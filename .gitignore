@@ -1,0 +1,26 @@
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Node modules (if any)
+node_modules/
+
+# Vendor directory
+vendor/
+
+# Log files
+*.log
+
+# Environment files
+.env
+.env.local
+
+# Cache
+.cache/
