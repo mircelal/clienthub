@@ -38,6 +38,76 @@ return [
 		['name' => 'website#delete', 'url' => '/api/websites/{id}', 'verb' => 'DELETE'],
 		['name' => 'website#byClient', 'url' => '/api/clients/{clientId}/websites', 'verb' => 'GET'],
 		['name' => 'website#byHosting', 'url' => '/api/hostings/{hostingId}/websites', 'verb' => 'GET'],
+		
+		// Service Type routes
+		['name' => 'service_type#index', 'url' => '/api/service-types', 'verb' => 'GET'],
+		['name' => 'service_type#show', 'url' => '/api/service-types/{id}', 'verb' => 'GET'],
+		['name' => 'service_type#create', 'url' => '/api/service-types', 'verb' => 'POST'],
+		['name' => 'service_type#update', 'url' => '/api/service-types/{id}', 'verb' => 'PUT'],
+		['name' => 'service_type#delete', 'url' => '/api/service-types/{id}', 'verb' => 'DELETE'],
+		['name' => 'service_type#initPredefined', 'url' => '/api/service-types/init', 'verb' => 'POST'],
+		
+		// Service routes
+		['name' => 'service#index', 'url' => '/api/services', 'verb' => 'GET'],
+		['name' => 'service#show', 'url' => '/api/services/{id}', 'verb' => 'GET'],
+		['name' => 'service#create', 'url' => '/api/services', 'verb' => 'POST'],
+		['name' => 'service#update', 'url' => '/api/services/{id}', 'verb' => 'PUT'],
+		['name' => 'service#delete', 'url' => '/api/services/{id}', 'verb' => 'DELETE'],
+		['name' => 'service#byClient', 'url' => '/api/clients/{clientId}/services', 'verb' => 'GET'],
+		['name' => 'service#expiringSoon', 'url' => '/api/services/expiring-soon', 'verb' => 'GET'],
+		['name' => 'service#extend', 'url' => '/api/services/{id}/extend', 'verb' => 'POST'],
+		
+		// Invoice routes
+		['name' => 'invoice#index', 'url' => '/api/invoices', 'verb' => 'GET'],
+		['name' => 'invoice#show', 'url' => '/api/invoices/{id}', 'verb' => 'GET'],
+		['name' => 'invoice#create', 'url' => '/api/invoices', 'verb' => 'POST'],
+		['name' => 'invoice#update', 'url' => '/api/invoices/{id}', 'verb' => 'PUT'],
+		['name' => 'invoice#delete', 'url' => '/api/invoices/{id}', 'verb' => 'DELETE'],
+		['name' => 'invoice#byClient', 'url' => '/api/clients/{clientId}/invoices', 'verb' => 'GET'],
+		['name' => 'invoice#overdue', 'url' => '/api/invoices/overdue', 'verb' => 'GET'],
+		['name' => 'invoice#upcoming', 'url' => '/api/invoices/upcoming', 'verb' => 'GET'],
+		['name' => 'invoice#unpaid', 'url' => '/api/invoices/unpaid', 'verb' => 'GET'],
+		
+		// Invoice Item routes
+		['name' => 'invoice_item#index', 'url' => '/api/invoice-items', 'verb' => 'GET'],
+		['name' => 'invoice_item#create', 'url' => '/api/invoice-items', 'verb' => 'POST'],
+		['name' => 'invoice_item#update', 'url' => '/api/invoice-items/{id}', 'verb' => 'PUT'],
+		['name' => 'invoice_item#delete', 'url' => '/api/invoice-items/{id}', 'verb' => 'DELETE'],
+		['name' => 'invoice_item#byInvoice', 'url' => '/api/invoices/{invoiceId}/items', 'verb' => 'GET'],
+		
+		// Payment routes
+		['name' => 'payment#index', 'url' => '/api/payments', 'verb' => 'GET'],
+		['name' => 'payment#show', 'url' => '/api/payments/{id}', 'verb' => 'GET'],
+		['name' => 'payment#create', 'url' => '/api/payments', 'verb' => 'POST'],
+		['name' => 'payment#update', 'url' => '/api/payments/{id}', 'verb' => 'PUT'],
+		['name' => 'payment#delete', 'url' => '/api/payments/{id}', 'verb' => 'DELETE'],
+		['name' => 'payment#byClient', 'url' => '/api/clients/{clientId}/payments', 'verb' => 'GET'],
+		['name' => 'payment#byInvoice', 'url' => '/api/invoices/{invoiceId}/payments', 'verb' => 'GET'],
+		['name' => 'payment#monthlyTotal', 'url' => '/api/payments/monthly-total', 'verb' => 'GET'],
+		
+		// Project routes
+		['name' => 'project#index', 'url' => '/api/projects', 'verb' => 'GET'],
+		['name' => 'project#show', 'url' => '/api/projects/{id}', 'verb' => 'GET'],
+		['name' => 'project#create', 'url' => '/api/projects', 'verb' => 'POST'],
+		['name' => 'project#update', 'url' => '/api/projects/{id}', 'verb' => 'PUT'],
+		['name' => 'project#delete', 'url' => '/api/projects/{id}', 'verb' => 'DELETE'],
+		['name' => 'project#byClient', 'url' => '/api/clients/{clientId}/projects', 'verb' => 'GET'],
+		['name' => 'project#active', 'url' => '/api/projects/active', 'verb' => 'GET'],
+		['name' => 'project#approachingDeadline', 'url' => '/api/projects/approaching-deadline', 'verb' => 'GET'],
+		['name' => 'project#addItem', 'url' => '/api/projects/{id}/items', 'verb' => 'POST'],
+		['name' => 'project#removeItem', 'url' => '/api/projects/{id}/items/{itemId}', 'verb' => 'DELETE'],
+		
+		// Task routes
+		['name' => 'task#index', 'url' => '/api/tasks', 'verb' => 'GET'],
+		['name' => 'task#show', 'url' => '/api/tasks/{id}', 'verb' => 'GET'],
+		['name' => 'task#create', 'url' => '/api/tasks', 'verb' => 'POST'],
+		['name' => 'task#update', 'url' => '/api/tasks/{id}', 'verb' => 'PUT'],
+		['name' => 'task#delete', 'url' => '/api/tasks/{id}', 'verb' => 'DELETE'],
+		['name' => 'task#byProject', 'url' => '/api/projects/{projectId}/tasks', 'verb' => 'GET'],
+		['name' => 'task#byClient', 'url' => '/api/clients/{clientId}/tasks', 'verb' => 'GET'],
+		['name' => 'task#pending', 'url' => '/api/tasks/pending', 'verb' => 'GET'],
+		['name' => 'task#approachingDeadline', 'url' => '/api/tasks/approaching-deadline', 'verb' => 'GET'],
+		['name' => 'task#overdue', 'url' => '/api/tasks/overdue', 'verb' => 'GET'],
+		['name' => 'task#toggleStatus', 'url' => '/api/tasks/{id}/toggle', 'verb' => 'POST'],
 	],
 ];
-

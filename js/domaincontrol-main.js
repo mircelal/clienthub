@@ -1,7 +1,7 @@
 /**
  * Domain Control - Main JavaScript
- * Version: 2.3.0
- * Build: 2024-12-18-FINAL
+ * Version: 3.0.0
+ * Build: 2024-12-19-INVOICES-PROJECTS
  * 
  * IMPORTANT: If you see "Initializing modern dashboard" in console,
  * this file is NOT loaded! Upload this file to server.
@@ -16,9 +16,19 @@
 		domains: [],
 		hostings: [],
 		websites: [],
+		serviceTypes: [],
+		services: [],
+		invoices: [],
+		payments: [],
+		projects: [],
+		tasks: [],
+		currentServiceId: null,
+		currentInvoiceId: null,
+		currentProjectId: null,
+		currentTaskId: null,
 
 	init: function() {
-		console.log('DomainControl: v2.3.0 Starting...');
+		console.log('DomainControl: v3.0.0 Starting...');
 		console.log('DomainControl: API Base:', this.apiBase);
 		try {
 			this.setupTabs();
@@ -26,7 +36,7 @@
 			this.setupButtons();
 			this.loadData();
 			this.updateDashboard();
-			console.log('DomainControl: v2.3.0 Ready!');
+			console.log('DomainControl: v3.0.0 Ready!');
 		} catch (e) {
 			console.error('DomainControl: Init error:', e);
 		}
@@ -48,12 +58,102 @@
 		document.getElementById('add-domain-btn')?.addEventListener('click', () => this.showDomainModal());
 		document.getElementById('add-hosting-btn')?.addEventListener('click', () => this.showHostingModal());
 		document.getElementById('add-website-btn')?.addEventListener('click', () => this.showWebsiteModal());
+		document.getElementById('add-service-btn')?.addEventListener('click', () => this.showServiceModal());
+		document.getElementById('add-invoice-btn')?.addEventListener('click', () => this.showInvoiceModal());
+		document.getElementById('add-project-btn')?.addEventListener('click', () => this.showProjectModal());
+		document.getElementById('add-task-btn')?.addEventListener('click', () => this.showTaskModal());
 
 		// Quick add buttons
 		document.getElementById('quick-add-client')?.addEventListener('click', () => this.showClientModal());
 		document.getElementById('quick-add-domain')?.addEventListener('click', () => this.showDomainModal());
 		document.getElementById('quick-add-hosting')?.addEventListener('click', () => this.showHostingModal());
 		document.getElementById('quick-add-website')?.addEventListener('click', () => this.showWebsiteModal());
+		document.getElementById('quick-add-invoice')?.addEventListener('click', () => this.showInvoiceModal());
+		document.getElementById('quick-add-payment')?.addEventListener('click', () => this.showPaymentModal());
+		document.getElementById('quick-add-project')?.addEventListener('click', () => this.showProjectModal());
+		document.getElementById('quick-add-task')?.addEventListener('click', () => this.showTaskModal());
+		
+		// Service type management
+		document.getElementById('manage-service-types-btn')?.addEventListener('click', () => this.showServiceTypesModal());
+		document.getElementById('add-service-type-btn')?.addEventListener('click', () => this.showServiceTypeModal());
+		document.getElementById('init-predefined-btn')?.addEventListener('click', () => this.initPredefinedServiceTypes());
+		
+		// Service detail buttons
+		document.getElementById('back-to-services-btn')?.addEventListener('click', () => this.hideServiceDetail());
+		document.getElementById('service-detail-edit-btn')?.addEventListener('click', () => {
+			if (this.currentServiceId) this.showServiceModal(this.currentServiceId);
+		});
+		document.getElementById('service-detail-delete-btn')?.addEventListener('click', () => {
+			if (this.currentServiceId && confirm('Bu hizmeti silmek istediğinize emin misiniz?')) {
+				this.deleteService(this.currentServiceId);
+				this.hideServiceDetail();
+			}
+		});
+		document.getElementById('service-create-invoice-btn')?.addEventListener('click', () => {
+			if (this.currentServiceId) this.createInvoiceFromService(this.currentServiceId);
+		});
+		document.getElementById('service-extend-btn')?.addEventListener('click', () => {
+			if (this.currentServiceId) this.showServiceExtendModal(this.currentServiceId);
+		});
+		
+		// Invoice detail buttons
+		document.getElementById('back-to-invoices-btn')?.addEventListener('click', () => this.hideInvoiceDetail());
+		document.getElementById('invoice-add-payment-btn')?.addEventListener('click', () => {
+			if (this.currentInvoiceId) this.showPaymentModal(null, this.currentInvoiceId);
+		});
+		document.getElementById('invoice-detail-edit-btn')?.addEventListener('click', () => {
+			if (this.currentInvoiceId) this.showInvoiceModal(this.currentInvoiceId);
+		});
+		document.getElementById('invoice-detail-delete-btn')?.addEventListener('click', () => {
+			if (this.currentInvoiceId && confirm('Bu faturayı silmek istediğinize emin misiniz?')) {
+				this.deleteInvoice(this.currentInvoiceId);
+				this.hideInvoiceDetail();
+			}
+		});
+		
+		// Project detail buttons
+		document.getElementById('back-to-projects-btn')?.addEventListener('click', () => this.hideProjectDetail());
+		document.getElementById('project-add-task-btn')?.addEventListener('click', () => {
+			if (this.currentProjectId) this.showTaskModal(null, this.currentProjectId);
+		});
+		document.getElementById('project-add-item-btn')?.addEventListener('click', () => {
+			if (this.currentProjectId) this.showProjectItemModal(this.currentProjectId);
+		});
+		document.getElementById('project-detail-edit-btn')?.addEventListener('click', () => {
+			if (this.currentProjectId) this.showProjectModal(this.currentProjectId);
+		});
+		document.getElementById('project-detail-delete-btn')?.addEventListener('click', () => {
+			if (this.currentProjectId && confirm('Bu projeyi silmek istediğinize emin misiniz?')) {
+				this.deleteProject(this.currentProjectId);
+				this.hideProjectDetail();
+			}
+		});
+		
+		// Task detail buttons
+		document.getElementById('back-to-tasks-btn')?.addEventListener('click', () => this.hideTaskDetail());
+		document.getElementById('task-toggle-btn')?.addEventListener('click', () => {
+			if (this.currentTaskId) this.toggleTaskStatus(this.currentTaskId);
+		});
+		document.getElementById('task-detail-edit-btn')?.addEventListener('click', () => {
+			if (this.currentTaskId) this.showTaskModal(this.currentTaskId);
+		});
+		document.getElementById('task-detail-delete-btn')?.addEventListener('click', () => {
+			if (this.currentTaskId && confirm('Bu görevi silmek istediğinize emin misiniz?')) {
+				this.deleteTask(this.currentTaskId);
+				this.hideTaskDetail();
+			}
+		});
+		
+		// Filter buttons
+		document.querySelectorAll('.filter-buttons .btn-filter').forEach(btn => {
+			btn.addEventListener('click', (e) => {
+				const filter = e.target.getAttribute('data-filter');
+				const parent = e.target.closest('.filter-buttons');
+				parent.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active'));
+				e.target.classList.add('active');
+				this.applyFilter(filter);
+			});
+		});
 
 		// Modal close buttons
 		document.querySelectorAll('.modal-close, .modal-cancel').forEach(btn => {
@@ -160,6 +260,12 @@
 			this.loadDomains();
 			this.loadHostings();
 			this.loadWebsites();
+			this.loadServiceTypes();
+			this.loadServices();
+			this.loadInvoices();
+			this.loadPayments();
+			this.loadProjects();
+			this.loadTasks();
 		},
 
 	loadTabData: function(tabName) {
@@ -179,6 +285,18 @@
 			case 'websites':
 				this.loadWebsites();
 				break;
+			case 'services':
+				this.loadServices();
+				break;
+			case 'invoices':
+				this.loadInvoices();
+				break;
+			case 'projects':
+				this.loadProjects();
+				break;
+			case 'tasks':
+				this.loadTasks();
+				break;
 		}
 	},
 
@@ -188,11 +306,30 @@
 		const statDomains = document.getElementById('stat-domains');
 		const statHostings = document.getElementById('stat-hostings');
 		const statWebsites = document.getElementById('stat-websites');
+		const statProjects = document.getElementById('stat-projects');
+		const statTasks = document.getElementById('stat-tasks');
+		const statUnpaidInvoices = document.getElementById('stat-unpaid-invoices');
+		const statMonthlyIncome = document.getElementById('stat-monthly-income');
 		
 		if (statClients) statClients.textContent = this.clients.length;
 		if (statDomains) statDomains.textContent = this.domains.length;
 		if (statHostings) statHostings.textContent = this.hostings.length;
 		if (statWebsites) statWebsites.textContent = this.websites.length;
+		
+		// New stats
+		const activeProjects = (this.projects || []).filter(p => p.status === 'active');
+		const pendingTasks = (this.tasks || []).filter(t => t.status !== 'done');
+		const unpaidInvoices = (this.invoices || []).filter(i => ['draft', 'sent', 'overdue'].includes(i.status));
+		
+		if (statProjects) statProjects.textContent = activeProjects.length;
+		if (statTasks) statTasks.textContent = pendingTasks.length;
+		if (statUnpaidInvoices) statUnpaidInvoices.textContent = unpaidInvoices.length;
+		
+		// Calculate monthly income
+		this.loadMonthlyIncome();
+		
+		// Update alert panels
+		this.updateAlertPanels();
 
 		// Show recent clients
 		const recentContainer = document.getElementById('recent-clients');
@@ -798,6 +935,76 @@
 			websitesListEl.innerHTML = websitesHtml;
 		}
 
+		// Render client's services
+		const clientServices = (this.services || []).filter(s => s.clientId == id);
+		const servicesListEl = document.getElementById('client-services-list');
+		if (servicesListEl) {
+			if (clientServices.length === 0) {
+				servicesListEl.innerHTML = '<p class="empty-mini">Hizmet yok</p>';
+			} else {
+				let servicesHtml = '';
+				clientServices.forEach(s => {
+					const statusClass = s.status === 'active' ? 'status-ok' : 'status-warning';
+					servicesHtml += `<div class="mini-item ${statusClass}" data-service-id="${s.id}" style="cursor:pointer;"><span>🛠️ ${this.escapeHtml(s.name)}</span><span>${s.price || 0} ${s.currency}</span></div>`;
+				});
+				servicesListEl.innerHTML = servicesHtml;
+				
+				// Add click listeners
+				servicesListEl.querySelectorAll('.mini-item').forEach(item => {
+					item.addEventListener('click', () => {
+						const sId = item.getAttribute('data-service-id');
+						if (sId) {
+							this.hideClientDetail();
+							this.switchTab('services');
+							setTimeout(() => this.showServiceDetail(parseInt(sId)), 100);
+						}
+					});
+				});
+			}
+		}
+
+		// Render client's invoices
+		const clientInvoices = (this.invoices || []).filter(i => i.clientId == id);
+		const invoicesListEl = document.getElementById('client-invoices-list');
+		if (invoicesListEl) {
+			if (clientInvoices.length === 0) {
+				invoicesListEl.innerHTML = '<p class="empty-mini">Fatura yok</p>';
+			} else {
+				let invoicesHtml = '';
+				clientInvoices.forEach(inv => {
+					const statusClass = inv.status === 'paid' ? 'status-ok' : (inv.status === 'overdue' ? 'status-critical' : 'status-warning');
+					invoicesHtml += `<div class="mini-item ${statusClass}" data-invoice-id="${inv.id}" style="cursor:pointer;"><span>📄 ${inv.invoiceNumber}</span><span>${inv.totalAmount || 0} ${inv.currency}</span></div>`;
+				});
+				invoicesListEl.innerHTML = invoicesHtml;
+				
+				invoicesListEl.querySelectorAll('.mini-item').forEach(item => {
+					item.addEventListener('click', () => {
+						const invId = item.getAttribute('data-invoice-id');
+						if (invId) {
+							this.hideClientDetail();
+							this.switchTab('invoices');
+							setTimeout(() => this.showInvoiceDetail(parseInt(invId)), 100);
+						}
+					});
+				});
+			}
+		}
+
+		// Render client's payments
+		const clientPayments = (this.payments || []).filter(p => p.clientId == id);
+		const paymentsListEl = document.getElementById('client-payments-list');
+		if (paymentsListEl) {
+			if (clientPayments.length === 0) {
+				paymentsListEl.innerHTML = '<p class="empty-mini">Ödeme yok</p>';
+			} else {
+				let paymentsHtml = '';
+				clientPayments.slice(0, 5).forEach(p => {
+					paymentsHtml += `<div class="mini-item status-ok"><span>💳 ${p.paymentDate || '-'}</span><span>${p.amount || 0} ${p.currency}</span></div>`;
+				});
+				paymentsListEl.innerHTML = paymentsHtml;
+			}
+		}
+
 		// Store current client id
 		this.currentClientId = client.id;
 	},
@@ -1283,23 +1490,71 @@
 				e.preventDefault();
 				this.extendDomain();
 			});
+			
+			// Service Type form
+			document.getElementById('service-type-form')?.addEventListener('submit', (e) => {
+				e.preventDefault();
+				this.saveServiceType();
+			});
+			
+			// Service form
+			document.getElementById('service-form')?.addEventListener('submit', (e) => {
+				e.preventDefault();
+				this.saveService();
+			});
+			
+			// Invoice form
+			document.getElementById('invoice-form')?.addEventListener('submit', (e) => {
+				e.preventDefault();
+				this.saveInvoice();
+			});
+			
+			// Payment form
+			document.getElementById('payment-form')?.addEventListener('submit', (e) => {
+				e.preventDefault();
+				this.savePayment();
+			});
+			
+			// Project form
+			document.getElementById('project-form')?.addEventListener('submit', (e) => {
+				e.preventDefault();
+				this.saveProject();
+			});
+			
+			// Task form
+			document.getElementById('task-form')?.addEventListener('submit', (e) => {
+				e.preventDefault();
+				this.saveTask();
+			});
 
 			// Update new expiry when years change
 			document.getElementById('extend-years').addEventListener('change', () => {
 				this.updateNewExpiryDate();
 			});
 
-			// Hosting payment form
-			document.getElementById('hosting-payment-form')?.addEventListener('submit', (e) => {
-				e.preventDefault();
-				this.addHostingPayment();
-			});
+		// Hosting payment form
+		document.getElementById('hosting-payment-form')?.addEventListener('submit', (e) => {
+			e.preventDefault();
+			this.addHostingPayment();
+		});
 
-			// Update payment expiry when period changes
-			document.getElementById('payment-period')?.addEventListener('change', () => {
-				this.updatePaymentNewExpiry();
-			});
-		},
+		// Update payment expiry when period changes
+		document.getElementById('payment-period')?.addEventListener('change', () => {
+			this.updatePaymentNewExpiry();
+		});
+		
+		// Invoice item form
+		document.getElementById('invoice-item-form')?.addEventListener('submit', (e) => {
+			e.preventDefault();
+			this.saveInvoiceItem();
+		});
+		
+		// Project item form
+		document.getElementById('project-item-form')?.addEventListener('submit', (e) => {
+			e.preventDefault();
+			this.saveProjectItem();
+		});
+	},
 
 		showClientModal: function(id = null) {
 			const modal = document.getElementById('client-modal');
@@ -1819,6 +2074,1711 @@
 			const div = document.createElement('div');
 			div.textContent = text;
 			return div.innerHTML;
+		},
+		
+		// ===== ALERT PANELS =====
+		updateAlertPanels: function() {
+			this.loadOverdueInvoices();
+			this.loadUpcomingPayments();
+			this.loadUpcomingTasks();
+		},
+		
+		loadMonthlyIncome: function() {
+			fetch(this.apiBase + '/payments/monthly-total', {
+				headers: { 'requesttoken': OC.requestToken }
+			})
+			.then(r => r.json())
+			.then(data => {
+				const el = document.getElementById('stat-monthly-income');
+				if (el) el.textContent = (data.total || 0).toFixed(2);
+			})
+			.catch(() => {});
+		},
+		
+		loadOverdueInvoices: function() {
+			fetch(this.apiBase + '/invoices/overdue', {
+				headers: { 'requesttoken': OC.requestToken }
+			})
+			.then(r => r.json())
+			.then(invoices => {
+				const list = document.getElementById('overdue-invoices-list');
+				const count = document.getElementById('overdue-count');
+				if (count) count.textContent = invoices.length;
+				if (!list) return;
+				
+				if (invoices.length === 0) {
+					list.innerHTML = '<p class="empty-message">Geciken ödeme yok</p>';
+					return;
+				}
+				
+				let html = '';
+				invoices.forEach(inv => {
+					const client = this.clients.find(c => c.id == inv.clientId);
+					const daysOverdue = Math.ceil((new Date() - new Date(inv.dueDate)) / (1000*60*60*24));
+					html += `
+						<div class="alert-item" data-id="${inv.id}">
+							<div class="alert-item__info">
+								<div class="alert-item__title">${inv.invoiceNumber}</div>
+								<div class="alert-item__subtitle">${client ? client.name : 'Bilinmeyen'} - ${inv.totalAmount} ${inv.currency}</div>
+							</div>
+							<span class="alert-item__badge alert-item__badge--danger">${daysOverdue} gün gecikti</span>
+						</div>
+					`;
+				});
+				list.innerHTML = html;
+			})
+			.catch(() => {});
+		},
+		
+		loadUpcomingPayments: function() {
+			fetch(this.apiBase + '/invoices/upcoming', {
+				headers: { 'requesttoken': OC.requestToken }
+			})
+			.then(r => r.json())
+			.then(invoices => {
+				const list = document.getElementById('upcoming-payments-list');
+				const count = document.getElementById('upcoming-count');
+				if (count) count.textContent = invoices.length;
+				if (!list) return;
+				
+				if (invoices.length === 0) {
+					list.innerHTML = '<p class="empty-message">Yaklaşan ödeme yok</p>';
+					return;
+				}
+				
+				let html = '';
+				invoices.forEach(inv => {
+					const client = this.clients.find(c => c.id == inv.clientId);
+					const daysLeft = Math.ceil((new Date(inv.dueDate) - new Date()) / (1000*60*60*24));
+					html += `
+						<div class="alert-item" data-id="${inv.id}">
+							<div class="alert-item__info">
+								<div class="alert-item__title">${inv.invoiceNumber}</div>
+								<div class="alert-item__subtitle">${client ? client.name : 'Bilinmeyen'} - ${inv.totalAmount} ${inv.currency}</div>
+							</div>
+							<span class="alert-item__badge alert-item__badge--warning">${daysLeft} gün</span>
+						</div>
+					`;
+				});
+				list.innerHTML = html;
+			})
+			.catch(() => {});
+		},
+		
+		loadUpcomingTasks: function() {
+			fetch(this.apiBase + '/tasks/approaching-deadline', {
+				headers: { 'requesttoken': OC.requestToken }
+			})
+			.then(r => r.json())
+			.then(tasks => {
+				const list = document.getElementById('upcoming-tasks-list');
+				const count = document.getElementById('upcoming-tasks-count');
+				if (count) count.textContent = tasks.length;
+				if (!list) return;
+				
+				if (tasks.length === 0) {
+					list.innerHTML = '<p class="empty-message">Yaklaşan görev yok</p>';
+					return;
+				}
+				
+				let html = '';
+				tasks.forEach(task => {
+					const project = this.projects.find(p => p.id == task.projectId);
+					const daysLeft = Math.ceil((new Date(task.dueDate) - new Date()) / (1000*60*60*24));
+					html += `
+						<div class="alert-item" data-id="${task.id}">
+							<div class="alert-item__info">
+								<div class="alert-item__title">${this.escapeHtml(task.title)}</div>
+								<div class="alert-item__subtitle">${project ? project.name : 'Genel'}</div>
+							</div>
+							<span class="alert-item__badge alert-item__badge--info">${daysLeft} gün</span>
+						</div>
+					`;
+				});
+				list.innerHTML = html;
+			})
+			.catch(() => {});
+		},
+		
+		// ===== SERVICE TYPES =====
+		loadServiceTypes: function() {
+			fetch(this.apiBase + '/service-types', {
+				headers: { 'requesttoken': OC.requestToken }
+			})
+			.then(r => r.json())
+			.then(data => {
+				this.serviceTypes = Array.isArray(data) ? data : [];
+				this.updateServiceTypeSelects();
+			})
+			.catch(() => { this.serviceTypes = []; });
+		},
+		
+		updateServiceTypeSelects: function() {
+			const select = document.getElementById('service-type-select');
+			if (!select) return;
+			select.innerHTML = '<option value="">Seçin veya özel girin</option>';
+			this.serviceTypes.forEach(st => {
+				select.innerHTML += `<option value="${st.id}">${this.escapeHtml(st.name)}</option>`;
+			});
+		},
+		
+	showServiceTypesModal: function() {
+		const modal = document.getElementById('service-types-modal');
+		const list = document.getElementById('service-types-list');
+		if (!modal || !list) return;
+		
+		let html = '';
+		this.serviceTypes.forEach(st => {
+			html += `
+				<div class="list-item">
+					<div class="list-item__content">
+						<div class="list-item__title">${this.escapeHtml(st.name)}</div>
+						<div class="list-item__meta">${st.defaultPrice || 0} ${st.defaultCurrency} / ${st.renewalInterval}</div>
+					</div>
+					<div class="list-item__actions">
+						<button class="btn btn-sm btn-secondary btn-edit-service-type" data-id="${st.id}">✏️</button>
+						<button class="btn btn-sm btn-danger btn-delete-service-type" data-id="${st.id}">🗑️</button>
+					</div>
+				</div>
+			`;
+		});
+		list.innerHTML = html || '<p class="empty-state">Henüz hizmet türü yok</p>';
+		
+		// Event delegation for edit/delete buttons
+		list.querySelectorAll('.btn-edit-service-type').forEach(btn => {
+			btn.addEventListener('click', (e) => {
+				e.stopPropagation();
+				const id = btn.getAttribute('data-id');
+				this.showServiceTypeModal(parseInt(id));
+			});
+		});
+		list.querySelectorAll('.btn-delete-service-type').forEach(btn => {
+			btn.addEventListener('click', (e) => {
+				e.stopPropagation();
+				const id = btn.getAttribute('data-id');
+				this.deleteServiceType(parseInt(id));
+			});
+		});
+		
+		modal.style.display = 'block';
+	},
+		
+		showServiceTypeModal: function(id = null) {
+			const modal = document.getElementById('service-type-modal');
+			const form = document.getElementById('service-type-form');
+			if (!modal || !form) return;
+			
+			form.reset();
+			document.getElementById('service-type-id').value = '';
+			document.getElementById('service-type-modal-title').textContent = 'Hizmet Türü Ekle';
+			
+			if (id) {
+				const st = this.serviceTypes.find(s => s.id == id);
+				if (st) {
+					document.getElementById('service-type-id').value = st.id;
+					document.getElementById('service-type-name').value = st.name || '';
+					document.getElementById('service-type-description').value = st.description || '';
+					document.getElementById('service-type-price').value = st.defaultPrice || '';
+					document.getElementById('service-type-currency').value = st.defaultCurrency || 'USD';
+					document.getElementById('service-type-interval').value = st.renewalInterval || 'monthly';
+					document.getElementById('service-type-modal-title').textContent = 'Hizmet Türü Düzenle';
+				}
+			}
+			modal.style.display = 'block';
+		},
+		
+		saveServiceType: function() {
+			const id = document.getElementById('service-type-id').value;
+			const data = new URLSearchParams({
+				name: document.getElementById('service-type-name').value,
+				description: document.getElementById('service-type-description').value,
+				defaultPrice: document.getElementById('service-type-price').value,
+				defaultCurrency: document.getElementById('service-type-currency').value,
+				renewalInterval: document.getElementById('service-type-interval').value
+			});
+			
+			const url = id ? `${this.apiBase}/service-types/${id}` : `${this.apiBase}/service-types`;
+			const method = id ? 'PUT' : 'POST';
+			
+			fetch(url, {
+				method,
+				headers: { 
+					'requesttoken': OC.requestToken,
+					'Content-Type': 'application/x-www-form-urlencoded'
+				},
+				body: data.toString()
+			})
+			.then(r => r.json())
+			.then(result => {
+				if (result.error) throw new Error(result.error);
+				this.closeModal('service-type-modal');
+				this.loadServiceTypes();
+				this.showServiceTypesModal();
+				this.showSuccess('Hizmet türü kaydedildi');
+			})
+			.catch(e => this.showError('Kaydetme hatası: ' + e.message));
+		},
+		
+		deleteServiceType: function(id) {
+			if (!confirm('Bu hizmet türünü silmek istediğinize emin misiniz?')) return;
+			fetch(`${this.apiBase}/service-types/${id}`, {
+				method: 'DELETE',
+				headers: { 'requesttoken': OC.requestToken }
+			})
+			.then(r => r.json())
+			.then(() => {
+				this.loadServiceTypes();
+				this.showServiceTypesModal();
+				this.showSuccess('Hizmet türü silindi');
+			})
+			.catch(e => this.showError('Silme hatası'));
+		},
+		
+		initPredefinedServiceTypes: function() {
+			fetch(`${this.apiBase}/service-types/init`, {
+				method: 'POST',
+				headers: { 'requesttoken': OC.requestToken }
+			})
+			.then(r => r.json())
+			.then(() => {
+				this.loadServiceTypes();
+				this.showServiceTypesModal();
+				this.showSuccess('Hazır hizmet türleri eklendi');
+			})
+			.catch(e => this.showError('Hata'));
+		},
+		
+		// ===== SERVICES =====
+		loadServices: function() {
+			fetch(this.apiBase + '/services', {
+				headers: { 'requesttoken': OC.requestToken }
+			})
+			.then(r => r.json())
+			.then(data => {
+				this.services = Array.isArray(data) ? data : [];
+				this.renderServices();
+			})
+			.catch(e => {
+				console.error('Error loading services:', e);
+				this.services = [];
+			});
+		},
+		
+	renderServices: function() {
+		const list = document.getElementById('services-list');
+		if (!list) return;
+		
+		if (this.services.length === 0) {
+			list.innerHTML = '<p class="empty-state">Henüz hizmet yok</p>';
+			return;
+		}
+		
+		let html = '';
+		this.services.forEach(svc => {
+			const client = this.clients.find(c => c.id == svc.clientId);
+			const statusClass = svc.status === 'active' ? 'status-badge--paid' : 'status-badge--cancelled';
+			const daysLeft = svc.expirationDate ? this.calculateDaysLeft(svc.expirationDate) : null;
+			const expiryBadge = daysLeft !== null && daysLeft <= 30 ? 
+				`<span class="status-badge ${daysLeft <= 7 ? 'status-badge--overdue' : 'status-badge--draft'}">${daysLeft} gün</span>` : '';
+			
+			html += `
+				<div class="list-item service-item" data-id="${svc.id}">
+					<div class="list-item__content">
+						<div class="list-item__title">${this.escapeHtml(svc.name)}</div>
+						<div class="list-item__meta">${client ? client.name : 'Bilinmeyen'} • ${svc.expirationDate || '-'}</div>
+					</div>
+					<div class="list-item__stats">
+						<span>${svc.price || 0} ${svc.currency}</span>
+						${expiryBadge}
+						<span class="status-badge ${statusClass}">${this.getStatusText(svc.status)}</span>
+					</div>
+					<div class="list-item__actions">
+						<button class="btn btn-sm btn-secondary btn-view-service" data-id="${svc.id}" title="Detay">👁️</button>
+						<button class="btn btn-sm btn-success btn-invoice-service" data-id="${svc.id}" title="Fatura Oluştur">📄</button>
+					</div>
+				</div>
+			`;
+		});
+		list.innerHTML = html;
+		
+		// Event delegation for service buttons
+		list.querySelectorAll('.btn-view-service').forEach(btn => {
+			btn.addEventListener('click', (e) => {
+				e.stopPropagation();
+				const id = btn.getAttribute('data-id');
+				this.showServiceDetail(parseInt(id));
+			});
+		});
+		list.querySelectorAll('.btn-invoice-service').forEach(btn => {
+			btn.addEventListener('click', (e) => {
+				e.stopPropagation();
+				const id = btn.getAttribute('data-id');
+				this.createInvoiceFromService(parseInt(id));
+			});
+		});
+		// Click on row also shows detail
+		list.querySelectorAll('.service-item').forEach(item => {
+			item.addEventListener('click', () => {
+				const id = item.getAttribute('data-id');
+				this.showServiceDetail(parseInt(id));
+			});
+		});
+	},
+	
+	getStatusText: function(status) {
+		const texts = {
+			active: 'Aktif',
+			paused: 'Durduruldu',
+			cancelled: 'İptal',
+			expired: 'Süresi Doldu'
+		};
+		return texts[status] || status;
+	},
+	
+	calculateDaysLeft: function(dateStr) {
+		if (!dateStr) return null;
+		const expiry = new Date(dateStr);
+		const today = new Date();
+		today.setHours(0, 0, 0, 0);
+		const diffTime = expiry.getTime() - today.getTime();
+		return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+	},
+		
+	showServiceDetail: function(id) {
+		const svc = this.services.find(s => s.id == id);
+		if (!svc) return;
+		
+		this.currentServiceId = id;
+		document.getElementById('services-list-view').style.display = 'none';
+		document.getElementById('service-detail-view').style.display = 'block';
+		
+		const client = this.clients.find(c => c.id == svc.clientId);
+		const daysLeft = svc.expirationDate ? this.calculateDaysLeft(svc.expirationDate) : null;
+		const serviceType = svc.serviceTypeId ? this.serviceTypes.find(t => t.id == svc.serviceTypeId) : null;
+		
+		document.getElementById('service-detail-name').textContent = svc.name;
+		document.getElementById('service-detail-client').textContent = client ? client.name : '-';
+		document.getElementById('service-detail-price').textContent = `${svc.price || 0} ${svc.currency}`;
+		document.getElementById('service-detail-expiry').textContent = svc.expirationDate || '-';
+		
+		// Additional info
+		document.getElementById('service-detail-start')?.textContent && (document.getElementById('service-detail-start').textContent = svc.startDate || '-');
+		document.getElementById('service-detail-interval')?.textContent && (document.getElementById('service-detail-interval').textContent = this.getIntervalText(svc.renewalInterval));
+		document.getElementById('service-detail-type')?.textContent && (document.getElementById('service-detail-type').textContent = serviceType ? serviceType.name : '-');
+		
+		// Status with badge
+		const statusEl = document.getElementById('service-detail-status');
+		const statusClass = svc.status === 'active' ? 'status-badge--paid' : 'status-badge--cancelled';
+		statusEl.innerHTML = `<span class="status-badge ${statusClass}">${this.getStatusText(svc.status)}</span>`;
+		
+		// Show days left if applicable
+		if (daysLeft !== null && daysLeft <= 30) {
+			const daysClass = daysLeft <= 0 ? 'status-badge--overdue' : (daysLeft <= 7 ? 'status-badge--draft' : 'status-badge--sent');
+			statusEl.innerHTML += ` <span class="status-badge ${daysClass}">${daysLeft <= 0 ? 'Süresi doldu!' : daysLeft + ' gün kaldı'}</span>`;
+		}
+		
+		document.getElementById('service-detail-notes').textContent = svc.notes || '-';
+	},
+	
+	getIntervalText: function(interval) {
+		const texts = {
+			monthly: 'Aylık',
+			quarterly: '3 Aylık',
+			yearly: 'Yıllık',
+			biennial: '2 Yıllık'
+		};
+		return texts[interval] || interval;
+	},
+	
+	showServiceExtendModal: function(id) {
+		const svc = this.services.find(s => s.id == id);
+		if (!svc) return;
+		
+		// For now, just extend the service by one period and show confirmation
+		const intervalMonths = {
+			monthly: 1,
+			quarterly: 3,
+			yearly: 12,
+			biennial: 24
+		};
+		const months = intervalMonths[svc.renewalInterval] || 12;
+		
+		if (!confirm(`"${svc.name}" hizmetinin süresini ${months} ay uzatmak istediğinize emin misiniz?`)) return;
+		
+		// Calculate new expiration date
+		let expDate = svc.expirationDate ? new Date(svc.expirationDate) : new Date();
+		expDate.setMonth(expDate.getMonth() + months);
+		const newExpiry = expDate.toISOString().split('T')[0];
+		
+		// Update service
+		const data = new URLSearchParams({ expirationDate: newExpiry });
+		
+		fetch(`${this.apiBase}/services/${id}`, {
+			method: 'PUT',
+			headers: { 
+				'requesttoken': OC.requestToken,
+				'Content-Type': 'application/x-www-form-urlencoded'
+			},
+			body: data.toString()
+		})
+		.then(r => r.json())
+		.then(result => {
+			if (result.error) throw new Error(result.error);
+			this.loadServices();
+			this.showServiceDetail(id);
+			this.showSuccess('Hizmet süresi uzatıldı');
+		})
+		.catch(e => this.showError('Uzatma hatası: ' + e.message));
+	},
+	
+	createInvoiceFromService: function(serviceId) {
+		const svc = this.services.find(s => s.id == serviceId);
+		if (!svc) return;
+		
+		// Open invoice modal with pre-filled data
+		this.showInvoiceModal();
+		
+		// Wait for modal to open, then fill data
+		setTimeout(() => {
+			document.getElementById('invoice-client-id').value = svc.clientId || '';
+			document.getElementById('invoice-total').value = svc.price || '';
+			document.getElementById('invoice-currency').value = svc.currency || 'USD';
+			
+			// Set a note about the service
+			document.getElementById('invoice-notes').value = `Hizmet: ${svc.name}`;
+		}, 100);
+	},
+		
+		hideServiceDetail: function() {
+			document.getElementById('services-list-view').style.display = 'block';
+			document.getElementById('service-detail-view').style.display = 'none';
+			this.currentServiceId = null;
+		},
+		
+	showServiceModal: function(id = null) {
+		const modal = document.getElementById('service-modal');
+		const form = document.getElementById('service-form');
+		if (!modal || !form) return;
+		
+		form.reset();
+		document.getElementById('service-id').value = '';
+		this.updateClientSelect('service-client-id');
+		this.updateServiceTypeSelect();
+		
+		// Set default dates
+		const today = new Date().toISOString().split('T')[0];
+		document.getElementById('service-start-date').value = today;
+		
+		// Setup service type change handler
+		const typeSelect = document.getElementById('service-type-select');
+		if (typeSelect) {
+			typeSelect.onchange = () => {
+				const stId = typeSelect.value;
+				if (stId) {
+					const st = this.serviceTypes.find(t => t.id == stId);
+					if (st) {
+						document.getElementById('service-name').value = st.name || '';
+						document.getElementById('service-price').value = st.defaultPrice || '';
+						document.getElementById('service-currency').value = st.defaultCurrency || 'USD';
+						document.getElementById('service-interval').value = st.renewalInterval || 'monthly';
+						
+						// Calculate expiration based on interval
+						const start = new Date();
+						const intervalMonths = { monthly: 1, quarterly: 3, yearly: 12, biennial: 24 };
+						start.setMonth(start.getMonth() + (intervalMonths[st.renewalInterval] || 12));
+						document.getElementById('service-expiration-date').value = start.toISOString().split('T')[0];
+					}
+				}
+			};
+		}
+		
+		if (id) {
+			const svc = this.services.find(s => s.id == id);
+			if (svc) {
+				document.getElementById('service-id').value = svc.id;
+				document.getElementById('service-client-id').value = svc.clientId || '';
+				document.getElementById('service-type-select').value = svc.serviceTypeId || '';
+				document.getElementById('service-name').value = svc.name || '';
+				document.getElementById('service-price').value = svc.price || '';
+				document.getElementById('service-currency').value = svc.currency || 'USD';
+				document.getElementById('service-interval').value = svc.renewalInterval || 'monthly';
+				document.getElementById('service-start-date').value = svc.startDate || '';
+				document.getElementById('service-expiration-date').value = svc.expirationDate || '';
+				document.getElementById('service-status').value = svc.status || 'active';
+				document.getElementById('service-notes').value = svc.notes || '';
+			}
+		}
+		modal.style.display = 'block';
+	},
+	
+	updateServiceTypeSelect: function() {
+		const select = document.getElementById('service-type-select');
+		if (!select) return;
+		select.innerHTML = '<option value="">Seçin veya özel girin</option>';
+		this.serviceTypes.forEach(st => {
+			select.innerHTML += `<option value="${st.id}">${this.escapeHtml(st.name)} (${st.defaultPrice || 0} ${st.defaultCurrency})</option>`;
+		});
+	},
+		
+		saveService: function() {
+			const id = document.getElementById('service-id').value;
+			const data = new URLSearchParams({
+				clientId: document.getElementById('service-client-id').value,
+				name: document.getElementById('service-name').value,
+				price: document.getElementById('service-price').value,
+				currency: document.getElementById('service-currency').value,
+				renewalInterval: document.getElementById('service-interval').value,
+				startDate: document.getElementById('service-start-date').value,
+				expirationDate: document.getElementById('service-expiration-date').value,
+				status: document.getElementById('service-status').value,
+				notes: document.getElementById('service-notes').value
+			});
+			
+			const url = id ? `${this.apiBase}/services/${id}` : `${this.apiBase}/services`;
+			fetch(url, {
+				method: id ? 'PUT' : 'POST',
+				headers: { 'requesttoken': OC.requestToken, 'Content-Type': 'application/x-www-form-urlencoded' },
+				body: data.toString()
+			})
+			.then(r => r.json())
+			.then(result => {
+				if (result.error) throw new Error(result.error);
+				this.closeModal('service-modal');
+				this.loadServices();
+				this.showSuccess('Hizmet kaydedildi');
+			})
+			.catch(e => this.showError('Kaydetme hatası: ' + e.message));
+		},
+		
+		deleteService: function(id) {
+			fetch(`${this.apiBase}/services/${id}`, {
+				method: 'DELETE',
+				headers: { 'requesttoken': OC.requestToken }
+			})
+			.then(r => r.json())
+			.then(() => {
+				this.loadServices();
+				this.showSuccess('Hizmet silindi');
+			})
+			.catch(e => this.showError('Silme hatası'));
+		},
+		
+		// ===== INVOICES =====
+		loadInvoices: function() {
+			fetch(this.apiBase + '/invoices', {
+				headers: { 'requesttoken': OC.requestToken }
+			})
+			.then(r => r.json())
+			.then(data => {
+				this.invoices = Array.isArray(data) ? data : [];
+				this.renderInvoices();
+				this.updateDashboard();
+			})
+			.catch(e => {
+				console.error('Error loading invoices:', e);
+				this.invoices = [];
+			});
+		},
+		
+	renderInvoices: function(filter = 'all') {
+		const list = document.getElementById('invoices-list');
+		if (!list) return;
+		
+		let filtered = this.invoices;
+		if (filter === 'unpaid') filtered = filtered.filter(i => ['draft', 'sent'].includes(i.status));
+		else if (filter === 'overdue') filtered = filtered.filter(i => i.status === 'overdue' || (new Date(i.dueDate) < new Date() && i.status !== 'paid'));
+		else if (filter === 'paid') filtered = filtered.filter(i => i.status === 'paid');
+		
+		if (filtered.length === 0) {
+			list.innerHTML = '<p class="empty-state">Fatura yok</p>';
+			return;
+		}
+		
+		let html = '';
+		filtered.forEach(inv => {
+			const client = this.clients.find(c => c.id == inv.clientId);
+			const remaining = (inv.totalAmount || 0) - (inv.paidAmount || 0);
+			const statusText = this.getInvoiceStatusText(inv.status);
+			html += `
+				<div class="list-item invoice-item" data-id="${inv.id}">
+					<div class="list-item__content">
+						<div class="list-item__title">${inv.invoiceNumber}</div>
+						<div class="list-item__meta">${client ? client.name : 'Bilinmeyen'} • Vade: ${inv.dueDate || '-'}</div>
+					</div>
+					<div class="list-item__stats">
+						<div class="list-item__stat">
+							<div class="list-item__stat-label">Toplam</div>
+							<div class="list-item__stat-value">${inv.totalAmount || 0} ${inv.currency}</div>
+						</div>
+						<div class="list-item__stat">
+							<div class="list-item__stat-label">Kalan</div>
+							<div class="list-item__stat-value">${remaining.toFixed(2)} ${inv.currency}</div>
+						</div>
+						<span class="status-badge status-badge--${inv.status}">${statusText}</span>
+					</div>
+				</div>
+			`;
+		});
+		list.innerHTML = html;
+		
+		// Event delegation for invoice items
+		list.querySelectorAll('.invoice-item').forEach(item => {
+			item.addEventListener('click', () => {
+				const id = item.getAttribute('data-id');
+				this.showInvoiceDetail(parseInt(id));
+			});
+		});
+	},
+		
+	showInvoiceDetail: function(id) {
+		const inv = this.invoices.find(i => i.id == id);
+		if (!inv) return;
+		
+		this.currentInvoiceId = id;
+		document.getElementById('invoices-list-view').style.display = 'none';
+		document.getElementById('invoice-detail-view').style.display = 'block';
+		
+		const client = this.clients.find(c => c.id == inv.clientId);
+		const remaining = (inv.totalAmount || 0) - (inv.paidAmount || 0);
+		
+		document.getElementById('invoice-detail-number').textContent = inv.invoiceNumber;
+		document.getElementById('invoice-detail-client').textContent = client ? client.name : '-';
+		document.getElementById('invoice-detail-total').textContent = `${inv.totalAmount || 0} ${inv.currency}`;
+		document.getElementById('invoice-detail-paid').textContent = `${inv.paidAmount || 0} ${inv.currency}`;
+		document.getElementById('invoice-detail-remaining').textContent = `${remaining} ${inv.currency}`;
+		document.getElementById('invoice-detail-issue-date').textContent = inv.issueDate || '-';
+		document.getElementById('invoice-detail-due-date').textContent = inv.dueDate || '-';
+		
+		// Status badge with color
+		const statusEl = document.getElementById('invoice-detail-status');
+		statusEl.innerHTML = `<span class="status-badge status-badge--${inv.status}">${this.getInvoiceStatusText(inv.status)}</span>`;
+		
+		// Load invoice items and payments
+		this.loadInvoiceItems(id);
+		this.loadInvoicePayments(id);
+	},
+	
+	getInvoiceStatusText: function(status) {
+		const statusTexts = {
+			draft: 'Taslak',
+			sent: 'Gönderildi',
+			paid: 'Ödendi',
+			overdue: 'Gecikmiş',
+			cancelled: 'İptal',
+			partial: 'Kısmi Ödeme'
+		};
+		return statusTexts[status] || status;
+	},
+	
+	loadInvoiceItems: function(invoiceId) {
+		fetch(`${this.apiBase}/invoices/${invoiceId}/items`, {
+			headers: { 'requesttoken': OC.requestToken }
+		})
+		.then(r => r.json())
+		.then(items => {
+			const container = document.getElementById('invoice-detail-items');
+			if (!container) return;
+			
+			if (!items || items.length === 0) {
+				container.innerHTML = `
+					<p class="empty-message">Henüz fatura kalemi yok</p>
+					<button class="btn btn-secondary btn-sm" onclick="DomainControl.showInvoiceItemModal()">+ Kalem Ekle</button>
+				`;
+				return;
+			}
+			
+			let html = `
+				<table class="invoice-items-table">
+					<thead>
+						<tr>
+							<th>Açıklama</th>
+							<th>Tür</th>
+							<th>Miktar</th>
+							<th>Birim Fiyat</th>
+							<th>Toplam</th>
+							<th></th>
+						</tr>
+					</thead>
+					<tbody>
+			`;
+			
+			items.forEach(item => {
+				const total = (item.quantity || 1) * (item.unitPrice || 0);
+				html += `
+					<tr>
+						<td>${this.escapeHtml(item.description)}</td>
+						<td><span class="status-badge">${item.itemType || '-'}</span></td>
+						<td>${item.quantity || 1}</td>
+						<td>${item.unitPrice || 0} ${item.currency || ''}</td>
+						<td><strong>${total.toFixed(2)} ${item.currency || ''}</strong></td>
+						<td>
+							<button class="btn btn-sm btn-danger" onclick="DomainControl.deleteInvoiceItem(${item.id})">🗑️</button>
+						</td>
+					</tr>
+				`;
+			});
+			
+			html += `
+					</tbody>
+				</table>
+				<div style="margin-top: 12px;">
+					<button class="btn btn-secondary btn-sm" onclick="DomainControl.showInvoiceItemModal()">+ Kalem Ekle</button>
+				</div>
+			`;
+			container.innerHTML = html;
+		})
+		.catch(e => {
+			console.error('Error loading invoice items:', e);
+		});
+	},
+	
+	loadInvoicePayments: function(invoiceId) {
+		fetch(`${this.apiBase}/invoices/${invoiceId}/payments`, {
+			headers: { 'requesttoken': OC.requestToken }
+		})
+		.then(r => r.json())
+		.then(payments => {
+			const container = document.getElementById('invoice-detail-payments');
+			if (!container) return;
+			
+			if (!payments || payments.length === 0) {
+				container.innerHTML = '<p class="empty-message">Henüz ödeme yok</p>';
+				return;
+			}
+			
+			let html = '';
+			payments.forEach(p => {
+				const methodTexts = { cash: 'Nakit', bank: 'Havale', card: 'Kart', other: 'Diğer' };
+				html += `
+					<div class="history-item">
+						<div class="history-date">${p.paymentDate || '-'}</div>
+						<div class="history-content">
+							<strong>${p.amount} ${p.currency}</strong>
+							<span class="history-detail">${methodTexts[p.paymentMethod] || p.paymentMethod}</span>
+							${p.reference ? `<span class="history-detail">Ref: ${p.reference}</span>` : ''}
+							${p.notes ? `<span class="history-note">${this.escapeHtml(p.notes)}</span>` : ''}
+						</div>
+						<button class="btn btn-sm btn-danger" onclick="DomainControl.deletePayment(${p.id})">🗑️</button>
+					</div>
+				`;
+			});
+			container.innerHTML = html;
+		})
+		.catch(e => {
+			console.error('Error loading payments:', e);
+		});
+	},
+	
+	deletePayment: function(id) {
+		if (!confirm('Bu ödemeyi silmek istediğinize emin misiniz?')) return;
+		fetch(`${this.apiBase}/payments/${id}`, {
+			method: 'DELETE',
+			headers: { 'requesttoken': OC.requestToken }
+		})
+		.then(r => r.json())
+		.then(() => {
+			this.loadPayments();
+			this.loadInvoices();
+			if (this.currentInvoiceId) {
+				this.loadInvoicePayments(this.currentInvoiceId);
+			}
+			this.showSuccess('Ödeme silindi');
+		})
+		.catch(e => this.showError('Silme hatası'));
+	},
+	
+	// ===== INVOICE ITEMS =====
+	showInvoiceItemModal: function(id = null) {
+		const modal = document.getElementById('invoice-item-modal');
+		const form = document.getElementById('invoice-item-form');
+		if (!modal || !form) return;
+		
+		form.reset();
+		document.getElementById('invoice-item-id').value = '';
+		document.getElementById('invoice-item-invoice-id').value = this.currentInvoiceId || '';
+		document.getElementById('invoice-item-quantity').value = '1';
+		document.getElementById('invoice-item-ref-group').style.display = 'none';
+		
+		// Get current invoice currency
+		if (this.currentInvoiceId) {
+			const inv = this.invoices.find(i => i.id == this.currentInvoiceId);
+			if (inv) {
+				document.getElementById('invoice-item-currency').value = inv.currency || 'USD';
+			}
+		}
+		
+		// Setup item type change handler
+		const typeSelect = document.getElementById('invoice-item-type');
+		typeSelect.onchange = () => this.onInvoiceItemTypeChange(typeSelect.value);
+		
+		modal.style.display = 'block';
+	},
+	
+	onInvoiceItemTypeChange: function(type) {
+		const refGroup = document.getElementById('invoice-item-ref-group');
+		const refSelect = document.getElementById('invoice-item-ref-id');
+		
+		if (type === 'manual') {
+			refGroup.style.display = 'none';
+			return;
+		}
+		
+		refGroup.style.display = 'block';
+		refSelect.innerHTML = '<option value="">Seçin</option>';
+		
+		let items = [];
+		switch (type) {
+			case 'domain':
+				items = this.domains;
+				break;
+			case 'hosting':
+				items = this.hostings;
+				break;
+			case 'website':
+				items = this.websites;
+				break;
+			case 'service':
+				items = this.services;
+				break;
+			case 'project':
+				items = this.projects;
+				break;
+		}
+		
+		items.forEach(item => {
+			const name = item.name || item.domainName || item.provider || 'Unknown';
+			const price = item.price || 0;
+			const currency = item.currency || 'USD';
+			refSelect.innerHTML += `<option value="${item.id}" data-price="${price}" data-currency="${currency}">${this.escapeHtml(name)} (${price} ${currency})</option>`;
+		});
+		
+		// Auto-fill price when selecting
+		refSelect.onchange = () => {
+			const selected = refSelect.options[refSelect.selectedIndex];
+			if (selected.value) {
+				const price = selected.getAttribute('data-price');
+				const currency = selected.getAttribute('data-currency');
+				const name = selected.textContent.split(' (')[0];
+				
+				document.getElementById('invoice-item-unit-price').value = price || '';
+				document.getElementById('invoice-item-currency').value = currency || 'USD';
+				document.getElementById('invoice-item-description').value = name;
+			}
+		};
+	},
+	
+	saveInvoiceItem: function() {
+		const invoiceId = document.getElementById('invoice-item-invoice-id').value;
+		if (!invoiceId) {
+			this.showError('Fatura ID bulunamadı');
+			return;
+		}
+		
+		const data = new URLSearchParams({
+			invoiceId: invoiceId,
+			description: document.getElementById('invoice-item-description').value,
+			itemType: document.getElementById('invoice-item-type').value,
+			itemId: document.getElementById('invoice-item-ref-id').value || '',
+			quantity: document.getElementById('invoice-item-quantity').value || '1',
+			unitPrice: document.getElementById('invoice-item-unit-price').value || '0',
+			currency: document.getElementById('invoice-item-currency').value,
+			periodStart: document.getElementById('invoice-item-start-date').value || '',
+			periodEnd: document.getElementById('invoice-item-end-date').value || '',
+			discount: document.getElementById('invoice-item-discount').value || '0',
+			discountType: document.getElementById('invoice-item-discount-type').value
+		});
+		
+		fetch(`${this.apiBase}/invoice-items`, {
+			method: 'POST',
+			headers: { 
+				'requesttoken': OC.requestToken,
+				'Content-Type': 'application/x-www-form-urlencoded'
+			},
+			body: data.toString()
+		})
+		.then(r => r.json())
+		.then(result => {
+			if (result.error) throw new Error(result.error);
+			this.closeModal('invoice-item-modal');
+			this.loadInvoiceItems(invoiceId);
+			this.recalculateInvoiceTotal(invoiceId);
+			this.showSuccess('Fatura kalemi eklendi');
+		})
+		.catch(e => this.showError('Kaydetme hatası: ' + e.message));
+	},
+	
+	deleteInvoiceItem: function(id) {
+		if (!confirm('Bu fatura kalemini silmek istediğinize emin misiniz?')) return;
+		
+		fetch(`${this.apiBase}/invoice-items/${id}`, {
+			method: 'DELETE',
+			headers: { 'requesttoken': OC.requestToken }
+		})
+		.then(r => r.json())
+		.then(() => {
+			if (this.currentInvoiceId) {
+				this.loadInvoiceItems(this.currentInvoiceId);
+				this.recalculateInvoiceTotal(this.currentInvoiceId);
+			}
+			this.showSuccess('Fatura kalemi silindi');
+		})
+		.catch(e => this.showError('Silme hatası'));
+	},
+	
+	recalculateInvoiceTotal: function(invoiceId) {
+		fetch(`${this.apiBase}/invoices/${invoiceId}/items`, {
+			headers: { 'requesttoken': OC.requestToken }
+		})
+		.then(r => r.json())
+		.then(items => {
+			let total = 0;
+			items.forEach(item => {
+				let itemTotal = (item.quantity || 1) * (item.unitPrice || 0);
+				// Apply discount
+				if (item.discount && item.discount > 0) {
+					if (item.discountType === 'percent') {
+						itemTotal -= itemTotal * (item.discount / 100);
+					} else {
+						itemTotal -= item.discount;
+					}
+				}
+				total += itemTotal;
+			});
+			
+			// Update invoice total
+			const inv = this.invoices.find(i => i.id == invoiceId);
+			if (inv) {
+				this.updateInvoiceTotal(invoiceId, total, inv.currency);
+			}
+		});
+	},
+	
+	updateInvoiceTotal: function(invoiceId, total, currency) {
+		const data = new URLSearchParams({ totalAmount: total.toFixed(2) });
+		
+		fetch(`${this.apiBase}/invoices/${invoiceId}`, {
+			method: 'PUT',
+			headers: { 
+				'requesttoken': OC.requestToken,
+				'Content-Type': 'application/x-www-form-urlencoded'
+			},
+			body: data.toString()
+		})
+		.then(r => r.json())
+		.then(() => {
+			this.loadInvoices();
+			// Update detail view
+			document.getElementById('invoice-detail-total').textContent = `${total.toFixed(2)} ${currency}`;
+			const inv = this.invoices.find(i => i.id == invoiceId);
+			const paid = inv ? (inv.paidAmount || 0) : 0;
+			document.getElementById('invoice-detail-remaining').textContent = `${(total - paid).toFixed(2)} ${currency}`;
+		});
+	},
+		
+		hideInvoiceDetail: function() {
+			document.getElementById('invoices-list-view').style.display = 'block';
+			document.getElementById('invoice-detail-view').style.display = 'none';
+			this.currentInvoiceId = null;
+		},
+		
+		showInvoiceModal: function(id = null) {
+			const modal = document.getElementById('invoice-modal');
+			const form = document.getElementById('invoice-form');
+			if (!modal || !form) return;
+			
+			form.reset();
+			document.getElementById('invoice-id').value = '';
+			document.getElementById('invoice-issue-date').value = new Date().toISOString().split('T')[0];
+			document.getElementById('invoice-due-date').value = new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0];
+			this.updateClientSelect('invoice-client-id');
+			
+			if (id) {
+				const inv = this.invoices.find(i => i.id == id);
+				if (inv) {
+					document.getElementById('invoice-id').value = inv.id;
+					document.getElementById('invoice-client-id').value = inv.clientId || '';
+					document.getElementById('invoice-number').value = inv.invoiceNumber || '';
+					document.getElementById('invoice-issue-date').value = inv.issueDate || '';
+					document.getElementById('invoice-due-date').value = inv.dueDate || '';
+					document.getElementById('invoice-total').value = inv.totalAmount || '';
+					document.getElementById('invoice-currency').value = inv.currency || 'USD';
+					document.getElementById('invoice-status').value = inv.status || 'draft';
+					document.getElementById('invoice-notes').value = inv.notes || '';
+				}
+			}
+			modal.style.display = 'block';
+		},
+		
+		saveInvoice: function() {
+			const id = document.getElementById('invoice-id').value;
+			const data = new URLSearchParams({
+				clientId: document.getElementById('invoice-client-id').value,
+				invoiceNumber: document.getElementById('invoice-number').value,
+				issueDate: document.getElementById('invoice-issue-date').value,
+				dueDate: document.getElementById('invoice-due-date').value,
+				totalAmount: document.getElementById('invoice-total').value,
+				currency: document.getElementById('invoice-currency').value,
+				status: document.getElementById('invoice-status').value,
+				notes: document.getElementById('invoice-notes').value
+			});
+			
+			const url = id ? `${this.apiBase}/invoices/${id}` : `${this.apiBase}/invoices`;
+			fetch(url, {
+				method: id ? 'PUT' : 'POST',
+				headers: { 'requesttoken': OC.requestToken, 'Content-Type': 'application/x-www-form-urlencoded' },
+				body: data.toString()
+			})
+			.then(r => r.json())
+			.then(result => {
+				if (result.error) throw new Error(result.error);
+				this.closeModal('invoice-modal');
+				this.loadInvoices();
+				this.showSuccess('Fatura kaydedildi');
+			})
+			.catch(e => this.showError('Kaydetme hatası: ' + e.message));
+		},
+		
+		deleteInvoice: function(id) {
+			fetch(`${this.apiBase}/invoices/${id}`, {
+				method: 'DELETE',
+				headers: { 'requesttoken': OC.requestToken }
+			})
+			.then(r => r.json())
+			.then(() => {
+				this.loadInvoices();
+				this.showSuccess('Fatura silindi');
+			})
+			.catch(e => this.showError('Silme hatası'));
+		},
+		
+		// ===== PAYMENTS =====
+		loadPayments: function() {
+			fetch(this.apiBase + '/payments', {
+				headers: { 'requesttoken': OC.requestToken }
+			})
+			.then(r => r.json())
+			.then(data => {
+				this.payments = Array.isArray(data) ? data : [];
+			})
+			.catch(e => {
+				console.error('Error loading payments:', e);
+				this.payments = [];
+			});
+		},
+		
+		showPaymentModal: function(id = null, invoiceId = null) {
+			const modal = document.getElementById('payment-modal');
+			const form = document.getElementById('payment-form');
+			if (!modal || !form) return;
+			
+			form.reset();
+			document.getElementById('payment-id').value = '';
+			document.getElementById('payment-invoice-id').value = invoiceId || '';
+			document.getElementById('payment-date').value = new Date().toISOString().split('T')[0];
+			this.updateClientSelect('payment-client-id');
+			
+			// If invoice is provided, set client and amount
+			if (invoiceId) {
+				const inv = this.invoices.find(i => i.id == invoiceId);
+				if (inv) {
+					document.getElementById('payment-client-id').value = inv.clientId;
+					document.getElementById('payment-amount').value = (inv.totalAmount - (inv.paidAmount || 0));
+					document.getElementById('payment-currency').value = inv.currency;
+				}
+			}
+			
+			modal.style.display = 'block';
+		},
+		
+		savePayment: function() {
+			const id = document.getElementById('payment-id').value;
+			const data = new URLSearchParams({
+				invoiceId: document.getElementById('payment-invoice-id').value,
+				clientId: document.getElementById('payment-client-id').value,
+				amount: document.getElementById('payment-amount').value,
+				currency: document.getElementById('payment-currency').value,
+				paymentDate: document.getElementById('payment-date').value,
+				paymentMethod: document.getElementById('payment-method').value,
+				reference: document.getElementById('payment-reference').value,
+				notes: document.getElementById('payment-notes').value
+			});
+			
+			const url = id ? `${this.apiBase}/payments/${id}` : `${this.apiBase}/payments`;
+			fetch(url, {
+				method: id ? 'PUT' : 'POST',
+				headers: { 'requesttoken': OC.requestToken, 'Content-Type': 'application/x-www-form-urlencoded' },
+				body: data.toString()
+			})
+			.then(r => r.json())
+			.then(result => {
+				if (result.error) throw new Error(result.error);
+				this.closeModal('payment-modal');
+				this.loadPayments();
+				this.loadInvoices();
+				this.updateDashboard();
+				this.showSuccess('Ödeme kaydedildi');
+			})
+			.catch(e => this.showError('Kaydetme hatası: ' + e.message));
+		},
+		
+		// ===== PROJECTS =====
+		loadProjects: function() {
+			fetch(this.apiBase + '/projects', {
+				headers: { 'requesttoken': OC.requestToken }
+			})
+			.then(r => r.json())
+			.then(data => {
+				this.projects = Array.isArray(data) ? data : [];
+				this.renderProjects();
+				this.updateProjectSelects();
+			})
+			.catch(e => {
+				console.error('Error loading projects:', e);
+				this.projects = [];
+			});
+		},
+		
+		updateProjectSelects: function() {
+			const select = document.getElementById('task-project-id');
+			if (!select) return;
+			select.innerHTML = '<option value="">Proje Seçin (opsiyonel)</option>';
+			this.projects.forEach(p => {
+				select.innerHTML += `<option value="${p.id}">${this.escapeHtml(p.name)}</option>`;
+			});
+		},
+		
+	renderProjects: function(filter = 'all') {
+		const list = document.getElementById('projects-list');
+		if (!list) return;
+		
+		let filtered = this.projects;
+		if (filter !== 'all') filtered = filtered.filter(p => p.status === filter);
+		
+		if (filtered.length === 0) {
+			list.innerHTML = '<p class="empty-state">Proje yok</p>';
+			return;
+		}
+		
+		let html = '';
+		filtered.forEach(proj => {
+			const client = this.clients.find(c => c.id == proj.clientId);
+			const statusTexts = { active: 'Aktif', on_hold: 'Beklemede', completed: 'Tamamlandı', cancelled: 'İptal' };
+			const daysLeft = proj.deadline ? this.calculateDaysLeft(proj.deadline) : null;
+			const deadlineBadge = daysLeft !== null && daysLeft <= 7 && daysLeft >= 0 ? 
+				`<span class="status-badge status-badge--draft">${daysLeft} gün</span>` : '';
+			
+			html += `
+				<div class="list-item project-item" data-id="${proj.id}">
+					<div class="list-item__content">
+						<div class="list-item__title">${this.escapeHtml(proj.name)}</div>
+						<div class="list-item__meta">${client ? client.name : 'Bilinmeyen'} • Deadline: ${proj.deadline || '-'}</div>
+					</div>
+					<div class="list-item__stats">
+						${proj.budget ? `<span>${proj.budget} ${proj.currency || 'USD'}</span>` : ''}
+						${deadlineBadge}
+						<span class="status-badge project-status--${proj.status}">${statusTexts[proj.status] || proj.status}</span>
+					</div>
+				</div>
+			`;
+		});
+		list.innerHTML = html;
+		
+		// Event delegation
+		list.querySelectorAll('.project-item').forEach(item => {
+			item.addEventListener('click', () => {
+				const id = item.getAttribute('data-id');
+				this.showProjectDetail(parseInt(id));
+			});
+		});
+	},
+		
+	showProjectDetail: function(id) {
+		const proj = this.projects.find(p => p.id == id);
+		if (!proj) return;
+		
+		this.currentProjectId = id;
+		document.getElementById('projects-list-view').style.display = 'none';
+		document.getElementById('project-detail-view').style.display = 'block';
+		
+		const client = this.clients.find(c => c.id == proj.clientId);
+		const statusTexts = { active: 'Aktif', on_hold: 'Beklemede', completed: 'Tamamlandı', cancelled: 'İptal' };
+		const daysLeft = proj.deadline ? this.calculateDaysLeft(proj.deadline) : null;
+		
+		document.getElementById('project-detail-name').textContent = proj.name;
+		document.getElementById('project-detail-client').textContent = client ? client.name : '-';
+		
+		// Status with badge
+		const statusEl = document.getElementById('project-detail-status');
+		statusEl.innerHTML = `<span class="status-badge project-status--${proj.status}">${statusTexts[proj.status] || proj.status}</span>`;
+		
+		// Deadline with days left
+		const deadlineEl = document.getElementById('project-detail-deadline');
+		if (proj.deadline) {
+			const deadlineClass = daysLeft <= 0 ? 'status-badge--overdue' : (daysLeft <= 7 ? 'status-badge--draft' : '');
+			deadlineEl.innerHTML = `${proj.deadline} ${daysLeft !== null ? `<span class="status-badge ${deadlineClass}">${daysLeft <= 0 ? 'Geçti!' : daysLeft + ' gün'}</span>` : ''}`;
+		} else {
+			deadlineEl.textContent = '-';
+		}
+		
+		document.getElementById('project-detail-budget').textContent = proj.budget ? `${proj.budget} ${proj.currency}` : '-';
+		document.getElementById('project-detail-description').textContent = proj.description || '-';
+		
+		// Load project tasks with progress
+		this.loadProjectTasks(id);
+	},
+	
+	loadProjectTasks: function(projectId) {
+		fetch(`${this.apiBase}/projects/${projectId}/tasks`, {
+			headers: { 'requesttoken': OC.requestToken }
+		})
+		.then(r => r.json())
+		.then(tasks => {
+			const container = document.getElementById('project-detail-tasks');
+			if (!container) return;
+			
+			if (!tasks || tasks.length === 0) {
+				container.innerHTML = `
+					<p class="empty-message">Bu projede henüz görev yok</p>
+					<button class="btn btn-primary btn-sm" onclick="DomainControl.showTaskModalForProject(${projectId})">+ Görev Ekle</button>
+				`;
+				return;
+			}
+			
+			// Calculate progress
+			const totalTasks = tasks.length;
+			const doneTasks = tasks.filter(t => t.status === 'done').length;
+			const progress = Math.round((doneTasks / totalTasks) * 100);
+			
+			const priorityTexts = { low: 'Düşük', medium: 'Orta', high: 'Yüksek' };
+			const statusTexts = { todo: 'Yapılacak', in_progress: 'Devam Ediyor', done: 'Tamamlandı' };
+			
+			let html = `
+				<div class="project-progress" style="margin-bottom: 20px;">
+					<div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+						<span><strong>İlerleme:</strong> ${doneTasks}/${totalTasks} görev tamamlandı</span>
+						<span><strong>${progress}%</strong></span>
+					</div>
+					<div class="progress-bar" style="height: 12px; background: var(--color-background-dark); border-radius: 6px; overflow: hidden;">
+						<div style="width: ${progress}%; height: 100%; background: ${progress === 100 ? 'var(--color-success)' : 'var(--color-primary-element)'}; transition: width 0.3s;"></div>
+					</div>
+				</div>
+				<button class="btn btn-primary btn-sm" onclick="DomainControl.showTaskModalForProject(${projectId})" style="margin-bottom: 16px;">+ Görev Ekle</button>
+			`;
+			
+			tasks.forEach(task => {
+				const overdue = task.dueDate && this.calculateDaysLeft(task.dueDate) < 0 && task.status !== 'done';
+				html += `
+					<div class="task-list-item ${overdue ? 'status-critical' : ''}" data-task-id="${task.id}">
+						<input type="checkbox" class="project-task-cb" data-id="${task.id}" ${task.status === 'done' ? 'checked' : ''} style="margin-right: 12px; width: 20px; height: 20px;">
+						<div style="flex: 1;">
+							<span class="task-list-item__title task-status--${task.status}">${this.escapeHtml(task.title)}</span>
+							<div class="list-item__meta" style="font-size: 12px; margin-top: 4px;">
+								<span class="priority-badge priority-badge--${task.priority}">${priorityTexts[task.priority] || task.priority}</span>
+								<span style="margin-left: 8px;">${task.dueDate || 'Tarih yok'}</span>
+							</div>
+						</div>
+						<span class="status-badge task-status--${task.status}">${statusTexts[task.status] || task.status}</span>
+					</div>
+				`;
+			});
+			container.innerHTML = html;
+			
+			// Event listeners
+			container.querySelectorAll('.task-list-item').forEach(item => {
+				item.addEventListener('click', (e) => {
+					if (e.target.classList.contains('project-task-cb')) return;
+					const tId = item.getAttribute('data-task-id');
+					if (tId) {
+						this.hideProjectDetail();
+						this.switchTab('tasks');
+						setTimeout(() => this.showTaskDetail(parseInt(tId)), 100);
+					}
+				});
+			});
+			
+			container.querySelectorAll('.project-task-cb').forEach(cb => {
+				cb.addEventListener('click', (e) => {
+					e.stopPropagation();
+					const tId = cb.getAttribute('data-id');
+					this.toggleTaskStatusAndReload(parseInt(tId), projectId);
+				});
+			});
+		})
+		.catch(e => {
+			console.error('Error loading project tasks:', e);
+		});
+	},
+	
+	toggleTaskStatusAndReload: function(taskId, projectId) {
+		const task = this.tasks.find(t => t.id == taskId);
+		if (!task) return;
+		
+		const newStatus = task.status === 'done' ? 'todo' : 'done';
+		
+		const data = new URLSearchParams({ status: newStatus });
+		fetch(`${this.apiBase}/tasks/${taskId}`, {
+			method: 'PUT',
+			headers: { 
+				'requesttoken': OC.requestToken,
+				'Content-Type': 'application/x-www-form-urlencoded'
+			},
+			body: data.toString()
+		})
+		.then(r => r.json())
+		.then(result => {
+			if (result.error) throw new Error(result.error);
+			// Update local data
+			if (task) task.status = newStatus;
+			// Reload project tasks
+			this.loadProjectTasks(projectId);
+			this.loadTasks();
+		})
+		.catch(e => this.showError('Güncelleme hatası'));
+	},
+	
+	showTaskModalForProject: function(projectId) {
+		this.showTaskModal();
+		setTimeout(() => {
+			document.getElementById('task-project-id').value = projectId;
+		}, 100);
+	},
+		
+		hideProjectDetail: function() {
+			document.getElementById('projects-list-view').style.display = 'block';
+			document.getElementById('project-detail-view').style.display = 'none';
+			this.currentProjectId = null;
+		},
+		
+		showProjectModal: function(id = null) {
+			const modal = document.getElementById('project-modal');
+			const form = document.getElementById('project-form');
+			if (!modal || !form) return;
+			
+			form.reset();
+			document.getElementById('project-id').value = '';
+			document.getElementById('project-start-date').value = new Date().toISOString().split('T')[0];
+			this.updateClientSelect('project-client-id');
+			
+			if (id) {
+				const proj = this.projects.find(p => p.id == id);
+				if (proj) {
+					document.getElementById('project-id').value = proj.id;
+					document.getElementById('project-client-id').value = proj.clientId || '';
+					document.getElementById('project-name').value = proj.name || '';
+					document.getElementById('project-description').value = proj.description || '';
+					document.getElementById('project-status').value = proj.status || 'active';
+					document.getElementById('project-start-date').value = proj.startDate || '';
+					document.getElementById('project-deadline').value = proj.deadline || '';
+					document.getElementById('project-budget').value = proj.budget || '';
+					document.getElementById('project-currency').value = proj.currency || 'USD';
+					document.getElementById('project-notes').value = proj.notes || '';
+				}
+			}
+			modal.style.display = 'block';
+		},
+		
+		saveProject: function() {
+			const id = document.getElementById('project-id').value;
+			const data = new URLSearchParams({
+				clientId: document.getElementById('project-client-id').value,
+				name: document.getElementById('project-name').value,
+				description: document.getElementById('project-description').value,
+				status: document.getElementById('project-status').value,
+				startDate: document.getElementById('project-start-date').value,
+				deadline: document.getElementById('project-deadline').value,
+				budget: document.getElementById('project-budget').value,
+				currency: document.getElementById('project-currency').value,
+				notes: document.getElementById('project-notes').value
+			});
+			
+			const url = id ? `${this.apiBase}/projects/${id}` : `${this.apiBase}/projects`;
+			fetch(url, {
+				method: id ? 'PUT' : 'POST',
+				headers: { 'requesttoken': OC.requestToken, 'Content-Type': 'application/x-www-form-urlencoded' },
+				body: data.toString()
+			})
+			.then(r => r.json())
+			.then(result => {
+				if (result.error) throw new Error(result.error);
+				this.closeModal('project-modal');
+				this.loadProjects();
+				this.showSuccess('Proje kaydedildi');
+			})
+			.catch(e => this.showError('Kaydetme hatası: ' + e.message));
+		},
+		
+		deleteProject: function(id) {
+			fetch(`${this.apiBase}/projects/${id}`, {
+				method: 'DELETE',
+				headers: { 'requesttoken': OC.requestToken }
+			})
+			.then(r => r.json())
+			.then(() => {
+				this.loadProjects();
+				this.showSuccess('Proje silindi');
+			})
+			.catch(e => this.showError('Silme hatası'));
+		},
+		
+		showProjectItemModal: function(projectId) {
+			const modal = document.getElementById('project-item-modal');
+			if (!modal) return;
+			document.getElementById('project-item-project-id').value = projectId;
+			document.getElementById('project-item-type').value = '';
+			document.getElementById('project-item-select').innerHTML = '<option value="">Önce türü seçin</option>';
+			modal.style.display = 'block';
+		},
+		
+		// ===== TASKS =====
+		loadTasks: function() {
+			fetch(this.apiBase + '/tasks', {
+				headers: { 'requesttoken': OC.requestToken }
+			})
+			.then(r => r.json())
+			.then(data => {
+				this.tasks = Array.isArray(data) ? data : [];
+				this.renderTasks();
+				this.updateDashboard();
+			})
+			.catch(e => {
+				console.error('Error loading tasks:', e);
+				this.tasks = [];
+			});
+		},
+		
+	renderTasks: function(filter = 'all') {
+		const list = document.getElementById('tasks-list');
+		if (!list) return;
+		
+		let filtered = this.tasks;
+		if (filter !== 'all') filtered = filtered.filter(t => t.status === filter);
+		
+		if (filtered.length === 0) {
+			list.innerHTML = '<p class="empty-state">Görev yok</p>';
+			return;
+		}
+		
+		const statusTexts = { todo: 'Yapılacak', in_progress: 'Devam Ediyor', done: 'Tamamlandı' };
+		const priorityTexts = { low: 'Düşük', medium: 'Orta', high: 'Yüksek' };
+		
+		let html = '';
+		filtered.forEach(task => {
+			const project = this.projects.find(p => p.id == task.projectId);
+			const daysLeft = task.dueDate ? this.calculateDaysLeft(task.dueDate) : null;
+			const overdue = daysLeft !== null && daysLeft < 0 && task.status !== 'done';
+			
+			html += `
+				<div class="list-item task-item ${overdue ? 'status-critical' : ''}" data-id="${task.id}">
+					<div class="list-item__content">
+						<input type="checkbox" class="task-checkbox" data-id="${task.id}" ${task.status === 'done' ? 'checked' : ''} style="margin-right: 12px; width: 20px; height: 20px;">
+						<div>
+							<div class="list-item__title task-status--${task.status}">${this.escapeHtml(task.title)}</div>
+							<div class="list-item__meta">${project ? project.name : 'Genel'} • ${task.dueDate || 'Tarih yok'}</div>
+						</div>
+					</div>
+					<div class="list-item__stats">
+						<span class="priority-badge priority-badge--${task.priority}">${priorityTexts[task.priority] || task.priority}</span>
+						<span class="status-badge task-status--${task.status}">${statusTexts[task.status] || task.status}</span>
+					</div>
+				</div>
+			`;
+		});
+		list.innerHTML = html;
+		
+		// Event delegation for task items
+		list.querySelectorAll('.task-item').forEach(item => {
+			item.addEventListener('click', (e) => {
+				if (e.target.classList.contains('task-checkbox')) return; // Don't navigate on checkbox click
+				const id = item.getAttribute('data-id');
+				this.showTaskDetail(parseInt(id));
+			});
+		});
+		
+		// Checkbox toggle
+		list.querySelectorAll('.task-checkbox').forEach(cb => {
+			cb.addEventListener('click', (e) => {
+				e.stopPropagation();
+				const id = cb.getAttribute('data-id');
+				this.toggleTaskStatus(parseInt(id));
+			});
+		});
+	},
+	
+	toggleTaskStatus: function(id) {
+		const task = this.tasks.find(t => t.id == id);
+		if (!task) return;
+		
+		const newStatus = task.status === 'done' ? 'todo' : 'done';
+		
+		const data = new URLSearchParams({ status: newStatus });
+		fetch(`${this.apiBase}/tasks/${id}`, {
+			method: 'PUT',
+			headers: { 
+				'requesttoken': OC.requestToken,
+				'Content-Type': 'application/x-www-form-urlencoded'
+			},
+			body: data.toString()
+		})
+		.then(r => r.json())
+		.then(result => {
+			if (result.error) throw new Error(result.error);
+			this.loadTasks();
+			this.showSuccess(newStatus === 'done' ? 'Görev tamamlandı!' : 'Görev yeniden açıldı');
+		})
+		.catch(e => this.showError('Güncelleme hatası'));
+	},
+		
+	showTaskDetail: function(id) {
+		const task = this.tasks.find(t => t.id == id);
+		if (!task) return;
+		
+		this.currentTaskId = id;
+		document.getElementById('tasks-list-view').style.display = 'none';
+		document.getElementById('task-detail-view').style.display = 'block';
+		
+		const project = this.projects.find(p => p.id == task.projectId);
+		const client = this.clients.find(c => c.id == task.clientId);
+		const statusTexts = { todo: 'Yapılacak', in_progress: 'Devam Ediyor', done: 'Tamamlandı' };
+		const priorityTexts = { low: 'Düşük', medium: 'Orta', high: 'Yüksek' };
+		const daysLeft = task.dueDate ? this.calculateDaysLeft(task.dueDate) : null;
+		
+		document.getElementById('task-detail-title').textContent = task.title;
+		document.getElementById('task-detail-project').textContent = project ? project.name : (client ? client.name : 'Genel');
+		
+		// Status with badge
+		const statusEl = document.getElementById('task-detail-status');
+		statusEl.innerHTML = `<span class="status-badge task-status--${task.status}">${statusTexts[task.status] || task.status}</span>`;
+		
+		// Priority with badge
+		const priorityEl = document.getElementById('task-detail-priority');
+		priorityEl.innerHTML = `<span class="priority-badge priority-badge--${task.priority}">${priorityTexts[task.priority] || task.priority}</span>`;
+		
+		// Due date with days left
+		const dueDateEl = document.getElementById('task-detail-due-date');
+		if (task.dueDate) {
+			const overdue = daysLeft !== null && daysLeft < 0 && task.status !== 'done';
+			const dueClass = overdue ? 'status-badge--overdue' : (daysLeft <= 7 ? 'status-badge--draft' : '');
+			dueDateEl.innerHTML = `${task.dueDate} ${daysLeft !== null ? `<span class="status-badge ${dueClass}">${daysLeft < 0 ? 'Geçti!' : daysLeft + ' gün'}</span>` : ''}`;
+		} else {
+			dueDateEl.textContent = '-';
+		}
+		
+		document.getElementById('task-detail-description').textContent = task.description || '-';
+	},
+		
+		hideTaskDetail: function() {
+			document.getElementById('tasks-list-view').style.display = 'block';
+			document.getElementById('task-detail-view').style.display = 'none';
+			this.currentTaskId = null;
+		},
+		
+		showTaskModal: function(id = null, projectId = null) {
+			const modal = document.getElementById('task-modal');
+			const form = document.getElementById('task-form');
+			if (!modal || !form) return;
+			
+			form.reset();
+			document.getElementById('task-id').value = '';
+			this.updateClientSelect('task-client-id');
+			this.updateProjectSelects();
+			
+			if (projectId) {
+				document.getElementById('task-project-id').value = projectId;
+			}
+			
+			if (id) {
+				const task = this.tasks.find(t => t.id == id);
+				if (task) {
+					document.getElementById('task-id').value = task.id;
+					document.getElementById('task-project-id').value = task.projectId || '';
+					document.getElementById('task-client-id').value = task.clientId || '';
+					document.getElementById('task-title').value = task.title || '';
+					document.getElementById('task-description').value = task.description || '';
+					document.getElementById('task-status').value = task.status || 'todo';
+					document.getElementById('task-priority').value = task.priority || 'medium';
+					document.getElementById('task-due-date').value = task.dueDate || '';
+				}
+			}
+			modal.style.display = 'block';
+		},
+		
+		saveTask: function() {
+			const id = document.getElementById('task-id').value;
+			const data = new URLSearchParams({
+				projectId: document.getElementById('task-project-id').value,
+				clientId: document.getElementById('task-client-id').value,
+				title: document.getElementById('task-title').value,
+				description: document.getElementById('task-description').value,
+				status: document.getElementById('task-status').value,
+				priority: document.getElementById('task-priority').value,
+				dueDate: document.getElementById('task-due-date').value
+			});
+			
+			const url = id ? `${this.apiBase}/tasks/${id}` : `${this.apiBase}/tasks`;
+			fetch(url, {
+				method: id ? 'PUT' : 'POST',
+				headers: { 'requesttoken': OC.requestToken, 'Content-Type': 'application/x-www-form-urlencoded' },
+				body: data.toString()
+			})
+			.then(r => r.json())
+			.then(result => {
+				if (result.error) throw new Error(result.error);
+				this.closeModal('task-modal');
+				this.loadTasks();
+				if (this.currentProjectId) this.loadProjectTasks(this.currentProjectId);
+				this.showSuccess('Görev kaydedildi');
+			})
+			.catch(e => this.showError('Kaydetme hatası: ' + e.message));
+		},
+		
+		deleteTask: function(id) {
+			fetch(`${this.apiBase}/tasks/${id}`, {
+				method: 'DELETE',
+				headers: { 'requesttoken': OC.requestToken }
+			})
+			.then(r => r.json())
+			.then(() => {
+				this.loadTasks();
+				this.showSuccess('Görev silindi');
+			})
+			.catch(e => this.showError('Silme hatası'));
+		},
+		
+		toggleTaskStatus: function(id) {
+			fetch(`${this.apiBase}/tasks/${id}/toggle`, {
+				method: 'POST',
+				headers: { 'requesttoken': OC.requestToken }
+			})
+			.then(r => r.json())
+			.then(result => {
+				if (result.error) throw new Error(result.error);
+				this.loadTasks();
+				if (this.currentProjectId) this.loadProjectTasks(this.currentProjectId);
+				if (this.currentTaskId == id) {
+					const task = this.tasks.find(t => t.id == id);
+					if (task) document.getElementById('task-detail-status').textContent = task.status;
+				}
+			})
+			.catch(e => this.showError('Durum değiştirme hatası'));
+		},
+		
+		// ===== FILTER =====
+		applyFilter: function(filter) {
+			if (this.currentTab === 'invoices') this.renderInvoices(filter);
+			else if (this.currentTab === 'projects') this.renderProjects(filter);
+			else if (this.currentTab === 'tasks') this.renderTasks(filter);
+		},
+		
+		// ===== HELPER =====
+		updateClientSelect: function(selectId) {
+			const select = document.getElementById(selectId);
+			if (!select) return;
+			const currentValue = select.value;
+			select.innerHTML = '<option value="">Müşteri Seçin</option>';
+			this.clients.forEach(c => {
+				select.innerHTML += `<option value="${c.id}">${this.escapeHtml(c.name)}</option>`;
+			});
+			if (currentValue) select.value = currentValue;
 		},
 
 		showError: function(message) {
