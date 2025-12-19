@@ -49,6 +49,21 @@ class InvoiceItemController extends Controller {
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 */
+	public function show(int $id): JSONResponse {
+		try {
+			$item = $this->mapper->find($id);
+			// Verify invoice belongs to user
+			$this->invoiceMapper->find($item->getInvoiceId(), $this->userId);
+			return new JSONResponse($item);
+		} catch (\Exception $e) {
+			return new JSONResponse(['error' => $e->getMessage()], 404);
+		}
+	}
+
+	/**
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 */
 	public function byInvoice(int $invoiceId): JSONResponse {
 		try {
 			// Verify invoice belongs to user

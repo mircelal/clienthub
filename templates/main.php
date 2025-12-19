@@ -573,41 +573,58 @@ style('domaincontrol', 'domaincontrol');
 			<div id="invoices-list" class="domaincontrol-list"></div>
 		</div>
 		
-		<div id="invoice-detail-view" style="display: none;">
-			<div class="detail-header">
-				<button class="btn btn-back" id="back-to-invoices-btn">← Geri</button>
-				<h2 id="invoice-detail-number"></h2>
-				<div class="detail-actions">
-					<button class="btn btn-success" id="invoice-add-payment-btn">💳 Ödeme Ekle</button>
-					<button class="btn btn-secondary" id="invoice-detail-edit-btn">Düzenle</button>
-					<button class="btn btn-danger" id="invoice-detail-delete-btn">Sil</button>
-				</div>
-			</div>
-			<div class="detail-content">
-				<div class="detail-stats">
-					<div class="stat-card"><div class="stat-card__label">Müşteri</div><div class="stat-card__value" id="invoice-detail-client"></div></div>
-					<div class="stat-card"><div class="stat-card__label">Toplam</div><div class="stat-card__value" id="invoice-detail-total"></div></div>
-					<div class="stat-card"><div class="stat-card__label">Ödenen</div><div class="stat-card__value" id="invoice-detail-paid"></div></div>
-					<div class="stat-card"><div class="stat-card__label">Kalan</div><div class="stat-card__value" id="invoice-detail-remaining"></div></div>
-				</div>
-				<div class="detail-grid">
-					<div class="detail-info-card">
-						<h3>Fatura Bilgileri</h3>
-						<p><strong>Düzenleme Tarihi:</strong> <span id="invoice-detail-issue-date"></span></p>
-						<p><strong>Vade Tarihi:</strong> <span id="invoice-detail-due-date"></span></p>
-						<p><strong>Durum:</strong> <span id="invoice-detail-status"></span></p>
-					</div>
-					<div class="detail-info-card">
-						<h3>Fatura Kalemleri</h3>
-						<div id="invoice-detail-items"></div>
-					</div>
-				</div>
-				<div class="detail-info-card">
-					<h3>Ödeme Geçmişi</h3>
-					<div id="invoice-detail-payments"></div>
-				</div>
+	<div id="invoice-detail-view" style="display: none;">
+		<div class="detail-header">
+			<button class="btn btn-back" id="back-to-invoices-btn">← Geri</button>
+			<h2 id="invoice-detail-number"></h2>
+			<div class="detail-actions">
+				<button class="btn btn-success" id="invoice-add-payment-btn">💳 Ödeme Ekle</button>
+				<button class="btn btn-info" id="invoice-add-item-btn">+ Kalem Ekle</button>
+				<button class="btn btn-secondary" id="invoice-detail-edit-btn">Düzenle</button>
+				<button class="btn btn-danger" id="invoice-detail-delete-btn">Sil</button>
 			</div>
 		</div>
+		<div class="detail-content">
+			<div class="detail-stats">
+				<div class="stat-card"><div class="stat-card__label">Müşteri</div><div class="stat-card__value" id="invoice-detail-client"></div></div>
+				<div class="stat-card"><div class="stat-card__label">Toplam</div><div class="stat-card__value" id="invoice-detail-total"></div></div>
+				<div class="stat-card"><div class="stat-card__label">Ödenen</div><div class="stat-card__value" id="invoice-detail-paid"></div></div>
+				<div class="stat-card"><div class="stat-card__label">Kalan</div><div class="stat-card__value" id="invoice-detail-remaining"></div></div>
+			</div>
+			
+			<!-- Payment Progress -->
+			<div class="detail-info-card" style="margin-bottom: 20px;">
+				<div id="invoice-payment-progress"></div>
+			</div>
+			
+			<!-- Status Change Buttons -->
+			<div class="invoice-status-actions" style="margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+				<button class="btn btn-sm btn-outline change-invoice-status-btn" data-status="draft">📝 Taslak</button>
+				<button class="btn btn-sm btn-outline change-invoice-status-btn" data-status="sent">📤 Gönderildi</button>
+				<button class="btn btn-sm btn-outline change-invoice-status-btn" data-status="paid">✅ Ödendi</button>
+				<button class="btn btn-sm btn-outline change-invoice-status-btn" data-status="overdue">⚠️ Gecikmiş</button>
+				<button class="btn btn-sm btn-outline change-invoice-status-btn" data-status="cancelled">❌ İptal</button>
+			</div>
+			
+			<div class="detail-grid">
+				<div class="detail-info-card">
+					<h3>Fatura Bilgileri</h3>
+					<p><strong>Düzenleme Tarihi:</strong> <span id="invoice-detail-issue-date"></span></p>
+					<p><strong>Vade Tarihi:</strong> <span id="invoice-detail-due-date"></span></p>
+					<p><strong>Durum:</strong> <span id="invoice-detail-status"></span></p>
+					<p><strong>Notlar:</strong> <span id="invoice-detail-notes">-</span></p>
+				</div>
+				<div class="detail-info-card">
+					<h3>Fatura Kalemleri</h3>
+					<div id="invoice-detail-items"></div>
+				</div>
+			</div>
+			<div class="detail-info-card">
+				<h3>Ödeme Geçmişi</h3>
+				<div id="invoice-detail-payments"></div>
+			</div>
+		</div>
+	</div>
 	</div>
 
 	<!-- Projects Tab -->
@@ -985,27 +1002,27 @@ style('domaincontrol', 'domaincontrol');
 <div id="hosting-payment-modal" class="modal">
 	<div class="modal-content">
 		<div class="modal-header">
-			<h3>💳 Ödeme Ekle</h3>
+			<h3>💳 Hosting Ödeme Ekle</h3>
 			<span class="modal-close" data-modal="hosting-payment-modal">&times;</span>
 		</div>
 		<div class="modal-body">
 			<form id="hosting-payment-form">
-				<input type="hidden" id="payment-hosting-id" name="hostingId">
+				<input type="hidden" id="hp-hosting-id" name="hostingId">
 				
 				<div class="domain-extend-info">
-					<p><strong>Hosting:</strong> <span id="payment-hosting-name"></span></p>
-					<p><strong>Mevcut Bitiş:</strong> <span id="payment-current-expiry"></span></p>
-					<p><strong>Yeni Bitiş:</strong> <span id="payment-new-expiry" class="text-success"></span></p>
+					<p><strong>Hosting:</strong> <span id="hp-hosting-name"></span></p>
+					<p><strong>Mevcut Bitiş:</strong> <span id="hp-current-expiry"></span></p>
+					<p><strong>Yeni Bitiş:</strong> <span id="hp-new-expiry" class="text-success"></span></p>
 				</div>
 				
 				<div class="form-row">
 					<div class="form-group">
-						<label for="payment-amount">Ödeme Tutarı</label>
-						<input type="number" id="payment-amount" name="amount" step="0.01" class="form-control" placeholder="9.99">
+						<label for="hp-amount">Ödeme Tutarı</label>
+						<input type="number" id="hp-amount" name="amount" step="0.01" class="form-control" placeholder="9.99">
 					</div>
 					<div class="form-group">
-						<label for="payment-currency">Para Birimi</label>
-						<select id="payment-currency" name="currency" class="form-control">
+						<label for="hp-currency">Para Birimi</label>
+						<select id="hp-currency" name="currency" class="form-control">
 							<option value="USD">$ USD</option>
 							<option value="EUR">€ EUR</option>
 							<option value="TRY">₺ TRY</option>
@@ -1017,8 +1034,8 @@ style('domaincontrol', 'domaincontrol');
 				</div>
 				
 				<div class="form-group">
-					<label for="payment-period">Ödeme Periyodu</label>
-					<select id="payment-period" name="period" class="form-control">
+					<label for="hp-period">Ödeme Periyodu</label>
+					<select id="hp-period" name="period" class="form-control">
 						<option value="1">1 Ay</option>
 						<option value="3">3 Ay</option>
 						<option value="6">6 Ay</option>
@@ -1028,8 +1045,8 @@ style('domaincontrol', 'domaincontrol');
 				</div>
 				
 				<div class="form-group">
-					<label for="payment-note">Not</label>
-					<textarea id="payment-note" name="note" class="form-control" rows="2" placeholder="Ödeme notu..."></textarea>
+					<label for="hp-note">Not</label>
+					<textarea id="hp-note" name="note" class="form-control" rows="2" placeholder="Ödeme notu..."></textarea>
 				</div>
 				
 				<div class="form-actions">

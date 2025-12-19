@@ -110,6 +110,17 @@
 				this.hideInvoiceDetail();
 			}
 		});
+		document.getElementById('invoice-add-item-btn')?.addEventListener('click', () => {
+			if (this.currentInvoiceId) this.showInvoiceItemModal();
+		});
+		
+		// Invoice status change buttons
+		document.querySelectorAll('.change-invoice-status-btn').forEach(btn => {
+			btn.addEventListener('click', () => {
+				const status = btn.dataset.status;
+				if (status) this.changeInvoiceStatus(status);
+			});
+		});
 		
 		// Project detail buttons
 		document.getElementById('back-to-projects-btn')?.addEventListener('click', () => this.hideProjectDetail());
@@ -1098,22 +1109,22 @@
 		if (!hosting) return;
 
 		const modal = document.getElementById('hosting-payment-modal');
-		document.getElementById('payment-hosting-id').value = hosting.id;
-		document.getElementById('payment-hosting-name').textContent = hosting.provider + (hosting.plan ? ' - ' + hosting.plan : '');
-		document.getElementById('payment-current-expiry').textContent = hosting.expirationDate || 'Belirtilmemiş';
-		document.getElementById('payment-amount').value = hosting.price || '';
-		document.getElementById('payment-currency').value = hosting.currency || 'USD';
-		document.getElementById('payment-period').value = hosting.renewalInterval === 'yearly' ? '12' : (hosting.renewalInterval === 'monthly' ? '1' : '12');
-		document.getElementById('payment-note').value = '';
+		document.getElementById('hp-hosting-id').value = hosting.id;
+		document.getElementById('hp-hosting-name').textContent = hosting.provider + (hosting.plan ? ' - ' + hosting.plan : '');
+		document.getElementById('hp-current-expiry').textContent = hosting.expirationDate || 'Belirtilmemiş';
+		document.getElementById('hp-amount').value = hosting.price || '';
+		document.getElementById('hp-currency').value = hosting.currency || 'USD';
+		document.getElementById('hp-period').value = hosting.renewalInterval === 'yearly' ? '12' : (hosting.renewalInterval === 'monthly' ? '1' : '12');
+		document.getElementById('hp-note').value = '';
 		
-		this.updatePaymentNewExpiry();
+		this.updateHostingPaymentNewExpiry();
 		
 		modal.style.display = 'block';
 	},
 
-	updatePaymentNewExpiry: function() {
-		const currentExpiry = document.getElementById('payment-current-expiry').textContent;
-		const months = parseInt(document.getElementById('payment-period').value) || 1;
+	updateHostingPaymentNewExpiry: function() {
+		const currentExpiry = document.getElementById('hp-current-expiry').textContent;
+		const months = parseInt(document.getElementById('hp-period').value) || 1;
 		
 		let baseDate;
 		if (currentExpiry && currentExpiry !== 'Belirtilmemiş') {
@@ -1130,16 +1141,16 @@
 		newDate.setMonth(newDate.getMonth() + months);
 		
 		const formatted = newDate.toISOString().split('T')[0];
-		document.getElementById('payment-new-expiry').textContent = formatted;
+		document.getElementById('hp-new-expiry').textContent = formatted;
 	},
 
 	addHostingPayment: function() {
-		const id = document.getElementById('payment-hosting-id').value;
-		const amount = document.getElementById('payment-amount').value;
-		const currency = document.getElementById('payment-currency').value;
-		const months = parseInt(document.getElementById('payment-period').value);
-		const note = document.getElementById('payment-note').value;
-		const newExpiry = document.getElementById('payment-new-expiry').textContent;
+		const id = document.getElementById('hp-hosting-id').value;
+		const amount = document.getElementById('hp-amount').value;
+		const currency = document.getElementById('hp-currency').value;
+		const months = parseInt(document.getElementById('hp-period').value);
+		const note = document.getElementById('hp-note').value;
+		const newExpiry = document.getElementById('hp-new-expiry').textContent;
 		
 		const hosting = this.hostings.find(h => h.id == id);
 		if (!hosting) return;
@@ -1538,9 +1549,9 @@
 			this.addHostingPayment();
 		});
 
-		// Update payment expiry when period changes
-		document.getElementById('payment-period')?.addEventListener('change', () => {
-			this.updatePaymentNewExpiry();
+		// Update hosting payment expiry when period changes
+		document.getElementById('hp-period')?.addEventListener('change', () => {
+			this.updateHostingPaymentNewExpiry();
 		});
 		
 		// Invoice item form
@@ -2739,19 +2750,59 @@
 		document.getElementById('invoice-detail-view').style.display = 'block';
 		
 		const client = this.clients.find(c => c.id == inv.clientId);
-		const remaining = (inv.totalAmount || 0) - (inv.paidAmount || 0);
+		const total = parseFloat(inv.totalAmount) || 0;
+		const paid = parseFloat(inv.paidAmount) || 0;
+		const remaining = Math.max(0, total - paid);
+		const paymentPercent = total > 0 ? Math.round((paid / total) * 100) : 0;
+		
+		// Calculate due days
+		const dueDate = inv.dueDate ? new Date(inv.dueDate) : null;
+		const today = new Date();
+		today.setHours(0, 0, 0, 0);
+		let dueDaysText = '';
+		if (dueDate) {
+			const dueDays = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+			if (inv.status === 'paid') {
+				dueDaysText = '';
+			} else if (dueDays < 0) {
+				dueDaysText = `<span class="status-badge status-badge--overdue">${Math.abs(dueDays)} gün geçti!</span>`;
+			} else if (dueDays === 0) {
+				dueDaysText = '<span class="status-badge status-badge--draft">Bugün!</span>';
+			} else if (dueDays <= 7) {
+				dueDaysText = `<span class="status-badge status-badge--sent">${dueDays} gün kaldı</span>`;
+			}
+		}
 		
 		document.getElementById('invoice-detail-number').textContent = inv.invoiceNumber;
 		document.getElementById('invoice-detail-client').textContent = client ? client.name : '-';
-		document.getElementById('invoice-detail-total').textContent = `${inv.totalAmount || 0} ${inv.currency}`;
-		document.getElementById('invoice-detail-paid').textContent = `${inv.paidAmount || 0} ${inv.currency}`;
-		document.getElementById('invoice-detail-remaining').textContent = `${remaining} ${inv.currency}`;
+		document.getElementById('invoice-detail-total').textContent = `${total.toFixed(2)} ${inv.currency}`;
+		document.getElementById('invoice-detail-paid').textContent = `${paid.toFixed(2)} ${inv.currency}`;
+		document.getElementById('invoice-detail-remaining').textContent = `${remaining.toFixed(2)} ${inv.currency}`;
 		document.getElementById('invoice-detail-issue-date').textContent = inv.issueDate || '-';
-		document.getElementById('invoice-detail-due-date').textContent = inv.dueDate || '-';
+		
+		// Due date with remaining days
+		const dueDateEl = document.getElementById('invoice-detail-due-date');
+		dueDateEl.innerHTML = `${inv.dueDate || '-'} ${dueDaysText}`;
 		
 		// Status badge with color
 		const statusEl = document.getElementById('invoice-detail-status');
 		statusEl.innerHTML = `<span class="status-badge status-badge--${inv.status}">${this.getInvoiceStatusText(inv.status)}</span>`;
+		
+		// Payment progress bar
+		const progressEl = document.getElementById('invoice-payment-progress');
+		if (progressEl) {
+			const progressColor = paymentPercent === 100 ? 'var(--color-success)' : 
+				(paymentPercent >= 50 ? 'var(--color-warning)' : 'var(--color-primary-element)');
+			progressEl.innerHTML = `
+				<div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+					<span><strong>Ödeme Durumu:</strong></span>
+					<span><strong>${paymentPercent}%</strong> (${paid.toFixed(2)} / ${total.toFixed(2)} ${inv.currency})</span>
+				</div>
+				<div class="progress-bar" style="height: 12px; background: var(--color-background-dark); border-radius: 6px; overflow: hidden;">
+					<div style="width: ${paymentPercent}%; height: 100%; background: ${progressColor}; transition: width 0.3s;"></div>
+				</div>
+			`;
+		}
 		
 		// Load invoice items and payments
 		this.loadInvoiceItems(id);
@@ -2770,6 +2821,32 @@
 		return statusTexts[status] || status;
 	},
 	
+	changeInvoiceStatus: function(newStatus) {
+		if (!this.currentInvoiceId) return;
+		
+		const data = new URLSearchParams({ status: newStatus });
+		fetch(`${this.apiBase}/invoices/${this.currentInvoiceId}`, {
+			method: 'PUT',
+			headers: { 
+				'requesttoken': OC.requestToken,
+				'Content-Type': 'application/x-www-form-urlencoded'
+			},
+			body: data.toString()
+		})
+		.then(r => r.json())
+		.then(result => {
+			if (result.error) throw new Error(result.error);
+			// Update local data
+			const inv = this.invoices.find(i => i.id == this.currentInvoiceId);
+			if (inv) inv.status = newStatus;
+			// Refresh UI
+			this.showInvoiceDetail(this.currentInvoiceId);
+			this.renderInvoices();
+			this.showSuccess('Fatura durumu güncellendi');
+		})
+		.catch(e => this.showError('Durum değiştirme hatası: ' + e.message));
+	},
+	
 	loadInvoiceItems: function(invoiceId) {
 		fetch(`${this.apiBase}/invoices/${invoiceId}/items`, {
 			headers: { 'requesttoken': OC.requestToken }
@@ -2779,13 +2856,14 @@
 			const container = document.getElementById('invoice-detail-items');
 			if (!container) return;
 			
-			if (!items || items.length === 0) {
-				container.innerHTML = `
-					<p class="empty-message">Henüz fatura kalemi yok</p>
-					<button class="btn btn-secondary btn-sm" onclick="DomainControl.showInvoiceItemModal()">+ Kalem Ekle</button>
-				`;
-				return;
-			}
+		if (!items || items.length === 0) {
+			container.innerHTML = `
+				<p class="empty-message">Henüz fatura kalemi yok</p>
+				<button class="btn btn-secondary btn-sm add-invoice-item-btn">+ Kalem Ekle</button>
+			`;
+			container.querySelector('.add-invoice-item-btn')?.addEventListener('click', () => this.showInvoiceItemModal());
+			return;
+		}
 			
 			let html = `
 				<table class="invoice-items-table">
@@ -2802,30 +2880,49 @@
 					<tbody>
 			`;
 			
-			items.forEach(item => {
-				const total = (item.quantity || 1) * (item.unitPrice || 0);
-				html += `
-					<tr>
-						<td>${this.escapeHtml(item.description)}</td>
-						<td><span class="status-badge">${item.itemType || '-'}</span></td>
-						<td>${item.quantity || 1}</td>
-						<td>${item.unitPrice || 0} ${item.currency || ''}</td>
-						<td><strong>${total.toFixed(2)} ${item.currency || ''}</strong></td>
-						<td>
-							<button class="btn btn-sm btn-danger" onclick="DomainControl.deleteInvoiceItem(${item.id})">🗑️</button>
-						</td>
-					</tr>
-				`;
-			});
+		items.forEach(item => {
+			const total = (item.quantity || 1) * (item.unitPrice || 0);
+			const itemTypeLabels = { manual: 'Manuel', domain: 'Domain', hosting: 'Hosting', website: 'Website', service: 'Hizmet', project: 'Proje' };
+			
+			// Get related item name
+			let relatedName = '';
+			if (item.itemId && item.itemType !== 'manual') {
+				const relatedItem = this.getRelatedItem(item.itemType, item.itemId);
+				relatedName = relatedItem ? `<br><small class="text-muted">${this.escapeHtml(relatedItem.name || relatedItem.domainName || relatedItem.provider || '')}</small>` : '';
+			}
 			
 			html += `
-					</tbody>
-				</table>
-				<div style="margin-top: 12px;">
-					<button class="btn btn-secondary btn-sm" onclick="DomainControl.showInvoiceItemModal()">+ Kalem Ekle</button>
-				</div>
+				<tr>
+					<td>${this.escapeHtml(item.description)}${relatedName}</td>
+					<td><span class="status-badge status-badge--${item.itemType}">${itemTypeLabels[item.itemType] || item.itemType}</span></td>
+					<td>${item.quantity || 1}</td>
+					<td>${item.unitPrice || 0} ${item.currency || ''}</td>
+					<td><strong>${total.toFixed(2)} ${item.currency || ''}</strong></td>
+					<td style="white-space: nowrap;">
+						<button class="btn btn-sm btn-secondary edit-item-btn" data-id="${item.id}">✏️</button>
+						<button class="btn btn-sm btn-danger delete-item-btn" data-id="${item.id}">🗑️</button>
+					</td>
+				</tr>
 			`;
-			container.innerHTML = html;
+		});
+			
+		html += `
+				</tbody>
+			</table>
+			<div style="margin-top: 12px;">
+				<button class="btn btn-secondary btn-sm add-invoice-item-btn">+ Kalem Ekle</button>
+			</div>
+		`;
+		container.innerHTML = html;
+		
+		// Event delegation for invoice item buttons
+		container.querySelector('.add-invoice-item-btn')?.addEventListener('click', () => this.showInvoiceItemModal());
+		container.querySelectorAll('.edit-item-btn').forEach(btn => {
+			btn.addEventListener('click', () => this.editInvoiceItem(parseInt(btn.dataset.id)));
+		});
+		container.querySelectorAll('.delete-item-btn').forEach(btn => {
+			btn.addEventListener('click', () => this.deleteInvoiceItem(parseInt(btn.dataset.id)));
+		});
 		})
 		.catch(e => {
 			console.error('Error loading invoice items:', e);
@@ -2846,27 +2943,67 @@
 				return;
 			}
 			
-			let html = '';
+			let html = '<div class="payment-history-list">';
 			payments.forEach(p => {
 				const methodTexts = { cash: 'Nakit', bank: 'Havale', card: 'Kart', other: 'Diğer' };
 				html += `
 					<div class="history-item">
 						<div class="history-date">${p.paymentDate || '-'}</div>
 						<div class="history-content">
-							<strong>${p.amount} ${p.currency}</strong>
-							<span class="history-detail">${methodTexts[p.paymentMethod] || p.paymentMethod}</span>
-							${p.reference ? `<span class="history-detail">Ref: ${p.reference}</span>` : ''}
-							${p.notes ? `<span class="history-note">${this.escapeHtml(p.notes)}</span>` : ''}
+							<strong>${parseFloat(p.amount).toFixed(2)} ${p.currency}</strong>
+							<span class="status-badge">${methodTexts[p.paymentMethod] || p.paymentMethod}</span>
+							${p.reference ? `<span class="history-detail">Ref: ${this.escapeHtml(p.reference)}</span>` : ''}
+							${p.notes ? `<div class="history-note">${this.escapeHtml(p.notes)}</div>` : ''}
 						</div>
-						<button class="btn btn-sm btn-danger" onclick="DomainControl.deletePayment(${p.id})">🗑️</button>
+						<div class="history-actions" style="white-space: nowrap;">
+							<button class="btn btn-sm btn-secondary edit-payment-btn" data-id="${p.id}">✏️</button>
+							<button class="btn btn-sm btn-danger delete-payment-btn" data-id="${p.id}">🗑️</button>
+						</div>
 					</div>
 				`;
 			});
+			html += '</div>';
 			container.innerHTML = html;
+			
+			// Event delegation for payment buttons
+			container.querySelectorAll('.edit-payment-btn').forEach(btn => {
+				btn.addEventListener('click', () => this.editPayment(parseInt(btn.dataset.id)));
+			});
+			container.querySelectorAll('.delete-payment-btn').forEach(btn => {
+				btn.addEventListener('click', () => this.deletePayment(parseInt(btn.dataset.id)));
+			});
 		})
 		.catch(e => {
 			console.error('Error loading payments:', e);
 		});
+	},
+	
+	editPayment: function(id) {
+		fetch(`${this.apiBase}/payments/${id}`, {
+			headers: { 'requesttoken': OC.requestToken }
+		})
+		.then(r => r.json())
+		.then(payment => {
+			if (payment.error) throw new Error(payment.error);
+			
+			const modal = document.getElementById('payment-modal');
+			const form = document.getElementById('payment-form');
+			if (!modal || !form) return;
+			
+			document.getElementById('payment-id').value = payment.id;
+			document.getElementById('payment-invoice-id').value = payment.invoiceId || '';
+			document.getElementById('payment-client-id').value = payment.clientId || '';
+			document.getElementById('payment-amount').value = payment.amount || 0;
+			document.getElementById('payment-currency').value = payment.currency || 'USD';
+			document.getElementById('payment-date').value = payment.paymentDate || '';
+			document.getElementById('payment-method').value = payment.paymentMethod || 'cash';
+			document.getElementById('payment-reference').value = payment.reference || '';
+			document.getElementById('payment-notes').value = payment.notes || '';
+			
+			document.getElementById('payment-modal-title').textContent = 'Ödeme Düzenle';
+			modal.style.display = 'block';
+		})
+		.catch(e => this.showError('Veri yükleme hatası: ' + e.message));
 	},
 	
 	deletePayment: function(id) {
@@ -2880,7 +3017,7 @@
 			this.loadPayments();
 			this.loadInvoices();
 			if (this.currentInvoiceId) {
-				this.loadInvoicePayments(this.currentInvoiceId);
+				this.showInvoiceDetail(this.currentInvoiceId);
 			}
 			this.showSuccess('Ödeme silindi');
 		})
@@ -2897,9 +3034,13 @@
 		document.getElementById('invoice-item-id').value = '';
 		document.getElementById('invoice-item-invoice-id').value = this.currentInvoiceId || '';
 		document.getElementById('invoice-item-quantity').value = '1';
+		document.getElementById('invoice-item-type').value = 'manual';
 		document.getElementById('invoice-item-ref-group').style.display = 'none';
+		document.getElementById('invoice-item-discount').value = '0';
+		document.getElementById('invoice-item-discount-type').value = 'fixed';
+		document.getElementById('invoice-item-modal-title').textContent = 'Fatura Kalemi Ekle';
 		
-		// Get current invoice currency
+		// Get current invoice currency and client
 		if (this.currentInvoiceId) {
 			const inv = this.invoices.find(i => i.id == this.currentInvoiceId);
 			if (inv) {
@@ -2945,30 +3086,54 @@
 				break;
 		}
 		
+		// Store items for later reference
+		this._currentItemList = items;
+		
 		items.forEach(item => {
 			const name = item.name || item.domainName || item.provider || 'Unknown';
-			const price = item.price || 0;
+			const price = item.price || item.budget || 0;
 			const currency = item.currency || 'USD';
-			refSelect.innerHTML += `<option value="${item.id}" data-price="${price}" data-currency="${currency}">${this.escapeHtml(name)} (${price} ${currency})</option>`;
+			const client = this.clients.find(c => c.id == item.clientId);
+			const clientName = client ? ` - ${client.name}` : '';
+			refSelect.innerHTML += `<option value="${item.id}">${this.escapeHtml(name)}${clientName} (${price} ${currency})</option>`;
 		});
 		
-		// Auto-fill price when selecting
+		// Auto-fill details when selecting
 		refSelect.onchange = () => {
-			const selected = refSelect.options[refSelect.selectedIndex];
-			if (selected.value) {
-				const price = selected.getAttribute('data-price');
-				const currency = selected.getAttribute('data-currency');
-				const name = selected.textContent.split(' (')[0];
-				
-				document.getElementById('invoice-item-unit-price').value = price || '';
-				document.getElementById('invoice-item-currency').value = currency || 'USD';
-				document.getElementById('invoice-item-description').value = name;
+			const selectedId = refSelect.value;
+			if (selectedId) {
+				const item = this._currentItemList.find(i => i.id == selectedId);
+				if (item) {
+					const name = item.name || item.domainName || item.provider || '';
+					const price = item.price || item.budget || 0;
+					const currency = item.currency || 'USD';
+					
+					document.getElementById('invoice-item-unit-price').value = price;
+					document.getElementById('invoice-item-currency').value = currency;
+					document.getElementById('invoice-item-description').value = `${name} - Yenileme`;
+					
+					// Set period dates based on item type
+					const today = new Date();
+					const todayStr = today.toISOString().split('T')[0];
+					document.getElementById('invoice-item-start-date').value = item.expirationDate || todayStr;
+					
+					// Calculate end date based on renewal interval
+					const interval = item.renewalInterval || 'yearly';
+					const months = { monthly: 1, quarterly: 3, yearly: 12, biennial: 24 };
+					const addMonths = months[interval] || 12;
+					
+					let endDate = new Date(item.expirationDate || today);
+					endDate.setMonth(endDate.getMonth() + addMonths);
+					document.getElementById('invoice-item-end-date').value = endDate.toISOString().split('T')[0];
+				}
 			}
 		};
 	},
 	
 	saveInvoiceItem: function() {
+		const itemId = document.getElementById('invoice-item-id').value;
 		const invoiceId = document.getElementById('invoice-item-invoice-id').value;
+		
 		if (!invoiceId) {
 			this.showError('Fatura ID bulunamadı');
 			return;
@@ -2978,7 +3143,7 @@
 			invoiceId: invoiceId,
 			description: document.getElementById('invoice-item-description').value,
 			itemType: document.getElementById('invoice-item-type').value,
-			itemId: document.getElementById('invoice-item-ref-id').value || '',
+			itemId: document.getElementById('invoice-item-ref-id').value || '0',
 			quantity: document.getElementById('invoice-item-quantity').value || '1',
 			unitPrice: document.getElementById('invoice-item-unit-price').value || '0',
 			currency: document.getElementById('invoice-item-currency').value,
@@ -2988,8 +3153,11 @@
 			discountType: document.getElementById('invoice-item-discount-type').value
 		});
 		
-		fetch(`${this.apiBase}/invoice-items`, {
-			method: 'POST',
+		const url = itemId ? `${this.apiBase}/invoice-items/${itemId}` : `${this.apiBase}/invoice-items`;
+		const method = itemId ? 'PUT' : 'POST';
+		
+		fetch(url, {
+			method: method,
 			headers: { 
 				'requesttoken': OC.requestToken,
 				'Content-Type': 'application/x-www-form-urlencoded'
@@ -3001,10 +3169,66 @@
 			if (result.error) throw new Error(result.error);
 			this.closeModal('invoice-item-modal');
 			this.loadInvoiceItems(invoiceId);
-			this.recalculateInvoiceTotal(invoiceId);
-			this.showSuccess('Fatura kalemi eklendi');
+			this.loadInvoices(); // Reload to get updated totals
+			if (this.currentInvoiceId) this.showInvoiceDetail(this.currentInvoiceId);
+			this.showSuccess(itemId ? 'Fatura kalemi güncellendi' : 'Fatura kalemi eklendi');
 		})
 		.catch(e => this.showError('Kaydetme hatası: ' + e.message));
+	},
+	
+	getRelatedItem: function(type, itemId) {
+		switch (type) {
+			case 'domain': return this.domains.find(d => d.id == itemId);
+			case 'hosting': return this.hostings.find(h => h.id == itemId);
+			case 'website': return this.websites.find(w => w.id == itemId);
+			case 'service': return this.services.find(s => s.id == itemId);
+			case 'project': return this.projects.find(p => p.id == itemId);
+			default: return null;
+		}
+	},
+	
+	editInvoiceItem: function(id) {
+		// Fetch item data first
+		fetch(`${this.apiBase}/invoice-items/${id}`, {
+			headers: { 'requesttoken': OC.requestToken }
+		})
+		.then(r => r.json())
+		.then(item => {
+			if (item.error) throw new Error(item.error);
+			
+			const modal = document.getElementById('invoice-item-modal');
+			const form = document.getElementById('invoice-item-form');
+			if (!modal || !form) return;
+			
+			// Fill form with item data
+			document.getElementById('invoice-item-id').value = item.id;
+			document.getElementById('invoice-item-invoice-id').value = item.invoiceId;
+			document.getElementById('invoice-item-type').value = item.itemType || 'manual';
+			document.getElementById('invoice-item-description').value = item.description || '';
+			document.getElementById('invoice-item-quantity').value = item.quantity || 1;
+			document.getElementById('invoice-item-unit-price').value = item.unitPrice || 0;
+			document.getElementById('invoice-item-currency').value = item.currency || 'USD';
+			document.getElementById('invoice-item-start-date').value = item.periodStart || '';
+			document.getElementById('invoice-item-end-date').value = item.periodEnd || '';
+			document.getElementById('invoice-item-discount').value = item.discount || 0;
+			document.getElementById('invoice-item-discount-type').value = item.discountType || 'fixed';
+			
+			// Setup item type change handler and trigger it
+			const typeSelect = document.getElementById('invoice-item-type');
+			typeSelect.onchange = () => this.onInvoiceItemTypeChange(typeSelect.value);
+			this.onInvoiceItemTypeChange(item.itemType || 'manual');
+			
+			// Set the related item after dropdown is populated
+			setTimeout(() => {
+				if (item.itemId) {
+					document.getElementById('invoice-item-ref-id').value = item.itemId;
+				}
+			}, 100);
+			
+			document.getElementById('invoice-item-modal-title').textContent = 'Fatura Kalemi Düzenle';
+			modal.style.display = 'block';
+		})
+		.catch(e => this.showError('Veri yükleme hatası: ' + e.message));
 	},
 	
 	deleteInvoiceItem: function(id) {
@@ -3339,8 +3563,9 @@
 			if (!tasks || tasks.length === 0) {
 				container.innerHTML = `
 					<p class="empty-message">Bu projede henüz görev yok</p>
-					<button class="btn btn-primary btn-sm" onclick="DomainControl.showTaskModalForProject(${projectId})">+ Görev Ekle</button>
+					<button class="btn btn-primary btn-sm add-project-task-btn">+ Görev Ekle</button>
 				`;
+				container.querySelector('.add-project-task-btn')?.addEventListener('click', () => this.showTaskModalForProject(projectId));
 				return;
 			}
 			
@@ -3358,12 +3583,12 @@
 						<span><strong>İlerleme:</strong> ${doneTasks}/${totalTasks} görev tamamlandı</span>
 						<span><strong>${progress}%</strong></span>
 					</div>
-					<div class="progress-bar" style="height: 12px; background: var(--color-background-dark); border-radius: 6px; overflow: hidden;">
-						<div style="width: ${progress}%; height: 100%; background: ${progress === 100 ? 'var(--color-success)' : 'var(--color-primary-element)'}; transition: width 0.3s;"></div>
-					</div>
+				<div class="progress-bar" style="height: 12px; background: var(--color-background-dark); border-radius: 6px; overflow: hidden;">
+					<div style="width: ${progress}%; height: 100%; background: ${progress === 100 ? 'var(--color-success)' : 'var(--color-primary-element)'}; transition: width 0.3s;"></div>
 				</div>
-				<button class="btn btn-primary btn-sm" onclick="DomainControl.showTaskModalForProject(${projectId})" style="margin-bottom: 16px;">+ Görev Ekle</button>
-			`;
+			</div>
+			<button class="btn btn-primary btn-sm add-project-task-btn" style="margin-bottom: 16px;">+ Görev Ekle</button>
+		`;
 			
 			tasks.forEach(task => {
 				const overdue = task.dueDate && this.calculateDaysLeft(task.dueDate) < 0 && task.status !== 'done';
@@ -3403,6 +3628,9 @@
 					this.toggleTaskStatusAndReload(parseInt(tId), projectId);
 				});
 			});
+			
+			// Add task button
+			container.querySelector('.add-project-task-btn')?.addEventListener('click', () => this.showTaskModalForProject(projectId));
 		})
 		.catch(e => {
 			console.error('Error loading project tasks:', e);
