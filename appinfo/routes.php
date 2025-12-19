@@ -94,6 +94,7 @@ return [
 		['name' => 'project#create', 'url' => '/api/projects', 'verb' => 'POST'],
 		['name' => 'project#update', 'url' => '/api/projects/{id}', 'verb' => 'PUT'],
 		['name' => 'project#delete', 'url' => '/api/projects/{id}', 'verb' => 'DELETE'],
+		['name' => 'project#items', 'url' => '/api/projects/{id}/items', 'verb' => 'GET'],
 		['name' => 'project#addItem', 'url' => '/api/projects/{id}/items', 'verb' => 'POST'],
 		['name' => 'project#removeItem', 'url' => '/api/projects/{id}/items/{itemId}', 'verb' => 'DELETE'],
 		['name' => 'project#byClient', 'url' => '/api/clients/{clientId}/projects', 'verb' => 'GET'],

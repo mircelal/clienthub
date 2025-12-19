@@ -176,13 +176,6 @@
 			});
 		});
 
-		// Click outside modal to close
-		window.addEventListener('click', (e) => {
-			if (e.target.classList.contains('modal')) {
-				e.target.style.display = 'none';
-			}
-		});
-
 		// Domain detail buttons
 		document.getElementById('back-to-domains-btn')?.addEventListener('click', () => this.hideDomainDetail());
 		document.getElementById('domain-detail-extend-btn')?.addEventListener('click', () => {
@@ -1460,7 +1453,15 @@
 			adminUrlEl.textContent = '';
 		}
 		document.getElementById('website-detail-admin-notes').textContent = website.adminNotes || 'Admin giriş bilgisi eklenmemiş';
-		document.getElementById('website-detail-notes').textContent = website.notes || 'Not bulunmuyor';
+		// Display notes as HTML (from rich text editor)
+		const notesEl = document.getElementById('website-detail-notes');
+		if (notesEl) {
+			if (website.notes && website.notes.trim()) {
+				notesEl.innerHTML = website.notes;
+			} else {
+				notesEl.textContent = 'Not bulunmuyor';
+			}
+		}
 
 		this.currentWebsiteId = website.id;
 	},
@@ -1660,36 +1661,47 @@
 	},
 
 		showWebsiteModal: function(id = null) {
-		const modal = document.getElementById('website-modal');
-		const form = document.getElementById('website-form');
-		const title = document.getElementById('website-modal-title');
-		
-		form.reset();
-		document.getElementById('website-id').value = '';
-		this.updateClientSelects();
-		this.updateDomainSelect();
-		this.updateHostingSelect();
-		
-		if (id) {
-			title.textContent = 'Website Düzenle';
-			const website = this.websites.find(w => w.id == id);
-			if (website) {
-				document.getElementById('website-id').value = website.id;
-				document.getElementById('website-client-id').value = website.clientId || '';
-				document.getElementById('website-domain-id').value = website.domainId || '';
-				document.getElementById('website-hosting-id').value = website.hostingId || '';
-				document.getElementById('website-name').value = website.name || '';
-				document.getElementById('website-software').value = website.software || '';
-				document.getElementById('website-version').value = website.version || '';
-				document.getElementById('website-status').value = website.status || 'active';
-				document.getElementById('website-installation-date').value = website.installationDate || '';
-				document.getElementById('website-url').value = website.url || '';
-				document.getElementById('website-admin-url').value = website.adminUrl || '';
-				document.getElementById('website-admin-notes').value = website.adminNotes || '';
-				document.getElementById('website-notes').value = website.notes || '';
-			}
-		} else {
-			title.textContent = 'Website Ekle';
+			const modal = document.getElementById('website-modal');
+			const form = document.getElementById('website-form');
+			const title = document.getElementById('website-modal-title');
+			const notesEditor = document.getElementById('website-notes');
+			
+			form.reset();
+			document.getElementById('website-id').value = '';
+			this.updateClientSelects();
+			this.updateDomainSelect();
+			this.updateHostingSelect();
+			
+			// Initialize rich text editor toolbar
+			this.initRichTextEditor('website-notes');
+			
+			if (id) {
+				title.textContent = 'Website Düzenle';
+				const website = this.websites.find(w => w.id == id);
+				if (website) {
+					document.getElementById('website-id').value = website.id;
+					document.getElementById('website-client-id').value = website.clientId || '';
+					document.getElementById('website-domain-id').value = website.domainId || '';
+					document.getElementById('website-hosting-id').value = website.hostingId || '';
+					document.getElementById('website-name').value = website.name || '';
+					document.getElementById('website-software').value = website.software || '';
+					document.getElementById('website-version').value = website.version || '';
+					document.getElementById('website-status').value = website.status || 'active';
+					document.getElementById('website-installation-date').value = website.installationDate || '';
+					document.getElementById('website-url').value = website.url || '';
+					document.getElementById('website-admin-url').value = website.adminUrl || '';
+					document.getElementById('website-admin-notes').value = website.adminNotes || '';
+					// Set HTML content for rich text editor
+					if (notesEditor) {
+						notesEditor.innerHTML = website.notes || '';
+					}
+				}
+			} else {
+				title.textContent = 'Website Ekle';
+				// Clear rich text editor
+				if (notesEditor) {
+					notesEditor.innerHTML = '';
+				}
 		}
 		
 		modal.style.display = 'block';
@@ -1899,19 +1911,21 @@
 	},
 
 		saveWebsite: function() {
-		const id = document.getElementById('website-id').value;
-		const clientId = document.getElementById('website-client-id').value;
-		const domainId = document.getElementById('website-domain-id').value;
-		const hostingId = document.getElementById('website-hosting-id').value;
-		const name = document.getElementById('website-name').value;
-		const software = document.getElementById('website-software').value;
-		const version = document.getElementById('website-version').value;
-		const status = document.getElementById('website-status').value;
-		const installationDate = document.getElementById('website-installation-date').value;
-		const url = document.getElementById('website-url').value;
-		const adminUrl = document.getElementById('website-admin-url').value;
-		const adminNotes = document.getElementById('website-admin-notes').value;
-		const notes = document.getElementById('website-notes').value;
+			const id = document.getElementById('website-id').value;
+			const clientId = document.getElementById('website-client-id').value;
+			const domainId = document.getElementById('website-domain-id').value;
+			const hostingId = document.getElementById('website-hosting-id').value;
+			const name = document.getElementById('website-name').value;
+			const software = document.getElementById('website-software').value;
+			const version = document.getElementById('website-version').value;
+			const status = document.getElementById('website-status').value;
+			const installationDate = document.getElementById('website-installation-date').value;
+			const url = document.getElementById('website-url').value;
+			const adminUrl = document.getElementById('website-admin-url').value;
+			const adminNotes = document.getElementById('website-admin-notes').value;
+			// Get HTML content from rich text editor
+			const notesEditor = document.getElementById('website-notes');
+			const notes = notesEditor ? notesEditor.innerHTML : '';
 
 		console.log('saveWebsite:', { id, clientId, name, software });
 
@@ -3483,6 +3497,21 @@
 			return;
 		}
 		
+		const projectTypeLabels = {
+			website: '🌐 Web Sitesi',
+			ecommerce: '🛒 E-Ticaret',
+			webapp: '📱 Web Uygulaması',
+			theme: '🎨 Tema/Modül',
+			design: '🖼️ Grafik Tasarım',
+			server: '🖥️ Sunucu',
+			email: '📧 Mail',
+			hosting: '☁️ Hosting',
+			device: '📟 Cihaz',
+			support: '🛠️ Destek',
+			seo: '📈 SEO',
+			other: '📦 Diğer'
+		};
+		
 		let html = '';
 		filtered.forEach(proj => {
 			const client = this.clients.find(c => c.id == proj.clientId);
@@ -3490,12 +3519,16 @@
 			const daysLeft = proj.deadline ? this.calculateDaysLeft(proj.deadline) : null;
 			const deadlineBadge = daysLeft !== null && daysLeft <= 7 && daysLeft >= 0 ? 
 				`<span class="status-badge status-badge--draft">${daysLeft} gün</span>` : '';
+			const typeLabel = proj.projectType ? projectTypeLabels[proj.projectType] || proj.projectType : '';
 			
 			html += `
 				<div class="list-item project-item" data-id="${proj.id}">
 					<div class="list-item__content">
 						<div class="list-item__title">${this.escapeHtml(proj.name)}</div>
-						<div class="list-item__meta">${client ? client.name : 'Bilinmeyen'} • Deadline: ${proj.deadline || '-'}</div>
+						<div class="list-item__meta">
+							${typeLabel ? `<span class="project-type-badge">${typeLabel}</span> • ` : ''}
+							${client ? client.name : 'Bilinmeyen'} • Deadline: ${proj.deadline || '-'}
+						</div>
 					</div>
 					<div class="list-item__stats">
 						${proj.budget ? `<span>${proj.budget} ${proj.currency || 'USD'}</span>` : ''}
@@ -3528,8 +3561,24 @@
 		const statusTexts = { active: 'Aktif', on_hold: 'Beklemede', completed: 'Tamamlandı', cancelled: 'İptal' };
 		const daysLeft = proj.deadline ? this.calculateDaysLeft(proj.deadline) : null;
 		
+		const projectTypeLabels = {
+			website: '🌐 Web Sitesi',
+			ecommerce: '🛒 E-Ticaret',
+			webapp: '📱 Web Uygulaması',
+			theme: '🎨 Tema/Modül',
+			design: '🖼️ Grafik Tasarım',
+			server: '🖥️ Sunucu',
+			email: '📧 Mail',
+			hosting: '☁️ Hosting',
+			device: '📟 Cihaz',
+			support: '🛠️ Destek',
+			seo: '📈 SEO',
+			other: '📦 Diğer'
+		};
+		
 		document.getElementById('project-detail-name').textContent = proj.name;
 		document.getElementById('project-detail-client').textContent = client ? client.name : '-';
+		document.getElementById('project-detail-type').textContent = proj.projectType ? (projectTypeLabels[proj.projectType] || proj.projectType) : '-';
 		
 		// Status with badge
 		const statusEl = document.getElementById('project-detail-status');
@@ -3544,11 +3593,104 @@
 			deadlineEl.textContent = '-';
 		}
 		
+		// Start date
+		const startEl = document.getElementById('project-detail-start');
+		if (startEl) startEl.textContent = proj.startDate || '-';
+		
 		document.getElementById('project-detail-budget').textContent = proj.budget ? `${proj.budget} ${proj.currency}` : '-';
 		document.getElementById('project-detail-description').textContent = proj.description || '-';
 		
+		// Notes
+		const notesEl = document.getElementById('project-detail-notes');
+		if (notesEl) notesEl.textContent = proj.notes || '-';
+		
 		// Load project tasks with progress
 		this.loadProjectTasks(id);
+		
+		// Load linked items
+		this.loadProjectItems(id);
+		
+		// Load project invoices and calculate financials
+		this.loadProjectFinancials(id);
+	},
+	
+	loadProjectFinancials: function(projectId) {
+		// Get invoices related to this project
+		const projectInvoices = (this.invoices || []).filter(inv => {
+			// Check if invoice has items linked to this project
+			// For now, we'll calculate from payments
+			return false;
+		});
+		
+		// Calculate from project budget and any linked invoices
+		const proj = this.projects.find(p => p.id == projectId);
+		if (!proj) return;
+		
+		const container = document.getElementById('project-financials');
+		if (!container) return;
+		
+		const budget = parseFloat(proj.budget) || 0;
+		
+		// Find invoices for this client with project-related items
+		const clientInvoices = (this.invoices || []).filter(inv => inv.clientId == proj.clientId);
+		let totalInvoiced = 0;
+		let totalPaid = 0;
+		
+		clientInvoices.forEach(inv => {
+			// For simplicity, we'll show all client invoices
+			// In a more advanced setup, we'd filter by project-linked items
+		});
+		
+		container.innerHTML = `
+			<div class="financial-summary">
+				<div class="financial-item">
+					<span class="financial-label">Bütçe:</span>
+					<span class="financial-value">${budget.toFixed(2)} ${proj.currency || 'USD'}</span>
+				</div>
+			</div>
+			<p class="text-muted" style="font-size: 12px; margin-top: 8px;">
+				Detaylı finansal takip için proje ile ilişkili fatura oluşturun.
+			</p>
+			<button class="btn btn-sm btn-primary create-project-invoice-btn" style="margin-top: 8px;">📄 Fatura Oluştur</button>
+		`;
+		
+		container.querySelector('.create-project-invoice-btn')?.addEventListener('click', () => {
+			this.createInvoiceFromProject(projectId);
+		});
+	},
+	
+	createInvoiceFromProject: function(projectId) {
+		const proj = this.projects.find(p => p.id == projectId);
+		if (!proj) return;
+		
+		// Create invoice and redirect to invoice detail
+		const data = new URLSearchParams({
+			clientId: proj.clientId,
+			currency: proj.currency || 'USD',
+			status: 'draft',
+			notes: `Proje: ${proj.name}`
+		});
+		
+		fetch(`${this.apiBase}/invoices`, {
+			method: 'POST',
+			headers: { 
+				'requesttoken': OC.requestToken,
+				'Content-Type': 'application/x-www-form-urlencoded'
+			},
+			body: data.toString()
+		})
+		.then(r => r.json())
+		.then(result => {
+			if (result.error) throw new Error(result.error);
+			this.loadInvoices();
+			this.hideProjectDetail();
+			this.switchTab('invoices');
+			setTimeout(() => {
+				this.showInvoiceDetail(result.id);
+				this.showSuccess('Fatura oluşturuldu. Şimdi kalem ekleyebilirsiniz.');
+			}, 300);
+		})
+		.catch(e => this.showError('Fatura oluşturma hatası: ' + e.message));
 	},
 	
 	loadProjectTasks: function(projectId) {
@@ -3692,6 +3834,7 @@
 				if (proj) {
 					document.getElementById('project-id').value = proj.id;
 					document.getElementById('project-client-id').value = proj.clientId || '';
+					document.getElementById('project-type').value = proj.projectType || '';
 					document.getElementById('project-name').value = proj.name || '';
 					document.getElementById('project-description').value = proj.description || '';
 					document.getElementById('project-status').value = proj.status || 'active';
@@ -3709,6 +3852,7 @@
 			const id = document.getElementById('project-id').value;
 			const data = new URLSearchParams({
 				clientId: document.getElementById('project-client-id').value,
+				projectType: document.getElementById('project-type').value,
 				name: document.getElementById('project-name').value,
 				description: document.getElementById('project-description').value,
 				status: document.getElementById('project-status').value,
@@ -3751,10 +3895,147 @@
 		showProjectItemModal: function(projectId) {
 			const modal = document.getElementById('project-item-modal');
 			if (!modal) return;
+			
 			document.getElementById('project-item-project-id').value = projectId;
 			document.getElementById('project-item-type').value = '';
 			document.getElementById('project-item-select').innerHTML = '<option value="">Önce türü seçin</option>';
+			
+			// Setup type change handler
+			const typeSelect = document.getElementById('project-item-type');
+			typeSelect.onchange = () => this.onProjectItemTypeChange(typeSelect.value);
+			
 			modal.style.display = 'block';
+		},
+		
+		onProjectItemTypeChange: function(type) {
+			const select = document.getElementById('project-item-select');
+			select.innerHTML = '<option value="">Seçin</option>';
+			
+			if (!type) return;
+			
+			let items = [];
+			switch (type) {
+				case 'domain':
+					items = this.domains || [];
+					items.forEach(d => {
+						const client = this.clients.find(c => c.id == d.clientId);
+						select.innerHTML += `<option value="${d.id}">${this.escapeHtml(d.domainName)} ${client ? '(' + client.name + ')' : ''}</option>`;
+					});
+					break;
+				case 'hosting':
+					items = this.hostings || [];
+					items.forEach(h => {
+						const client = this.clients.find(c => c.id == h.clientId);
+						select.innerHTML += `<option value="${h.id}">${this.escapeHtml(h.provider)} - ${h.plan || 'N/A'} ${client ? '(' + client.name + ')' : ''}</option>`;
+					});
+					break;
+				case 'website':
+					items = this.websites || [];
+					items.forEach(w => {
+						const client = this.clients.find(c => c.id == w.clientId);
+						select.innerHTML += `<option value="${w.id}">${this.escapeHtml(w.name)} ${client ? '(' + client.name + ')' : ''}</option>`;
+					});
+					break;
+				case 'service':
+					items = this.services || [];
+					items.forEach(s => {
+						const client = this.clients.find(c => c.id == s.clientId);
+						select.innerHTML += `<option value="${s.id}">${this.escapeHtml(s.name)} ${client ? '(' + client.name + ')' : ''}</option>`;
+					});
+					break;
+			}
+		},
+		
+		saveProjectItem: function() {
+			const projectId = document.getElementById('project-item-project-id').value;
+			const itemType = document.getElementById('project-item-type').value;
+			const itemId = document.getElementById('project-item-select').value;
+			
+			if (!projectId || !itemType || !itemId) {
+				this.showError('Lütfen tüm alanları doldurun');
+				return;
+			}
+			
+			const data = new URLSearchParams({ itemType, itemId });
+			
+			fetch(`${this.apiBase}/projects/${projectId}/items`, {
+				method: 'POST',
+				headers: { 
+					'requesttoken': OC.requestToken,
+					'Content-Type': 'application/x-www-form-urlencoded'
+				},
+				body: data.toString()
+			})
+			.then(r => r.json())
+			.then(result => {
+				if (result.error) throw new Error(result.error);
+				this.closeModal('project-item-modal');
+				this.loadProjectItems(projectId);
+				this.showSuccess('Öğe projeye bağlandı');
+			})
+			.catch(e => this.showError('Bağlama hatası: ' + e.message));
+		},
+		
+		loadProjectItems: function(projectId) {
+			fetch(`${this.apiBase}/projects/${projectId}/items`, {
+				headers: { 'requesttoken': OC.requestToken }
+			})
+			.then(r => r.json())
+			.then(items => {
+				const container = document.getElementById('project-linked-items');
+				if (!container) return;
+				
+				if (!items || items.length === 0) {
+					container.innerHTML = '<p class="empty-message">Bağlı öğe yok</p>';
+					return;
+				}
+				
+				const typeLabels = { domain: 'Domain', hosting: 'Hosting', website: 'Website', service: 'Hizmet' };
+				const typeIcons = { domain: '🌐', hosting: '🖥️', website: '🌍', service: '🛠️' };
+				
+				let html = '<div class="linked-items-list">';
+				items.forEach(item => {
+					const itemData = this.getRelatedItem(item.itemType, item.itemId);
+					const itemName = itemData ? (itemData.name || itemData.domainName || itemData.provider || 'N/A') : 'Bulunamadı';
+					
+					html += `
+						<div class="linked-item">
+							<span class="linked-item__icon">${typeIcons[item.itemType] || '📎'}</span>
+							<span class="linked-item__type">${typeLabels[item.itemType] || item.itemType}</span>
+							<span class="linked-item__name">${this.escapeHtml(itemName)}</span>
+							<button class="btn btn-sm btn-danger remove-project-item-btn" data-id="${item.id}" data-project="${projectId}">🗑️</button>
+						</div>
+					`;
+				});
+				html += '</div>';
+				container.innerHTML = html;
+				
+				// Event listeners
+				container.querySelectorAll('.remove-project-item-btn').forEach(btn => {
+					btn.addEventListener('click', () => {
+						const itemId = btn.dataset.id;
+						const projId = btn.dataset.project;
+						this.removeProjectItem(projId, itemId);
+					});
+				});
+			})
+			.catch(e => console.error('Error loading project items:', e));
+		},
+		
+		removeProjectItem: function(projectId, itemId) {
+			if (!confirm('Bu öğeyi projeden kaldırmak istediğinize emin misiniz?')) return;
+			
+			fetch(`${this.apiBase}/projects/${projectId}/items/${itemId}`, {
+				method: 'DELETE',
+				headers: { 'requesttoken': OC.requestToken }
+			})
+			.then(r => r.json())
+			.then(result => {
+				if (result.error) throw new Error(result.error);
+				this.loadProjectItems(projectId);
+				this.showSuccess('Öğe projeden kaldırıldı');
+			})
+			.catch(e => this.showError('Kaldırma hatası'));
 		},
 		
 		// ===== TASKS =====
@@ -4015,18 +4296,149 @@
 
 		showSuccess: function(message) {
 			OC.Notification.showTemporary(message, { type: 'success' });
+		},
+		
+		initRichTextEditor: function(editorId) {
+			const editor = document.getElementById(editorId);
+			if (!editor) return;
+			
+			const toolbar = editor.parentElement.querySelector('.rich-text-toolbar');
+			if (!toolbar) return;
+			
+			// Remove existing listeners
+			const buttons = toolbar.querySelectorAll('.toolbar-btn');
+			buttons.forEach(btn => {
+				const newBtn = btn.cloneNode(true);
+				btn.parentNode.replaceChild(newBtn, btn);
+			});
+			
+			// Add event listeners
+			toolbar.querySelectorAll('.toolbar-btn').forEach(btn => {
+				btn.addEventListener('click', (e) => {
+					e.preventDefault();
+					const command = btn.dataset.command;
+					
+					// Focus editor
+					editor.focus();
+					
+					switch (command) {
+						case 'bold':
+							document.execCommand('bold', false, null);
+							this.updateToolbarState(editor);
+							break;
+						case 'italic':
+							document.execCommand('italic', false, null);
+							this.updateToolbarState(editor);
+							break;
+						case 'underline':
+							document.execCommand('underline', false, null);
+							this.updateToolbarState(editor);
+							break;
+						case 'insertEmoji':
+							this.insertEmoji(editor);
+							break;
+						case 'insertLineBreak':
+							document.execCommand('insertHTML', false, '<br>');
+							break;
+					}
+				});
+			});
+			
+			// Update toolbar state on selection change
+			editor.addEventListener('keyup', () => this.updateToolbarState(editor));
+			editor.addEventListener('mouseup', () => this.updateToolbarState(editor));
+		},
+		
+		updateToolbarState: function(editor) {
+			const toolbar = editor.parentElement.querySelector('.rich-text-toolbar');
+			if (!toolbar) return;
+			
+			// Check which commands are active
+			const boldBtn = toolbar.querySelector('[data-command="bold"]');
+			const italicBtn = toolbar.querySelector('[data-command="italic"]');
+			const underlineBtn = toolbar.querySelector('[data-command="underline"]');
+			
+			if (boldBtn) {
+				boldBtn.classList.toggle('active', document.queryCommandState('bold'));
+			}
+			if (italicBtn) {
+				italicBtn.classList.toggle('active', document.queryCommandState('italic'));
+			}
+			if (underlineBtn) {
+				underlineBtn.classList.toggle('active', document.queryCommandState('underline'));
+			}
+		},
+		
+		insertEmoji: function(editor) {
+			const emojis = [
+				'😊', '😀', '😁', '😂', '🤣', '😃', '😄', '😅', '😆', '😉',
+				'👍', '👎', '❤️', '💛', '💚', '💙', '💜', '🧡', '🖤', '🤍',
+				'✅', '❌', '⚠️', '💡', '📝', '🔗', '📧', '📱', '💻', '🌐',
+				'⚡', '🎉', '🎊', '🔥', '⭐', '🌟', '💯', '🔔', '📢', '📣',
+				'🎯', '🏆', '💰', '💎', '🚀', '🎨', '🎭', '🎪', '🎬', '🎮'
+			];
+			
+			// Create emoji picker
+			const picker = document.createElement('div');
+			picker.className = 'emoji-picker';
+			picker.style.cssText = `
+				position: absolute;
+				background: var(--color-main-background);
+				border: 1px solid var(--color-border);
+				border-radius: 8px;
+				padding: 8px;
+				display: grid;
+				grid-template-columns: repeat(8, 1fr);
+				gap: 4px;
+				z-index: 10000;
+				box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+				max-width: 300px;
+			`;
+			
+			emojis.forEach(emoji => {
+				const btn = document.createElement('button');
+				btn.textContent = emoji;
+				btn.style.cssText = `
+					background: transparent;
+					border: none;
+					padding: 6px;
+					cursor: pointer;
+					font-size: 18px;
+					border-radius: 4px;
+					transition: background 0.2s;
+				`;
+				btn.onmouseover = () => btn.style.background = 'var(--color-background-hover)';
+				btn.onmouseout = () => btn.style.background = 'transparent';
+				btn.onclick = () => {
+					editor.focus();
+					document.execCommand('insertText', false, emoji);
+					picker.remove();
+				};
+				picker.appendChild(btn);
+			});
+			
+			// Position picker near editor
+			const rect = editor.getBoundingClientRect();
+			picker.style.top = (rect.bottom + 5) + 'px';
+			picker.style.left = rect.left + 'px';
+			
+			// Remove existing picker
+			document.querySelectorAll('.emoji-picker').forEach(p => p.remove());
+			
+			// Add to body
+			document.body.appendChild(picker);
+			
+			// Close on outside click
+			setTimeout(() => {
+				document.addEventListener('click', function closePicker(e) {
+					if (!picker.contains(e.target) && e.target !== editor) {
+						picker.remove();
+						document.removeEventListener('click', closePicker);
+					}
+				});
+			}, 100);
 		}
 	};
-
-	// Close modal when clicking outside
-	window.addEventListener('click', function(event) {
-		const modals = document.querySelectorAll('.modal');
-		modals.forEach(modal => {
-			if (event.target === modal) {
-				modal.style.display = 'none';
-			}
-		});
-	});
 
 	// Initialize when DOM is ready
 	if (document.readyState === 'loading') {

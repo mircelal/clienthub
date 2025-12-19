@@ -10,6 +10,8 @@ use OCP\AppFramework\Db\Entity;
  * @method void setClientId(int $clientId)
  * @method string getName()
  * @method void setName(string $name)
+ * @method string getProjectType()
+ * @method void setProjectType(string $projectType)
  * @method string getDescription()
  * @method void setDescription(string $description)
  * @method string getStatus()
@@ -34,6 +36,7 @@ use OCP\AppFramework\Db\Entity;
 class Project extends Entity implements \JsonSerializable {
 	protected $clientId;
 	protected $name;
+	protected $projectType;
 	protected $description;
 	protected $status;
 	protected $startDate;
@@ -48,6 +51,7 @@ class Project extends Entity implements \JsonSerializable {
 	public function __construct() {
 		$this->addType('clientId', 'integer');
 		$this->addType('name', 'string');
+		$this->addType('projectType', 'string');
 		$this->addType('description', 'string');
 		$this->addType('status', 'string');
 		$this->addType('startDate', 'string');
@@ -65,6 +69,7 @@ class Project extends Entity implements \JsonSerializable {
 			'id' => $this->id,
 			'clientId' => $this->clientId,
 			'name' => $this->name,
+			'projectType' => $this->projectType,
 			'description' => $this->description,
 			'status' => $this->status,
 			'startDate' => $this->startDate,

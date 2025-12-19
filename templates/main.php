@@ -500,7 +500,7 @@ style('domaincontrol', 'domaincontrol');
 				
 				<div class="detail-info-card">
 					<h3>Notlar</h3>
-					<p id="website-detail-notes"></p>
+					<div id="website-detail-notes" class="rich-text-content"></div>
 				</div>
 			</div>
 		</div>
@@ -658,22 +658,38 @@ style('domaincontrol', 'domaincontrol');
 			<div class="detail-content">
 				<div class="detail-stats">
 					<div class="stat-card"><div class="stat-card__label">Müşteri</div><div class="stat-card__value" id="project-detail-client"></div></div>
+					<div class="stat-card"><div class="stat-card__label">Proje Türü</div><div class="stat-card__value" id="project-detail-type"></div></div>
 					<div class="stat-card"><div class="stat-card__label">Durum</div><div class="stat-card__value" id="project-detail-status"></div></div>
+					<div class="stat-card"><div class="stat-card__label">Başlangıç</div><div class="stat-card__value" id="project-detail-start"></div></div>
 					<div class="stat-card"><div class="stat-card__label">Deadline</div><div class="stat-card__value" id="project-detail-deadline"></div></div>
 					<div class="stat-card"><div class="stat-card__label">Bütçe</div><div class="stat-card__value" id="project-detail-budget"></div></div>
 				</div>
+				
 				<div class="detail-grid">
 					<div class="detail-info-card">
-						<h3>Proje Açıklaması</h3>
+						<h3>📝 Proje Açıklaması</h3>
 						<p id="project-detail-description"></p>
 					</div>
 					<div class="detail-info-card">
-						<h3>Bağlı Öğeler</h3>
-						<div id="project-detail-items"></div>
+						<h3>📋 Notlar</h3>
+						<p id="project-detail-notes"></p>
 					</div>
 				</div>
+				
+				<div class="detail-grid">
+					<div class="detail-info-card">
+						<h3>🔗 Bağlı Öğeler</h3>
+						<p class="text-muted" style="font-size: 12px; margin-bottom: 10px;">Domain, hosting, website ve hizmetleri projeye bağlayın</p>
+						<div id="project-linked-items"></div>
+					</div>
+					<div class="detail-info-card">
+						<h3>💰 Finansal Bilgiler</h3>
+						<div id="project-financials"></div>
+					</div>
+				</div>
+				
 				<div class="detail-info-card">
-					<h3>Görevler</h3>
+					<h3>✅ Görevler</h3>
 					<div id="project-detail-tasks"></div>
 				</div>
 			</div>
@@ -1133,7 +1149,27 @@ style('domaincontrol', 'domaincontrol');
 				</div>
 				<div class="form-group">
 					<label for="website-notes">Genel Notlar</label>
-					<textarea id="website-notes" name="notes" class="form-control" rows="2" placeholder="Diğer notlar..."></textarea>
+					<div class="rich-text-editor-wrapper">
+						<div class="rich-text-toolbar">
+							<button type="button" class="toolbar-btn" data-command="bold" title="Kalın">
+								<strong>B</strong>
+							</button>
+							<button type="button" class="toolbar-btn" data-command="italic" title="İtalik">
+								<em>I</em>
+							</button>
+							<button type="button" class="toolbar-btn" data-command="underline" title="Altı Çizili">
+								<u>U</u>
+							</button>
+							<button type="button" class="toolbar-btn" data-command="insertEmoji" title="Emoji">
+								😊
+							</button>
+							<button type="button" class="toolbar-btn" data-command="insertLineBreak" title="Satır">
+								↵
+							</button>
+						</div>
+						<div id="website-notes" class="rich-text-editor" contenteditable="true" data-placeholder="Diğer notlar..."></div>
+						<input type="hidden" id="website-notes-hidden" name="notes">
+					</div>
 				</div>
 				<div class="form-actions">
 					<button type="button" class="btn btn-secondary modal-cancel" data-modal="website-modal">İptal</button>
@@ -1428,15 +1464,29 @@ style('domaincontrol', 'domaincontrol');
 						</select>
 					</div>
 					<div class="form-group">
+						<label for="project-type">Proje Türü</label>
+						<select id="project-type" name="projectType" class="form-control">
+							<option value="">Seçin</option>
+							<option value="website">🌐 Web Sitesi</option>
+							<option value="ecommerce">🛒 E-Ticaret</option>
+							<option value="webapp">📱 Web Uygulaması</option>
+							<option value="theme">🎨 Tema / Modül</option>
+							<option value="design">🖼️ Grafik Tasarım</option>
+							<option value="server">🖥️ Sunucu Kurulumu</option>
+							<option value="email">📧 Mail Kurulumu</option>
+							<option value="hosting">☁️ Hosting</option>
+							<option value="device">📟 Cihaz Kurulumu</option>
+							<option value="support">🛠️ Teknik Destek</option>
+							<option value="seo">📈 SEO / Pazarlama</option>
+							<option value="other">📦 Diğer</option>
+						</select>
+					</div>
+				</div>
+				<div class="form-row">
+					<div class="form-group">
 						<label for="project-name">Proje Adı *</label>
 						<input type="text" id="project-name" name="name" required class="form-control">
 					</div>
-				</div>
-				<div class="form-group">
-					<label for="project-description">Açıklama</label>
-					<textarea id="project-description" name="description" class="form-control" rows="3"></textarea>
-				</div>
-				<div class="form-row">
 					<div class="form-group">
 						<label for="project-status">Durum</label>
 						<select id="project-status" name="status" class="form-control">
@@ -1446,6 +1496,12 @@ style('domaincontrol', 'domaincontrol');
 							<option value="cancelled">İptal</option>
 						</select>
 					</div>
+				</div>
+				<div class="form-group">
+					<label for="project-description">Açıklama</label>
+					<textarea id="project-description" name="description" class="form-control" rows="3" placeholder="Proje detayları, gereksinimler, özel notlar..."></textarea>
+				</div>
+				<div class="form-row">
 					<div class="form-group">
 						<label for="project-start-date">Başlangıç</label>
 						<input type="date" id="project-start-date" name="startDate" class="form-control">
@@ -1458,7 +1514,7 @@ style('domaincontrol', 'domaincontrol');
 				<div class="form-row">
 					<div class="form-group">
 						<label for="project-budget">Bütçe</label>
-						<input type="number" id="project-budget" name="budget" step="0.01" class="form-control">
+						<input type="number" id="project-budget" name="budget" step="0.01" class="form-control" placeholder="0.00">
 					</div>
 					<div class="form-group">
 						<label for="project-currency">Para Birimi</label>
@@ -1472,7 +1528,7 @@ style('domaincontrol', 'domaincontrol');
 				</div>
 				<div class="form-group">
 					<label for="project-notes">Notlar</label>
-					<textarea id="project-notes" name="notes" class="form-control" rows="2"></textarea>
+					<textarea id="project-notes" name="notes" class="form-control" rows="2" placeholder="Ek bilgiler, anlaşma detayları..."></textarea>
 				</div>
 				<div class="form-actions">
 					<button type="button" class="btn btn-secondary modal-cancel" data-modal="project-modal">İptal</button>

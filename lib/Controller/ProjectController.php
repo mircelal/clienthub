@@ -124,6 +124,7 @@ class ProjectController extends Controller {
 			$project = new Project();
 			$project->setClientId((int)($data['clientId'] ?? 0));
 			$project->setName($name);
+			$project->setProjectType($data['projectType'] ?? '');
 			$project->setDescription($data['description'] ?? '');
 			$project->setStatus($data['status'] ?? 'active');
 			$project->setStartDate($data['startDate'] ?? date('Y-m-d'));
@@ -153,6 +154,7 @@ class ProjectController extends Controller {
 			
 			if (isset($data['clientId'])) $project->setClientId((int)$data['clientId']);
 			if (isset($data['name']) && $data['name'] !== '') $project->setName($data['name']);
+			if (isset($data['projectType'])) $project->setProjectType($data['projectType']);
 			if (isset($data['description'])) $project->setDescription($data['description']);
 			if (isset($data['status'])) $project->setStatus($data['status']);
 			if (isset($data['startDate'])) $project->setStartDate($data['startDate']);
@@ -165,6 +167,20 @@ class ProjectController extends Controller {
 			
 			$project = $this->mapper->update($project);
 			return new JSONResponse($project);
+		} catch (\Exception $e) {
+			return new JSONResponse(['error' => $e->getMessage()], 500);
+		}
+	}
+	
+	/**
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 */
+	public function items(int $id): JSONResponse {
+		try {
+			$project = $this->mapper->find($id, $this->userId);
+			$items = $this->itemMapper->findByProject($id);
+			return new JSONResponse($items);
 		} catch (\Exception $e) {
 			return new JSONResponse(['error' => $e->getMessage()], 500);
 		}
