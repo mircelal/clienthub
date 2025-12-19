@@ -162,6 +162,12 @@ class ServiceController extends Controller {
 	public function extend(int $id): JSONResponse {
 		try {
 			$service = $this->mapper->find($id, $this->userId);
+			
+			// Tek seferlik hizmetler için uzatma yapılamaz
+			if ($service->getRenewalInterval() === 'one-time') {
+				return new JSONResponse(['error' => 'Tek seferlik hizmetler için süre uzatma yapılamaz'], 400);
+			}
+			
 			$data = $this->getRequestData();
 			
 			$months = (int)($data['months'] ?? 1);

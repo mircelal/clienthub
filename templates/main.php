@@ -5,8 +5,8 @@ style('domaincontrol', 'domaincontrol');
 
 <div id="domaincontrol-app" class="domaincontrol-container">
 	<div class="domaincontrol-header">
-		<h2>Domain Control</h2>
-		<p class="domaincontrol-subtitle">Manage your clients, domains, hosting, and websites</p>
+		<h2>ClientHub</h2>
+		<p class="domaincontrol-subtitle">Kapsamlı müşteri, proje ve iş yönetim sistemi</p>
 	</div>
 
 	<div class="domaincontrol-tabs">
@@ -632,6 +632,22 @@ style('domaincontrol', 'domaincontrol');
 				<h3>Ödeme Geçmişi</h3>
 				<div id="invoice-detail-payments"></div>
 			</div>
+			
+			<!-- Invoice Files Section -->
+			<div class="detail-info-card">
+				<h3>📎 Fatura Dosyaları</h3>
+				<p class="text-muted" style="margin-bottom: 15px;">Faturaya ait belgeler, ödeme makbuzları, sözleşmeler ve diğer dosyalar</p>
+				
+				<div class="form-group" style="margin-bottom: 20px;">
+					<label for="invoice-file-input">Dosya Yükle</label>
+					<input type="file" id="invoice-file-input" multiple class="form-control" style="padding: 8px;">
+					<button type="button" class="btn btn-primary" id="invoice-upload-files-btn" style="margin-top: 10px;">
+						📤 Dosyaları Yükle
+					</button>
+				</div>
+				
+				<div id="invoice-files-list" class="file-list"></div>
+			</div>
 		</div>
 	</div>
 	</div>
@@ -752,33 +768,58 @@ style('domaincontrol', 'domaincontrol');
 <div id="client-modal" class="modal">
 	<div class="modal-content">
 		<div class="modal-header">
-			<h3 id="client-modal-title">Add Client</h3>
+			<h3 id="client-modal-title">Müşteri Ekle</h3>
 			<span class="modal-close" data-modal="client-modal">&times;</span>
 		</div>
 		<div class="modal-body">
+			<div style="margin-bottom: 16px;">
+				<button type="button" class="btn btn-info btn-sm" id="select-from-contacts-btn">📇 Kişilerden Seç</button>
+			</div>
 			<form id="client-form">
 				<input type="hidden" id="client-id" name="id">
 				<div class="form-group">
-					<label for="client-name">Name *</label>
+					<label for="client-name">Ad *</label>
 					<input type="text" id="client-name" name="name" required class="form-control">
 				</div>
 				<div class="form-group">
-					<label for="client-email">Email</label>
+					<label for="client-email">E-posta</label>
 					<input type="email" id="client-email" name="email" class="form-control">
 				</div>
 				<div class="form-group">
-					<label for="client-phone">Phone</label>
+					<label for="client-phone">Telefon</label>
 					<input type="text" id="client-phone" name="phone" class="form-control">
 				</div>
 				<div class="form-group">
-					<label for="client-notes">Notes</label>
+					<label for="client-notes">Notlar</label>
 					<textarea id="client-notes" name="notes" class="form-control" rows="4"></textarea>
 				</div>
 				<div class="form-actions">
-					<button type="button" class="btn btn-secondary modal-cancel" data-modal="client-modal">Cancel</button>
-					<button type="submit" class="btn btn-primary">Save</button>
+					<button type="button" class="btn btn-secondary modal-cancel" data-modal="client-modal">İptal</button>
+					<button type="submit" class="btn btn-primary">Kaydet</button>
 				</div>
 			</form>
+		</div>
+	</div>
+</div>
+
+<!-- Contacts Selection Modal -->
+<div id="contacts-modal" class="modal">
+	<div class="modal-content modal-large">
+		<div class="modal-header">
+			<h3>Kişilerden Seç</h3>
+			<span class="modal-close" data-modal="contacts-modal">&times;</span>
+		</div>
+		<div class="modal-body">
+			<div class="form-group" style="margin-bottom: 16px;">
+				<input type="text" id="contacts-search" class="form-control" placeholder="🔍 Kişi ara (ad, e-posta, telefon...)">
+			</div>
+			<div id="contacts-loading" style="text-align: center; padding: 20px;">
+				<p>Kişiler yükleniyor...</p>
+			</div>
+			<div id="contacts-list" style="max-height: 500px; overflow-y: auto;"></div>
+			<div id="contacts-empty" style="display: none; text-align: center; padding: 20px;">
+				<p class="empty-message">Arama kriterinize uygun kişi bulunamadı</p>
+			</div>
 		</div>
 	</div>
 </div>
@@ -1224,6 +1265,7 @@ style('domaincontrol', 'domaincontrol');
 					<div class="form-group">
 						<label for="service-type-interval">Yenileme Periyodu</label>
 						<select id="service-type-interval" name="renewalInterval" class="form-control">
+							<option value="one-time">🔄 Tek Seferlik</option>
 							<option value="monthly">Aylık</option>
 							<option value="quarterly">3 Aylık</option>
 							<option value="yearly">Yıllık</option>
@@ -1284,6 +1326,7 @@ style('domaincontrol', 'domaincontrol');
 					<div class="form-group">
 						<label for="service-interval">Yenileme</label>
 						<select id="service-interval" name="renewalInterval" class="form-control">
+							<option value="one-time">🔄 Tek Seferlik</option>
 							<option value="monthly">Aylık</option>
 							<option value="quarterly">3 Aylık</option>
 							<option value="yearly">Yıllık</option>

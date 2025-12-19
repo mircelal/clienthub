@@ -1679,3 +1679,50 @@ div#website-notes {
 	gap: 6px;
 	flex-shrink: 0;
 }
+
+/* Contacts List */
+.contacts-list {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.contact-item {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 12px;
+	background: var(--color-background-hover);
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	transition: all 0.2s;
+}
+
+.contact-item:hover {
+	background: var(--color-background-dark);
+	border-color: var(--color-primary-element);
+}
+
+.contact-info {
+	flex: 1;
+}
+
+.contact-name {
+	font-weight: 500;
+	font-size: 14px;
+	color: var(--color-main-text);
+	margin-bottom: 4px;
+}
+
+.contact-details {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	font-size: 12px;
+	color: var(--color-text-maxcontrast);
+}
+
+.contact-details span {
+	display: inline-block;
+	margin-right: 12px;
+}

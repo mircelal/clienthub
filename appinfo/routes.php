@@ -13,6 +13,7 @@ return [
 		['name' => 'client#create', 'url' => '/api/clients', 'verb' => 'POST'],
 		['name' => 'client#update', 'url' => '/api/clients/{id}', 'verb' => 'PUT'],
 		['name' => 'client#delete', 'url' => '/api/clients/{id}', 'verb' => 'DELETE'],
+		['name' => 'client#getContacts', 'url' => '/api/contacts', 'verb' => 'GET'],
 		
 		// Domain routes
 		['name' => 'domain#index', 'url' => '/api/domains', 'verb' => 'GET'],
@@ -43,6 +44,11 @@ return [
 		['name' => 'file#uploadWebsiteFile', 'url' => '/api/websites/{websiteId}/files', 'verb' => 'POST'],
 		['name' => 'file#listWebsiteFiles', 'url' => '/api/websites/{websiteId}/files', 'verb' => 'GET'],
 		['name' => 'file#deleteWebsiteFile', 'url' => '/api/websites/{websiteId}/files/{fileName}', 'verb' => 'DELETE'],
+		
+		// Invoice File routes
+		['name' => 'file#uploadInvoiceFile', 'url' => '/api/invoices/{invoiceId}/files', 'verb' => 'POST'],
+		['name' => 'file#listInvoiceFiles', 'url' => '/api/invoices/{invoiceId}/files', 'verb' => 'GET'],
+		['name' => 'file#deleteInvoiceFile', 'url' => '/api/invoices/{invoiceId}/files/{fileName}', 'verb' => 'DELETE'],
 		
 		// Service Type routes
 		['name' => 'service_type#index', 'url' => '/api/service-types', 'verb' => 'GET'],

@@ -2,12 +2,12 @@
 <info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
 	<id>domaincontrol</id>
-	<name>Domain Control</name>
-	<summary>Personal domain, hosting, and client management system</summary>
-	<description><![CDATA[Manage all your clients, their websites, domains, hostings, and software. Track details, payments, and renewal schedules.]]></description>
-	<version>3.0.97</version>
+	<name>ClientHub</name>
+	<summary>Comprehensive client, project, and business management system</summary>
+	<description><![CDATA[ClientHub - Complete business management solution. Manage clients, projects, invoices, payments, tasks, domains, hosting, websites, and services. Track everything in one place with integrated file management and Nextcloud Contacts integration.]]></description>
+	<version>3.3.0</version>
 	<licence>agpl</licence>
-	<author>Domain Control</author>
+	<author>ClientHub</author>
 	<namespace>DomainControl</namespace>
 	<category>tools</category>
 	
@@ -19,7 +19,7 @@
 	
 	<navigations>
 		<navigation>
-			<name>Domain Control</name>
+			<name>ClientHub</name>
 			<route>domaincontrol.page.index</route>
 			<icon>app.svg</icon>
 		</navigation>

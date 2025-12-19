@@ -14,22 +14,26 @@ use OCP\Files\NotPermittedException;
 use OCP\Files\NotFoundException;
 use OCA\DomainControl\Db\WebsiteMapper;
 use OCA\DomainControl\Db\ClientMapper;
+use OCA\DomainControl\Db\InvoiceMapper;
 
 class FileController extends Controller {
 	private $userId;
 	private IRootFolder $rootFolder;
 	private WebsiteMapper $websiteMapper;
 	private ClientMapper $clientMapper;
+	private InvoiceMapper $invoiceMapper;
 
 	public function __construct(IRequest $request,
 	                            IRootFolder $rootFolder,
 	                            WebsiteMapper $websiteMapper,
 	                            ClientMapper $clientMapper,
+	                            InvoiceMapper $invoiceMapper,
 	                            $userId) {
 		parent::__construct(Application::APP_ID, $request);
 		$this->rootFolder = $rootFolder;
 		$this->websiteMapper = $websiteMapper;
 		$this->clientMapper = $clientMapper;
+		$this->invoiceMapper = $invoiceMapper;
 		$this->userId = $userId;
 	}
 
@@ -98,6 +102,43 @@ class FileController extends Controller {
 		}
 		
 		return $websitesFolder->newFolder($safeWebsiteName);
+	}
+
+	/**
+	 * Get or create invoices folder for a client
+	 */
+	private function getInvoicesFolder(string $clientName): Folder {
+		$clientFolder = $this->getClientFolder($clientName);
+		
+		try {
+			$invoicesFolder = $clientFolder->get('invoices');
+			if ($invoicesFolder instanceof Folder) {
+				return $invoicesFolder;
+			}
+		} catch (NotFoundException $e) {
+			// Folder doesn't exist, create it
+		}
+		
+		return $clientFolder->newFolder('invoices');
+	}
+
+	/**
+	 * Get or create invoice folder for a specific invoice
+	 */
+	private function getInvoiceFolder(string $clientName, string $invoiceNumber): Folder {
+		$invoicesFolder = $this->getInvoicesFolder($clientName);
+		$safeInvoiceNumber = $this->sanitizeFolderName($invoiceNumber);
+		
+		try {
+			$invoiceFolder = $invoicesFolder->get($safeInvoiceNumber);
+			if ($invoiceFolder instanceof Folder) {
+				return $invoiceFolder;
+			}
+		} catch (NotFoundException $e) {
+			// Folder doesn't exist, create it
+		}
+		
+		return $invoicesFolder->newFolder($safeInvoiceNumber);
 	}
 
 	/**
@@ -242,6 +283,129 @@ class FileController extends Controller {
 			
 			$websiteFolder = $this->getWebsiteFolder($client->getName(), $website->getName());
 			$file = $websiteFolder->get($fileName);
+			
+			if ($file instanceof File) {
+				$file->delete();
+				return new JSONResponse(['success' => true]);
+			}
+			
+			return new JSONResponse(['error' => 'File not found'], 404);
+		} catch (\Exception $e) {
+			return new JSONResponse(['error' => $e->getMessage()], 500);
+		}
+	}
+
+	/**
+	 * @NoAdminRequired
+	 */
+	public function uploadInvoiceFile(int $invoiceId): JSONResponse {
+		try {
+			$invoice = $this->invoiceMapper->find($invoiceId, $this->userId);
+			$client = $this->clientMapper->find($invoice->getClientId(), $this->userId);
+			
+			$invoiceFolder = $this->getInvoiceFolder($client->getName(), $invoice->getInvoiceNumber());
+			
+			// Handle multiple files
+			$uploadedFiles = [];
+			
+			// PHP receives file[] as $_FILES['file'] with array structure
+			if (!isset($_FILES['file'])) {
+				return new JSONResponse(['error' => 'No file uploaded'], 400);
+			}
+			
+			$files = $_FILES['file'];
+			
+			// Handle single or multiple files
+			$fileNames = is_array($files['name']) ? $files['name'] : [$files['name']];
+			$tmpNames = is_array($files['tmp_name']) ? $files['tmp_name'] : [$files['tmp_name']];
+			$errors = is_array($files['error']) ? $files['error'] : [$files['error']];
+			
+			foreach ($fileNames as $index => $originalName) {
+				if ($errors[$index] !== UPLOAD_ERR_OK) {
+					continue;
+				}
+				
+				$fileName = $this->sanitizeFileName($originalName);
+				
+				// Check if file exists, add number suffix
+				$counter = 1;
+				$finalFileName = $fileName;
+				$pathInfo = pathinfo($fileName);
+				while ($invoiceFolder->nodeExists($finalFileName)) {
+					$extension = isset($pathInfo['extension']) ? '.' . $pathInfo['extension'] : '';
+					$finalFileName = $pathInfo['filename'] . '_' . $counter . $extension;
+					$counter++;
+				}
+				
+				$newFile = $invoiceFolder->newFile($finalFileName, file_get_contents($tmpNames[$index]));
+				$userFolder = $this->rootFolder->getUserFolder($this->userId);
+				$relativePath = $userFolder->getRelativePath($newFile->getPath());
+				
+				$uploadedFiles[] = [
+					'name' => $finalFileName,
+					'size' => $newFile->getSize(),
+					'path' => $relativePath,
+					'mimeType' => $newFile->getMimeType(),
+					'fileId' => $newFile->getId()
+				];
+			}
+			
+			if (empty($uploadedFiles)) {
+				return new JSONResponse(['error' => 'No files were uploaded'], 400);
+			}
+			
+			return new JSONResponse([
+				'success' => true,
+				'files' => $uploadedFiles
+			]);
+		} catch (\Exception $e) {
+			return new JSONResponse(['error' => $e->getMessage()], 500);
+		}
+	}
+
+	/**
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 */
+	public function listInvoiceFiles(int $invoiceId): JSONResponse {
+		try {
+			$invoice = $this->invoiceMapper->find($invoiceId, $this->userId);
+			$client = $this->clientMapper->find($invoice->getClientId(), $this->userId);
+			
+			$invoiceFolder = $this->getInvoiceFolder($client->getName(), $invoice->getInvoiceNumber());
+			
+			$files = [];
+			$userFolder = $this->rootFolder->getUserFolder($this->userId);
+			foreach ($invoiceFolder->getDirectoryListing() as $node) {
+				if ($node instanceof File) {
+					$relativePath = $userFolder->getRelativePath($node->getPath());
+					$files[] = [
+						'name' => $node->getName(),
+						'size' => $node->getSize(),
+						'mimeType' => $node->getMimeType(),
+						'mtime' => $node->getMTime(),
+						'path' => $relativePath,
+						'fileId' => $node->getId()
+					];
+				}
+			}
+			
+			return new JSONResponse($files);
+		} catch (\Exception $e) {
+			return new JSONResponse(['error' => $e->getMessage()], 500);
+		}
+	}
+
+	/**
+	 * @NoAdminRequired
+	 */
+	public function deleteInvoiceFile(int $invoiceId, string $fileName): JSONResponse {
+		try {
+			$invoice = $this->invoiceMapper->find($invoiceId, $this->userId);
+			$client = $this->clientMapper->find($invoice->getClientId(), $this->userId);
+			
+			$invoiceFolder = $this->getInvoiceFolder($client->getName(), $invoice->getInvoiceNumber());
+			$file = $invoiceFolder->get($fileName);
 			
 			if ($file instanceof File) {
 				$file->delete();

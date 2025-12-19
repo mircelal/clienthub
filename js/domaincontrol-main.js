@@ -28,7 +28,7 @@
 		currentTaskId: null,
 
 	init: function() {
-		console.log('DomainControl: v3.0.0 Starting...');
+		console.log('ClientHub: v3.3.0 Starting...');
 		console.log('DomainControl: API Base:', this.apiBase);
 		try {
 			this.setupTabs();
@@ -36,7 +36,7 @@
 			this.setupButtons();
 			this.loadData();
 			this.updateDashboard();
-			console.log('DomainControl: v3.0.0 Ready!');
+			console.log('ClientHub: v3.3.0 Ready!');
 		} catch (e) {
 			console.error('DomainControl: Init error:', e);
 		}
@@ -55,6 +55,7 @@
 	setupButtons: function() {
 		// Add buttons
 		document.getElementById('add-client-btn')?.addEventListener('click', () => this.showClientModal());
+		document.getElementById('select-from-contacts-btn')?.addEventListener('click', () => this.showContactsModal());
 		document.getElementById('add-domain-btn')?.addEventListener('click', () => this.showDomainModal());
 		document.getElementById('add-hosting-btn')?.addEventListener('click', () => this.showHostingModal());
 		document.getElementById('add-website-btn')?.addEventListener('click', () => this.showWebsiteModal());
@@ -248,6 +249,19 @@
 				this.uploadWebsiteFiles(this.currentWebsiteId, Array.from(e.target.files));
 			}
 		});
+		
+		// Invoice file upload
+		document.getElementById('invoice-upload-files-btn')?.addEventListener('click', () => {
+			if (this.currentInvoiceId) {
+				const fileInput = document.getElementById('invoice-file-input');
+				if (fileInput && fileInput.files.length > 0) {
+					this.uploadInvoiceFiles(this.currentInvoiceId, Array.from(fileInput.files));
+				} else {
+					fileInput?.click();
+				}
+			}
+		});
+		// Remove change event - only upload when button is clicked
 	},
 
 		switchTab: function(tabName) {
@@ -1539,6 +1553,20 @@
 	},
 	
 	uploadWebsiteFiles: function(websiteId, files) {
+		if (!files || files.length === 0) {
+			this.showError('Lütfen yüklenecek dosya seçin');
+			return;
+		}
+		
+		const uploadBtn = document.getElementById('website-upload-file-btn');
+		const fileInput = document.getElementById('website-file-input');
+		
+		// Disable button during upload
+		if (uploadBtn) {
+			uploadBtn.disabled = true;
+			uploadBtn.textContent = '⏳ Yükleniyor...';
+		}
+		
 		const formData = new FormData();
 		// Append files - PHP will handle as array if multiple
 		files.forEach(file => {
@@ -1556,11 +1584,20 @@
 			const fileCount = result.files ? result.files.length : 1;
 			this.showSuccess(`${fileCount} dosya başarıyla yüklendi`);
 			this.loadWebsiteFiles(websiteId);
-			// Clear file input
-			document.getElementById('website-file-input').value = '';
+			// Clear file input to allow re-uploading
+			if (fileInput) {
+				fileInput.value = '';
+			}
 		})
 		.catch(e => {
 			this.showError('Dosya yükleme hatası: ' + e.message);
+		})
+		.finally(() => {
+			// Re-enable button
+			if (uploadBtn) {
+				uploadBtn.disabled = false;
+				uploadBtn.textContent = '📤 Dosya Yükle';
+			}
 		});
 	},
 	
@@ -1603,6 +1640,144 @@
 	},
 	
 	getWebsiteFileUrl: function(filePath, fileName) {
+		// Generate URL to Nextcloud Files app
+		// Format: /apps/files/?dir=/path/to/dir&scrollto=filename
+		const dirPath = filePath.substring(0, filePath.lastIndexOf('/'));
+		const encodedDir = encodeURIComponent(dirPath);
+		const encodedFile = encodeURIComponent(fileName);
+		return OC.generateUrl('/apps/files/') + '?dir=' + encodedDir + '&scrollto=' + encodedFile;
+	},
+	
+	// Invoice Files Functions
+	loadInvoiceFiles: function(invoiceId) {
+		fetch(`${this.apiBase}/invoices/${invoiceId}/files`, {
+			headers: { 'requesttoken': OC.requestToken }
+		})
+		.then(r => r.json())
+		.then(files => {
+			this.renderInvoiceFiles(invoiceId, files);
+		})
+		.catch(e => {
+			console.error('Error loading invoice files:', e);
+			const container = document.getElementById('invoice-files-list');
+			if (container) {
+				container.innerHTML = '<p class="empty-message">Dosyalar yüklenirken hata oluştu</p>';
+			}
+		});
+	},
+	
+	renderInvoiceFiles: function(invoiceId, files) {
+		const container = document.getElementById('invoice-files-list');
+		if (!container) return;
+		
+		if (!files || files.length === 0) {
+			container.innerHTML = '<p class="empty-message">Henüz dosya eklenmemiş</p>';
+			return;
+		}
+		
+		let html = '<div class="file-list">';
+		files.forEach(file => {
+			const fileSize = this.formatFileSize(file.size);
+			const fileIcon = this.getFileIcon(file.mimeType);
+			const fileDate = new Date(file.mtime * 1000).toLocaleDateString('tr-TR');
+			
+			// Generate file URL
+			const fileUrl = this.getInvoiceFileUrl(file.path, file.name);
+			
+			html += `
+				<div class="file-item">
+					<div class="file-icon">${fileIcon}</div>
+					<div class="file-info">
+						<div class="file-name">${this.escapeHtml(file.name)}</div>
+						<div class="file-meta">${fileSize} • ${fileDate}</div>
+					</div>
+					<div class="file-actions">
+						<a href="${fileUrl}" target="_blank" class="btn btn-sm btn-secondary" title="Aç">👁️</a>
+						<button class="btn btn-sm btn-danger delete-invoice-file-btn" data-file="${this.escapeHtml(file.name)}" title="Sil">🗑️</button>
+					</div>
+				</div>
+			`;
+		});
+		html += '</div>';
+		container.innerHTML = html;
+		
+		// Event listeners for delete buttons
+		container.querySelectorAll('.delete-invoice-file-btn').forEach(btn => {
+			btn.addEventListener('click', () => {
+				const fileName = btn.dataset.file;
+				if (confirm(`"${fileName}" dosyasını silmek istediğinize emin misiniz?`)) {
+					this.deleteInvoiceFile(invoiceId, fileName);
+				}
+			});
+		});
+	},
+	
+	uploadInvoiceFiles: function(invoiceId, files) {
+		if (!files || files.length === 0) {
+			this.showError('Lütfen yüklenecek dosya seçin');
+			return;
+		}
+		
+		const uploadBtn = document.getElementById('invoice-upload-files-btn');
+		const fileInput = document.getElementById('invoice-file-input');
+		
+		// Disable button during upload
+		if (uploadBtn) {
+			uploadBtn.disabled = true;
+			uploadBtn.textContent = '⏳ Yükleniyor...';
+		}
+		
+		const formData = new FormData();
+		// Append files - PHP will handle as array if multiple
+		files.forEach(file => {
+			formData.append('file[]', file);
+		});
+		
+		fetch(`${this.apiBase}/invoices/${invoiceId}/files`, {
+			method: 'POST',
+			headers: { 'requesttoken': OC.requestToken },
+			body: formData
+		})
+		.then(r => r.json())
+		.then(result => {
+			if (result.error) throw new Error(result.error);
+			const fileCount = result.files ? result.files.length : 1;
+			this.showSuccess(`${fileCount} dosya başarıyla yüklendi`);
+			this.loadInvoiceFiles(invoiceId);
+			// Clear file input to allow re-uploading
+			if (fileInput) {
+				fileInput.value = '';
+			}
+		})
+		.catch(e => {
+			this.showError('Dosya yükleme hatası: ' + e.message);
+		})
+		.finally(() => {
+			// Re-enable button
+			if (uploadBtn) {
+				uploadBtn.disabled = false;
+				uploadBtn.textContent = '📤 Dosyaları Yükle';
+			}
+		});
+	},
+	
+	deleteInvoiceFile: function(invoiceId, fileName) {
+		fetch(`${this.apiBase}/invoices/${invoiceId}/files/${encodeURIComponent(fileName)}`, {
+			method: 'DELETE',
+			headers: { 'requesttoken': OC.requestToken }
+		})
+		.then(r => r.json())
+		.then(result => {
+			if (result.error) throw new Error(result.error);
+			this.showSuccess('Dosya silindi');
+			this.loadInvoiceFiles(invoiceId);
+		})
+		.catch(e => {
+			this.showError('Dosya silme hatası: ' + e.message);
+		});
+	},
+	
+	getInvoiceFileUrl: function(filePath, fileName) {
 		// Generate URL to Nextcloud Files app
 		// Format: /apps/files/?dir=/path/to/dir&scrollto=filename
 		const dirPath = filePath.substring(0, filePath.lastIndexOf('/'));
@@ -1722,8 +1897,8 @@
 			document.getElementById('client-id').value = '';
 			
 			if (id) {
-				title.textContent = 'Edit Client';
-				const client = this.clients.find(c => c.id === id);
+				title.textContent = 'Müşteri Düzenle';
+				const client = this.clients.find(c => c.id == id);
 				if (client) {
 					document.getElementById('client-id').value = client.id;
 					document.getElementById('client-name').value = client.name || '';
@@ -1732,10 +1907,324 @@
 					document.getElementById('client-notes').value = client.notes || '';
 				}
 			} else {
-				title.textContent = 'Add Client';
+				title.textContent = 'Müşteri Ekle';
 			}
 			
 			modal.style.display = 'block';
+		},
+		
+		showContactsModal: function() {
+			const modal = document.getElementById('contacts-modal');
+			const loadingEl = document.getElementById('contacts-loading');
+			const listEl = document.getElementById('contacts-list');
+			const emptyEl = document.getElementById('contacts-empty');
+			const searchInput = document.getElementById('contacts-search');
+			
+			modal.style.display = 'block';
+			loadingEl.style.display = 'block';
+			listEl.innerHTML = '';
+			emptyEl.style.display = 'none';
+			if (searchInput) searchInput.value = '';
+			
+			// Load contacts from Nextcloud Contacts API
+			this.loadContacts();
+		},
+		
+		loadContacts: function() {
+			const loadingEl = document.getElementById('contacts-loading');
+			const listEl = document.getElementById('contacts-list');
+			
+			// Try multiple methods to fetch contacts
+			// Method 1: Try our backend API
+			fetch(`${this.apiBase}/contacts`, {
+				headers: { 'requesttoken': OC.requestToken }
+			})
+			.then(r => r.json())
+			.then(contacts => {
+				if (Array.isArray(contacts) && contacts.length > 0) {
+					loadingEl.style.display = 'none';
+					this.renderContactsList(contacts);
+					return;
+				}
+				// If empty, try DAV method
+				throw new Error('No contacts from backend');
+			})
+			.catch(e => {
+				console.log('Backend API failed, trying DAV:', e);
+				// Method 2: Try DAV method
+				this.loadContactsFromDAV();
+			});
+		},
+		
+		loadContactsFromDAV: function() {
+			const loadingEl = document.getElementById('contacts-loading');
+			const listEl = document.getElementById('contacts-list');
+			
+			const userId = OC.currentUser || '';
+			if (!userId) {
+				loadingEl.style.display = 'none';
+				listEl.innerHTML = '<p class="empty-message">Kullanıcı bilgisi alınamadı</p>';
+				return;
+			}
+			
+			// Build DAV URL manually
+			const baseUrl = window.location.origin + OC.getRootPath();
+			const davUrl = baseUrl + '/remote.php/dav/addressbooks/users/' + encodeURIComponent(userId) + '/contacts/';
+			
+			fetch(davUrl, {
+				method: 'PROPFIND',
+				headers: {
+					'requesttoken': OC.requestToken,
+					'Depth': '1',
+					'Content-Type': 'application/xml'
+				},
+				body: '<?xml version="1.0"?><d:propfind xmlns:d="DAV:"><d:prop><d:getcontenttype/><d:getetag/></d:prop></d:propfind>'
+			})
+			.then(r => {
+				if (!r.ok) throw new Error('DAV API not available');
+				return r.text();
+			})
+			.then(xml => {
+				// Parse XML response
+				const parser = new DOMParser();
+				const doc = parser.parseFromString(xml, 'text/xml');
+				const responses = Array.from(doc.querySelectorAll('response'));
+				
+				if (responses.length === 0) {
+					listEl.innerHTML = '<p class="empty-message">Kişi bulunamadı</p>';
+					loadingEl.style.display = 'none';
+					return;
+				}
+				
+				// Fetch each contact's details
+				const contacts = [];
+				let loaded = 0;
+				const total = responses.length;
+				
+				responses.forEach(response => {
+					const hrefEl = response.querySelector('href');
+					if (!hrefEl) {
+						loaded++;
+						if (loaded === total) {
+							loadingEl.style.display = 'none';
+							this.renderContactsList(contacts);
+						}
+						return;
+					}
+					
+					const href = hrefEl.textContent;
+					if (href && href.endsWith('.vcf')) {
+						this.fetchContactDetails(href, (contact) => {
+							if (contact && contact.name) {
+								contacts.push(contact);
+							}
+							loaded++;
+							
+							if (loaded === total) {
+								loadingEl.style.display = 'none';
+								this.renderContactsList(contacts);
+							}
+						});
+					} else {
+						loaded++;
+						if (loaded === total) {
+							loadingEl.style.display = 'none';
+							this.renderContactsList(contacts);
+						}
+					}
+				});
+			})
+			.catch(e => {
+				console.error('Error loading contacts:', e);
+				loadingEl.style.display = 'none';
+				listEl.innerHTML = '<p class="empty-message">Kişiler yüklenemedi. Nextcloud Kişiler uygulamasının kurulu olduğundan emin olun.</p>';
+			});
+		},
+		
+		fetchContactDetails: function(href, callback) {
+			// href is relative path from DAV, build full URL
+			const baseUrl = window.location.origin + OC.getRootPath();
+			const contactUrl = baseUrl + '/remote.php/dav' + href;
+			
+			fetch(contactUrl, {
+				headers: { 'requesttoken': OC.requestToken }
+			})
+			.then(r => {
+				if (!r.ok) throw new Error('Failed to fetch contact');
+				return r.text();
+			})
+			.then(vcard => {
+				const contact = this.parseVCard(vcard);
+				callback(contact);
+			})
+			.catch(e => {
+				console.error('Error fetching contact:', e);
+				callback(null);
+			});
+		},
+		
+		parseVCard: function(vcard) {
+			const contact = {
+				id: '',
+				name: '',
+				email: '',
+				phone: '',
+				organization: '',
+				notes: ''
+			};
+			
+			const lines = vcard.split('\n');
+			lines.forEach(line => {
+				line = line.trim();
+				if (line.startsWith('FN:')) {
+					contact.name = line.substring(3).trim();
+				} else if (line.startsWith('EMAIL')) {
+					if (!contact.email) {
+						const match = line.match(/EMAIL[^:]*:(.+)/);
+						if (match) contact.email = match[1].trim();
+					}
+				} else if (line.startsWith('TEL')) {
+					if (!contact.phone) {
+						const match = line.match(/TEL[^:]*:(.+)/);
+						if (match) contact.phone = match[1].trim();
+					}
+				} else if (line.startsWith('ORG:')) {
+					contact.organization = line.substring(4).trim();
+				} else if (line.startsWith('NOTE:')) {
+					contact.notes = line.substring(5).trim();
+				} else if (line.startsWith('UID:')) {
+					contact.id = line.substring(4).trim();
+				}
+			});
+			
+			return contact;
+		},
+		
+		renderContactsList: function(contacts) {
+			const loadingEl = document.getElementById('contacts-loading');
+			const listEl = document.getElementById('contacts-list');
+			const emptyEl = document.getElementById('contacts-empty');
+			
+			loadingEl.style.display = 'none';
+			
+			// Store all contacts for filtering
+			this.allContacts = contacts;
+			
+			if (contacts.length === 0) {
+				listEl.innerHTML = '';
+				emptyEl.style.display = 'block';
+				return;
+			}
+			
+			// Sort by name
+			contacts.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+			
+			// Render contacts
+			this.renderFilteredContacts(contacts);
+			
+			// Setup search
+			const searchInput = document.getElementById('contacts-search');
+			if (searchInput) {
+				// Remove existing listeners
+				const newSearchInput = searchInput.cloneNode(true);
+				searchInput.parentNode.replaceChild(newSearchInput, searchInput);
+				
+				// Add search listener
+				newSearchInput.addEventListener('input', (e) => {
+					this.filterContacts(e.target.value);
+				});
+				
+				// Focus on search input
+				setTimeout(() => newSearchInput.focus(), 100);
+			}
+		},
+		
+		filterContacts: function(searchTerm) {
+			const listEl = document.getElementById('contacts-list');
+			const emptyEl = document.getElementById('contacts-empty');
+			
+			if (!this.allContacts || this.allContacts.length === 0) {
+				return;
+			}
+			
+			const term = searchTerm.toLowerCase().trim();
+			
+			if (!term) {
+				// Show all contacts
+				this.renderFilteredContacts(this.allContacts);
+				emptyEl.style.display = 'none';
+				return;
+			}
+			
+			// Filter contacts
+			const filtered = this.allContacts.filter(contact => {
+				const name = (contact.name || '').toLowerCase();
+				const email = (contact.email || '').toLowerCase();
+				const phone = (contact.phone || '').toLowerCase();
+				const organization = (contact.organization || '').toLowerCase();
+				
+				return name.includes(term) || 
+				       email.includes(term) || 
+				       phone.includes(term) || 
+				       organization.includes(term);
+			});
+			
+			if (filtered.length === 0) {
+				listEl.innerHTML = '';
+				emptyEl.style.display = 'block';
+			} else {
+				emptyEl.style.display = 'none';
+				this.renderFilteredContacts(filtered);
+			}
+		},
+		
+		renderFilteredContacts: function(contacts) {
+			const listEl = document.getElementById('contacts-list');
+			
+			let html = '<div class="contacts-list">';
+			contacts.forEach(contact => {
+				html += `
+					<div class="contact-item" data-contact-id="${this.escapeHtml(contact.id)}">
+						<div class="contact-info">
+							<div class="contact-name">${this.escapeHtml(contact.name)}</div>
+							<div class="contact-details">
+								${contact.email ? `<span>📧 ${this.escapeHtml(contact.email)}</span>` : ''}
+								${contact.phone ? `<span>📞 ${this.escapeHtml(contact.phone)}</span>` : ''}
+								${contact.organization ? `<span>🏢 ${this.escapeHtml(contact.organization)}</span>` : ''}
+							</div>
+						</div>
+						<button class="btn btn-primary btn-sm select-contact-btn">Seç</button>
+					</div>
+				`;
+			});
+			html += '</div>';
+			listEl.innerHTML = html;
+			
+			// Event listeners
+			listEl.querySelectorAll('.select-contact-btn').forEach(btn => {
+				btn.addEventListener('click', () => {
+					const contactItem = btn.closest('.contact-item');
+					const contactId = contactItem.dataset.contactId;
+					const contact = contacts.find(c => c.id === contactId);
+					if (contact) {
+						this.selectContact(contact);
+					}
+				});
+			});
+		},
+		
+		selectContact: function(contact) {
+			// Fill client form with contact data
+			document.getElementById('client-name').value = contact.name || '';
+			document.getElementById('client-email').value = contact.email || '';
+			document.getElementById('client-phone').value = contact.phone || '';
+			document.getElementById('client-notes').value = (contact.organization ? 'Kurum: ' + contact.organization + '\n' : '') + (contact.notes || '');
+			
+			// Close contacts modal
+			this.closeModal('contacts-modal');
+			
+			// Focus on name field
+			document.getElementById('client-name').focus();
 		},
 
 		showDomainModal: function(id = null) {
@@ -2629,7 +3118,10 @@
 		document.getElementById('service-detail-name').textContent = svc.name;
 		document.getElementById('service-detail-client').textContent = client ? client.name : '-';
 		document.getElementById('service-detail-price').textContent = `${svc.price || 0} ${svc.currency}`;
-		document.getElementById('service-detail-expiry').textContent = svc.expirationDate || '-';
+		
+		// Expiration date - tek seferlik hizmetler için özel gösterim
+		const isOneTime = svc.renewalInterval === 'one-time';
+		document.getElementById('service-detail-expiry').textContent = isOneTime ? '🔄 Tek Seferlik' : (svc.expirationDate || '-');
 		
 		// Additional info
 		document.getElementById('service-detail-start')?.textContent && (document.getElementById('service-detail-start').textContent = svc.startDate || '-');
@@ -2641,10 +3133,16 @@
 		const statusClass = svc.status === 'active' ? 'status-badge--paid' : 'status-badge--cancelled';
 		statusEl.innerHTML = `<span class="status-badge ${statusClass}">${this.getStatusText(svc.status)}</span>`;
 		
-		// Show days left if applicable
-		if (daysLeft !== null && daysLeft <= 30) {
+		// Show days left if applicable (sadece periyodik hizmetler için)
+		if (!isOneTime && daysLeft !== null && daysLeft <= 30) {
 			const daysClass = daysLeft <= 0 ? 'status-badge--overdue' : (daysLeft <= 7 ? 'status-badge--draft' : 'status-badge--sent');
 			statusEl.innerHTML += ` <span class="status-badge ${daysClass}">${daysLeft <= 0 ? 'Süresi doldu!' : daysLeft + ' gün kaldı'}</span>`;
+		}
+		
+		// Süreyi Uzat butonunu tek seferlik hizmetler için gizle
+		const extendBtn = document.getElementById('service-extend-btn');
+		if (extendBtn) {
+			extendBtn.style.display = isOneTime ? 'none' : 'inline-block';
 		}
 		
 		document.getElementById('service-detail-notes').textContent = svc.notes || '-';
@@ -2652,6 +3150,7 @@
 	
 	getIntervalText: function(interval) {
 		const texts = {
+			'one-time': '🔄 Tek Seferlik',
 			monthly: 'Aylık',
 			quarterly: '3 Aylık',
 			yearly: 'Yıllık',
@@ -2660,9 +3159,52 @@
 		return texts[interval] || interval;
 	},
 	
+	updateServiceExpirationDate: function(interval) {
+		const expirationInput = document.getElementById('service-expiration-date');
+		if (!expirationInput) return;
+		
+		const expirationLabel = expirationInput.closest('.form-group')?.querySelector('label');
+		
+		if (interval === 'one-time') {
+			// Tek seferlik hizmetler için expiration date opsiyonel
+			expirationInput.value = '';
+			expirationInput.required = false;
+			if (expirationLabel) {
+				expirationLabel.innerHTML = 'Bitiş (Opsiyonel)';
+			}
+		} else {
+			// Periyodik hizmetler için expiration date hesapla
+			const startDateInput = document.getElementById('service-start-date');
+			const startDate = startDateInput?.value ? new Date(startDateInput.value) : new Date();
+			
+			const intervalMonths = { 
+				monthly: 1, 
+				quarterly: 3, 
+				yearly: 12, 
+				biennial: 24 
+			};
+			
+			const months = intervalMonths[interval] || 12;
+			const expirationDate = new Date(startDate);
+			expirationDate.setMonth(expirationDate.getMonth() + months);
+			
+			expirationInput.value = expirationDate.toISOString().split('T')[0];
+			expirationInput.required = false;
+			if (expirationLabel) {
+				expirationLabel.innerHTML = 'Bitiş';
+			}
+		}
+	},
+	
 	showServiceExtendModal: function(id) {
 		const svc = this.services.find(s => s.id == id);
 		if (!svc) return;
+		
+		// Tek seferlik hizmetler için uzatma yapılamaz
+		if (svc.renewalInterval === 'one-time') {
+			this.showError('Tek seferlik hizmetler için süre uzatma yapılamaz');
+			return;
+		}
 		
 		// For now, just extend the service by one period and show confirmation
 		const intervalMonths = {
@@ -2752,13 +3294,19 @@
 						document.getElementById('service-currency').value = st.defaultCurrency || 'USD';
 						document.getElementById('service-interval').value = st.renewalInterval || 'monthly';
 						
-						// Calculate expiration based on interval
-						const start = new Date();
-						const intervalMonths = { monthly: 1, quarterly: 3, yearly: 12, biennial: 24 };
-						start.setMonth(start.getMonth() + (intervalMonths[st.renewalInterval] || 12));
-						document.getElementById('service-expiration-date').value = start.toISOString().split('T')[0];
+						// Update expiration date based on interval
+						this.updateServiceExpirationDate(st.renewalInterval);
 					}
 				}
+			};
+		}
+		
+		// Setup interval change handler
+		const intervalSelect = document.getElementById('service-interval');
+		if (intervalSelect) {
+			intervalSelect.onchange = () => {
+				const interval = intervalSelect.value;
+				this.updateServiceExpirationDate(interval);
 			};
 		}
 		
@@ -2963,9 +3511,10 @@
 			`;
 		}
 		
-		// Load invoice items and payments
+		// Load invoice items, payments, and files
 		this.loadInvoiceItems(id);
 		this.loadInvoicePayments(id);
+		this.loadInvoiceFiles(id);
 	},
 	
 	getInvoiceStatusText: function(status) {
@@ -4595,4 +5144,5 @@
 	// Make DomainControl available globally
 	window.DomainControl = DomainControl;
 })();
+
 

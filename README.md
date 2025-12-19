@@ -1,6 +1,6 @@
-# Domain Control for Nextcloud
+# ClientHub for Nextcloud
 
-Kapsamlı müşteri, domain, hosting ve proje yönetim sistemi. Tüm işletme süreçlerinizi tek bir yerden yönetin.
+ClientHub - Kapsamlı müşteri, proje ve iş yönetim sistemi. Tüm işletme süreçlerinizi tek bir yerden yönetin.
 
 ## Özellikler
 
@@ -87,7 +87,7 @@ Kapsamlı müşteri, domain, hosting ve proje yönetim sistemi. Tüm işletme s�
 
 ## Kullanım
 
-1. Nextcloud navigasyon menüsünden "Domain Control" seçeneğine tıklayın
+1. Nextcloud navigasyon menüsünden "ClientHub" seçeneğine tıklayın
 2. Dashboard'dan genel durumu görüntüleyin
 3. İlgili sekmeden (Müşteriler, Domainler, Hosting, vb.) yeni kayıtlar ekleyin
 4. Her kayıt için detaylı bilgileri girebilir ve takip edebilirsiniz
