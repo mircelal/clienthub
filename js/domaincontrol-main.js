@@ -1,5 +1,6 @@
 /**
  * Domain Control - Main JavaScript
+ * Version: 2.1.1 - Build: 20241218-FIX
  */
 (function() {
 	'use strict';
@@ -13,14 +14,18 @@
 		websites: [],
 
 	init: function() {
-		console.log('DomainControl: Initializing v2.0.0...');
+		console.log('DomainControl: v2.2.0 Starting...');
 		console.log('DomainControl: API Base:', this.apiBase);
-		this.setupTabs();
-		this.setupForms();
-		this.setupButtons();
-		this.loadData();
-		this.updateDashboard();
-		console.log('DomainControl: Init complete');
+		try {
+			this.setupTabs();
+			this.setupForms();
+			this.setupButtons();
+			this.loadData();
+			this.updateDashboard();
+			console.log('DomainControl: v2.2.0 Ready!');
+		} catch (e) {
+			console.error('DomainControl: Init error:', e);
+		}
 	},
 
 	setupTabs: function() {
@@ -94,6 +99,23 @@
 				this.hideClientDetail();
 			}
 		});
+
+		// Hosting detail buttons
+		document.getElementById('back-to-hostings-btn')?.addEventListener('click', () => this.hideHostingDetail());
+		document.getElementById('hosting-detail-pay-btn')?.addEventListener('click', () => {
+			if (this.currentHostingId) this.showHostingPaymentModal(this.currentHostingId);
+		});
+		document.getElementById('hosting-detail-edit-btn')?.addEventListener('click', () => {
+			if (this.currentHostingId) {
+				this.showHostingModal(this.currentHostingId);
+			}
+		});
+		document.getElementById('hosting-detail-delete-btn')?.addEventListener('click', () => {
+			if (this.currentHostingId && confirm('Bu hostingi silmek istediğinize emin misiniz?')) {
+				this.deleteHosting(this.currentHostingId);
+				this.hideHostingDetail();
+			}
+		});
 	},
 
 		switchTab: function(tabName) {
@@ -143,11 +165,16 @@
 	},
 
 	updateDashboard: function() {
-		// Update stats
-		document.getElementById('stat-clients').textContent = this.clients.length;
-		document.getElementById('stat-domains').textContent = this.domains.length;
-		document.getElementById('stat-hostings').textContent = this.hostings.length;
-		document.getElementById('stat-websites').textContent = this.websites.length;
+		// Update stats (null-safe)
+		const statClients = document.getElementById('stat-clients');
+		const statDomains = document.getElementById('stat-domains');
+		const statHostings = document.getElementById('stat-hostings');
+		const statWebsites = document.getElementById('stat-websites');
+		
+		if (statClients) statClients.textContent = this.clients.length;
+		if (statDomains) statDomains.textContent = this.domains.length;
+		if (statHostings) statHostings.textContent = this.hostings.length;
+		if (statWebsites) statWebsites.textContent = this.websites.length;
 
 		// Show recent clients
 		const recentContainer = document.getElementById('recent-clients');
@@ -238,20 +265,31 @@
 	},
 
 	loadHostings: function() {
+		console.log('DomainControl: Loading hostings...');
 		fetch(this.apiBase + '/hostings', {
 			headers: {
 				'requesttoken': OC.requestToken
 			}
 		})
-			.then(response => response.json())
-			.then(data => {
-				this.hostings = data;
-				this.renderHostings();
-			})
-			.catch(error => {
-				console.error('Error loading hostings:', error);
-				this.showError('Failed to load hostings');
-			});
+		.then(response => {
+			console.log('Hostings response status:', response.status);
+			return response.json();
+		})
+		.then(data => {
+			console.log('Hostings loaded:', data);
+			if (data.error) {
+				throw new Error(data.error);
+			}
+			this.hostings = Array.isArray(data) ? data : [];
+			this.renderHostings();
+			this.updateDashboard();
+		})
+		.catch(error => {
+			console.error('Error loading hostings:', error);
+			this.showError('Hostingler yüklenemedi: ' + error.message);
+			this.hostings = [];
+			this.renderHostings();
+		});
 	},
 
 	loadWebsites: function() {
@@ -653,51 +691,404 @@
 		this.currentDomainId = null;
 	},
 
-	renderHostings: function() {
-			const container = document.getElementById('hostings-list');
-			if (this.hostings.length === 0) {
-				container.innerHTML = '<p class="empty-state">No hostings found. Add your first hosting to get started.</p>';
-				return;
-			}
+	showClientDetail: function(id) {
+		const client = this.clients.find(c => c.id == id);
+		if (!client) return;
 
-			let html = '<div class="domaincontrol-grid">';
-			this.hostings.forEach(hosting => {
-				const client = this.clients.find(c => c.id === hosting.clientId);
+		// Count related items
+		const clientDomains = (this.domains || []).filter(d => d.clientId == id);
+		const clientHostings = (this.hostings || []).filter(h => h.clientId == id);
+		const clientWebsites = (this.websites || []).filter(w => w.clientId == id);
+
+		// Hide list, show detail
+		document.getElementById('clients-list-view').style.display = 'none';
+		document.getElementById('client-detail-view').style.display = 'block';
+
+		// Fill detail info
+		document.getElementById('client-detail-name').textContent = client.name;
+		document.getElementById('client-detail-email').textContent = client.email || '-';
+		document.getElementById('client-detail-phone').textContent = client.phone || '-';
+		document.getElementById('client-detail-created').textContent = client.createdAt ? client.createdAt.split(' ')[0] : '-';
+		document.getElementById('client-detail-notes').textContent = client.notes || 'Not bulunmuyor';
+
+		// Update counts
+		document.getElementById('client-detail-domains-count').textContent = clientDomains.length;
+		document.getElementById('client-detail-hostings-count').textContent = clientHostings.length;
+		document.getElementById('client-detail-websites-count').textContent = clientWebsites.length;
+
+		// Render client's domains
+		const domainsListEl = document.getElementById('client-domains-list');
+		if (clientDomains.length === 0) {
+			domainsListEl.innerHTML = '<p class="empty-mini">Domain yok</p>';
+		} else {
+			let domainsHtml = '';
+			clientDomains.forEach(d => {
+				const daysLeft = this.getDaysUntilExpiry(d.expirationDate);
+				const statusClass = daysLeft <= 7 ? 'status-critical' : (daysLeft <= 30 ? 'status-warning' : 'status-ok');
+				domainsHtml += `<div class="mini-item ${statusClass}"><span>🌐 ${this.escapeHtml(d.domainName)}</span><span>${d.expirationDate || '-'}</span></div>`;
+			});
+			domainsListEl.innerHTML = domainsHtml;
+		}
+
+		// Render client's hostings
+		const hostingsListEl = document.getElementById('client-hostings-list');
+		if (clientHostings.length === 0) {
+			hostingsListEl.innerHTML = '<p class="empty-mini">Hosting yok</p>';
+		} else {
+			let hostingsHtml = '';
+			clientHostings.forEach(h => {
+				const daysLeft = this.getDaysUntilExpiry(h.expirationDate);
+				const statusClass = daysLeft <= 7 ? 'status-critical' : (daysLeft <= 30 ? 'status-warning' : 'status-ok');
+				const serverIcon = h.serverType === 'own' ? '🏠' : '🖥️';
+				hostingsHtml += `<div class="mini-item ${statusClass}" data-hosting-id="${h.id}" style="cursor:pointer;"><span>${serverIcon} ${this.escapeHtml(h.provider || 'N/A')}</span><span>${h.expirationDate || '-'}</span></div>`;
+			});
+			hostingsListEl.innerHTML = hostingsHtml;
+
+			// Add click listeners for hostings
+			hostingsListEl.querySelectorAll('.mini-item').forEach(item => {
+				item.addEventListener('click', () => {
+					const hId = item.getAttribute('data-hosting-id');
+					if (hId) {
+						this.hideClientDetail();
+						this.switchTab('hostings');
+						setTimeout(() => this.showHostingDetail(parseInt(hId)), 100);
+					}
+				});
+			});
+		}
+
+		// Render client's websites
+		const websitesListEl = document.getElementById('client-websites-list');
+		if (clientWebsites.length === 0) {
+			websitesListEl.innerHTML = '<p class="empty-mini">Website yok</p>';
+		} else {
+			let websitesHtml = '';
+			clientWebsites.forEach(w => {
+				websitesHtml += `<div class="mini-item"><span>🌍 ${this.escapeHtml(w.name || 'N/A')}</span><span>${w.url || '-'}</span></div>`;
+			});
+			websitesListEl.innerHTML = websitesHtml;
+		}
+
+		// Store current client id
+		this.currentClientId = client.id;
+	},
+
+	hideClientDetail: function() {
+		document.getElementById('clients-list-view').style.display = 'block';
+		document.getElementById('client-detail-view').style.display = 'none';
+		this.currentClientId = null;
+	},
+
+	showHostingDetail: function(id) {
+		const hosting = this.hostings.find(h => h.id == id);
+		if (!hosting) return;
+
+		const client = (this.clients || []).find(c => c.id == hosting.clientId);
+		const daysLeft = this.getDaysUntilExpiry(hosting.expirationDate);
+		const statusClass = daysLeft <= 7 ? 'status-critical' : (daysLeft <= 30 ? 'status-warning' : 'status-ok');
+		const currencySymbol = this.getCurrencySymbol(hosting.currency);
+		const intervalText = this.getIntervalText(hosting.renewalInterval);
+		const serverTypeText = hosting.serverType === 'own' ? '🏠 Kendi Sunucum' : '🌐 Harici';
+
+		// Hide list, show detail
+		document.getElementById('hostings-list-view').style.display = 'none';
+		document.getElementById('hosting-detail-view').style.display = 'block';
+
+		// Fill detail info
+		document.getElementById('hosting-detail-name').textContent = hosting.provider + (hosting.plan ? ' - ' + hosting.plan : '');
+		document.getElementById('hosting-detail-expiry').textContent = hosting.expirationDate || '-';
+		document.getElementById('hosting-detail-days-left').textContent = daysLeft > 0 ? daysLeft + ' gün' : 'Geçti';
+		document.getElementById('hosting-detail-days-left').className = 'stat-card__value ' + statusClass;
+		document.getElementById('hosting-detail-price').textContent = hosting.price ? currencySymbol + parseFloat(hosting.price).toFixed(2) + '/' + intervalText : '-';
+		document.getElementById('hosting-detail-server-type').textContent = serverTypeText;
+		
+		document.getElementById('hosting-detail-client').textContent = client ? client.name : 'Atanmamış';
+		document.getElementById('hosting-detail-plan').textContent = hosting.plan || '-';
+		document.getElementById('hosting-detail-ip').textContent = hosting.serverIp || '-';
+		document.getElementById('hosting-detail-start').textContent = hosting.startDate || '-';
+		document.getElementById('hosting-detail-last-payment').textContent = hosting.lastPaymentDate || '-';
+
+		// Panel info
+		const panelUrlEl = document.getElementById('hosting-detail-panel-url');
+		if (hosting.panelUrl) {
+			panelUrlEl.innerHTML = `<a href="${this.escapeHtml(hosting.panelUrl)}" target="_blank">${this.escapeHtml(hosting.panelUrl)}</a>`;
+		} else {
+			panelUrlEl.textContent = '';
+		}
+		document.getElementById('hosting-detail-panel-notes').textContent = hosting.panelNotes || 'Panel giriş bilgisi eklenmemiş';
+
+		// Bağlı domainler (website'ların hostingId'si bu hosting'e eşit olanlar)
+		const hostingWebsites = (this.websites || []).filter(w => w.hostingId == id);
+		const hostingDomainIds = hostingWebsites.map(w => w.domainId).filter(d => d);
+		const hostingDomains = (this.domains || []).filter(d => hostingDomainIds.includes(d.id));
+
+		const domainsListEl = document.getElementById('hosting-domains-list');
+		if (hostingDomains.length === 0) {
+			domainsListEl.innerHTML = '<p class="empty-mini">Bağlı domain yok</p>';
+		} else {
+			let domainsHtml = '';
+			hostingDomains.forEach(d => {
+				domainsHtml += `<div class="mini-item"><span>🌐 ${this.escapeHtml(d.domainName)}</span></div>`;
+			});
+			domainsListEl.innerHTML = domainsHtml;
+		}
+
+		// Bağlı websiteler
+		const websitesListEl = document.getElementById('hosting-websites-list');
+		if (hostingWebsites.length === 0) {
+			websitesListEl.innerHTML = '<p class="empty-mini">Bağlı website yok</p>';
+		} else {
+			let websitesHtml = '';
+			hostingWebsites.forEach(w => {
+				websitesHtml += `<div class="mini-item"><span>🌍 ${this.escapeHtml(w.name || w.software || 'N/A')}</span></div>`;
+			});
+			websitesListEl.innerHTML = websitesHtml;
+		}
+
+		// Payment history
+		this.renderHostingPaymentHistory(hosting);
+
+		this.currentHostingId = hosting.id;
+	},
+
+	hideHostingDetail: function() {
+		document.getElementById('hostings-list-view').style.display = 'block';
+		document.getElementById('hosting-detail-view').style.display = 'none';
+		this.currentHostingId = null;
+	},
+
+	showHostingPaymentModal: function(id) {
+		const hosting = this.hostings.find(h => h.id == id);
+		if (!hosting) return;
+
+		const modal = document.getElementById('hosting-payment-modal');
+		document.getElementById('payment-hosting-id').value = hosting.id;
+		document.getElementById('payment-hosting-name').textContent = hosting.provider + (hosting.plan ? ' - ' + hosting.plan : '');
+		document.getElementById('payment-current-expiry').textContent = hosting.expirationDate || 'Belirtilmemiş';
+		document.getElementById('payment-amount').value = hosting.price || '';
+		document.getElementById('payment-currency').value = hosting.currency || 'USD';
+		document.getElementById('payment-period').value = hosting.renewalInterval === 'yearly' ? '12' : (hosting.renewalInterval === 'monthly' ? '1' : '12');
+		document.getElementById('payment-note').value = '';
+		
+		this.updatePaymentNewExpiry();
+		
+		modal.style.display = 'block';
+	},
+
+	updatePaymentNewExpiry: function() {
+		const currentExpiry = document.getElementById('payment-current-expiry').textContent;
+		const months = parseInt(document.getElementById('payment-period').value) || 1;
+		
+		let baseDate;
+		if (currentExpiry && currentExpiry !== 'Belirtilmemiş') {
+			baseDate = new Date(currentExpiry);
+		} else {
+			baseDate = new Date();
+		}
+		
+		if (baseDate < new Date()) {
+			baseDate = new Date();
+		}
+		
+		const newDate = new Date(baseDate);
+		newDate.setMonth(newDate.getMonth() + months);
+		
+		const formatted = newDate.toISOString().split('T')[0];
+		document.getElementById('payment-new-expiry').textContent = formatted;
+	},
+
+	addHostingPayment: function() {
+		const id = document.getElementById('payment-hosting-id').value;
+		const amount = document.getElementById('payment-amount').value;
+		const currency = document.getElementById('payment-currency').value;
+		const months = parseInt(document.getElementById('payment-period').value);
+		const note = document.getElementById('payment-note').value;
+		const newExpiry = document.getElementById('payment-new-expiry').textContent;
+		
+		const hosting = this.hostings.find(h => h.id == id);
+		if (!hosting) return;
+
+		// Parse existing history
+		let history = [];
+		if (hosting.paymentHistory) {
+			try {
+				history = JSON.parse(hosting.paymentHistory);
+			} catch(e) {
+				history = [];
+			}
+		}
+		
+		// Add new entry
+		const today = new Date().toISOString().split('T')[0];
+		const currencySymbol = this.getCurrencySymbol(currency);
+		history.push({
+			date: today,
+			amount: amount ? currencySymbol + amount + ' ' + currency : '',
+			months: months,
+			newExpiry: newExpiry,
+			note: note
+		});
+
+		console.log('Adding payment:', { id, amount, currency, months, newExpiry, note });
+
+		const params = new URLSearchParams();
+		params.append('expirationDate', newExpiry);
+		params.append('lastPaymentDate', today);
+		params.append('paymentHistory', JSON.stringify(history));
+		if (amount) {
+			params.append('price', amount);
+			params.append('currency', currency);
+		}
+
+		fetch(`${this.apiBase}/hostings/${id}`, {
+			method: 'PUT',
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+				'requesttoken': OC.requestToken
+			},
+			body: params.toString()
+		})
+		.then(response => response.json())
+		.then(result => {
+			console.log('Payment result:', result);
+			if (result.error) {
+				this.showError('Ödeme kaydedilemedi: ' + result.error);
+			} else {
+				this.closeModal('hosting-payment-modal');
+				const detailOpen = this.currentHostingId;
+				this.loadHostings();
+				if (detailOpen) {
+					setTimeout(() => this.showHostingDetail(detailOpen), 500);
+				}
+				this.showSuccess('Ödeme başarıyla kaydedildi!');
+			}
+		})
+		.catch(error => {
+			console.error('Error adding payment:', error);
+			this.showError('Ödeme kaydedilemedi: ' + error.message);
+		});
+	},
+
+	renderHostingPaymentHistory: function(hosting) {
+		const historyEl = document.getElementById('hosting-detail-payments');
+		
+		let historyEntries = [];
+		if (hosting.paymentHistory) {
+			try {
+				historyEntries = JSON.parse(hosting.paymentHistory);
+			} catch(e) {
+				historyEntries = [];
+			}
+		}
+
+		if (historyEntries.length === 0) {
+			historyEl.innerHTML = '<p class="empty-state">Henüz ödeme kaydı yok</p>';
+		} else {
+			let html = '';
+			historyEntries.slice().reverse().forEach(entry => {
 				html += `
-					<div class="domaincontrol-card">
-						<div class="card-header">
-						<h4>${this.escapeHtml(hosting.provider)}</h4>
-						<div class="card-actions">
-							<button class="icon-edit edit-hosting-btn" data-id="${hosting.id}" title="Edit"></button>
-							<button class="icon-delete delete-hosting-btn" data-id="${hosting.id}" title="Delete"></button>
-						</div>
-						</div>
-						<div class="card-body">
-							<p><strong>Client:</strong> ${client ? this.escapeHtml(client.name) : 'N/A'}</p>
-							${hosting.plan ? `<p><strong>Plan:</strong> ${this.escapeHtml(hosting.plan)}</p>` : ''}
-							${hosting.serverIp ? `<p><strong>Server IP:</strong> ${this.escapeHtml(hosting.serverIp)}</p>` : ''}
-							${hosting.installationDate ? `<p><strong>Installed:</strong> ${hosting.installationDate}</p>` : ''}
-							${hosting.price ? `<p><strong>Price:</strong> $${parseFloat(hosting.price).toFixed(2)}/${hosting.renewalInterval || 'monthly'}</p>` : ''}
+					<div class="history-item">
+						<div class="history-date">📅 ${entry.date}</div>
+						<div class="history-content">
+							<strong>${entry.months} ay uzatıldı</strong>
+							<span class="history-detail">Yeni bitiş: ${entry.newExpiry}</span>
+							${entry.amount ? `<span class="history-detail">Tutar: ${entry.amount}</span>` : ''}
+							${entry.note ? `<span class="history-note">${this.escapeHtml(entry.note)}</span>` : ''}
 						</div>
 					</div>
 				`;
+			});
+			historyEl.innerHTML = html;
+		}
+	},
+
+	renderHostings: function() {
+		const container = document.getElementById('hostings-list');
+		if (!container) return;
+		
+		if (!this.hostings || this.hostings.length === 0) {
+			container.innerHTML = '<p class="empty-state">Henüz hosting eklenmemiş. İlk hostinginizi ekleyin.</p>';
+			return;
+		}
+
+		let html = '';
+		this.hostings.forEach(hosting => {
+			const client = (this.clients || []).find(c => c.id == hosting.clientId);
+			const daysLeft = this.getDaysUntilExpiry(hosting.expirationDate);
+			const statusClass = daysLeft <= 7 ? 'status-critical' : (daysLeft <= 30 ? 'status-warning' : 'status-ok');
+			const statusText = daysLeft <= 0 ? 'ÖDENMEDİ' : (daysLeft <= 7 ? 'ACİL' : (daysLeft <= 30 ? 'YAKLAŞAN' : 'AKTİF'));
+			const currencySymbol = this.getCurrencySymbol(hosting.currency);
+			const serverIcon = hosting.serverType === 'own' ? '🏠' : '🌐';
+			const intervalText = this.getIntervalText(hosting.renewalInterval);
+			
+			html += `
+				<div class="list-item ${statusClass}" data-hosting-id="${hosting.id}" style="cursor: pointer;">
+					<div class="list-item__avatar">${serverIcon}</div>
+					<div class="list-item__content">
+						<div class="list-item__title">${this.escapeHtml(hosting.provider)} ${hosting.plan ? '- ' + this.escapeHtml(hosting.plan) : ''}</div>
+						<div class="list-item__meta">
+							<span>👤 ${client ? this.escapeHtml(client.name) : 'Atanmamış'}</span>
+							${hosting.serverIp ? `<span>🖥️ ${this.escapeHtml(hosting.serverIp)}</span>` : ''}
+							<span>📅 Ödeme: ${hosting.expirationDate || 'Belirtilmemiş'}</span>
+						</div>
+					</div>
+					<div class="list-item__stats">
+						<div class="list-item__stat">
+							<div class="list-item__stat-label">Kalan</div>
+							<div class="list-item__stat-value">${daysLeft > 0 ? daysLeft + ' gün' : 'Geçti'}</div>
+						</div>
+						<div class="list-item__stat">
+							<div class="list-item__stat-label">Fiyat</div>
+							<div class="list-item__stat-value">${hosting.price ? currencySymbol + parseFloat(hosting.price).toFixed(2) : '-'}/${intervalText}</div>
+						</div>
+					</div>
+					<div class="list-item__actions">
+						<button class="btn-extend pay-hosting-btn" data-id="${hosting.id}" title="Ödeme Ekle">💳</button>
+						<button class="icon-edit edit-hosting-btn" data-id="${hosting.id}" title="Düzenle"></button>
+						<button class="icon-delete delete-hosting-btn" data-id="${hosting.id}" title="Sil"></button>
+					</div>
+				</div>
+			`;
 		});
-		html += '</div>';
 		container.innerHTML = html;
 		
 		// Attach event listeners
+		container.querySelectorAll('.list-item').forEach(item => {
+			item.addEventListener('click', (e) => {
+				if (e.target.closest('.list-item__actions')) return;
+				const hostingItem = e.target.closest('.list-item');
+				if (hostingItem) {
+					const id = hostingItem.getAttribute('data-hosting-id');
+					if (id) this.showHostingDetail(parseInt(id));
+				}
+			});
+		});
+		container.querySelectorAll('.pay-hosting-btn').forEach(btn => {
+			btn.addEventListener('click', (e) => {
+				e.stopPropagation();
+				const id = parseInt(e.target.getAttribute('data-id'));
+				this.showHostingPaymentModal(id);
+			});
+		});
 		container.querySelectorAll('.edit-hosting-btn').forEach(btn => {
 			btn.addEventListener('click', (e) => {
+				e.stopPropagation();
 				const id = parseInt(e.target.getAttribute('data-id'));
 				this.showHostingModal(id);
 			});
 		});
 		container.querySelectorAll('.delete-hosting-btn').forEach(btn => {
 			btn.addEventListener('click', (e) => {
+				e.stopPropagation();
 				const id = parseInt(e.target.getAttribute('data-id'));
 				this.deleteHosting(id);
 			});
 		});
+	},
+
+	getIntervalText: function(interval) {
+		const texts = { monthly: 'ay', quarterly: '3ay', yearly: 'yıl', biennial: '2yıl' };
+		return texts[interval] || 'ay';
 	},
 
 	renderWebsites: function() {
@@ -784,6 +1175,17 @@
 			document.getElementById('extend-years').addEventListener('change', () => {
 				this.updateNewExpiryDate();
 			});
+
+			// Hosting payment form
+			document.getElementById('hosting-payment-form')?.addEventListener('submit', (e) => {
+				e.preventDefault();
+				this.addHostingPayment();
+			});
+
+			// Update payment expiry when period changes
+			document.getElementById('payment-period')?.addEventListener('change', () => {
+				this.updatePaymentNewExpiry();
+			});
 		},
 
 		showClientModal: function(id = null) {
@@ -844,35 +1246,39 @@
 	},
 
 		showHostingModal: function(id = null) {
-			const modal = document.getElementById('hosting-modal');
-			const form = document.getElementById('hosting-form');
-			const title = document.getElementById('hosting-modal-title');
-			
-			form.reset();
-			document.getElementById('hosting-id').value = '';
-			this.updateClientSelects();
-			
-			if (id) {
-				title.textContent = 'Edit Hosting';
-				const hosting = this.hostings.find(h => h.id === id);
-				if (hosting) {
-					document.getElementById('hosting-id').value = hosting.id;
-					document.getElementById('hosting-client-id').value = hosting.clientId || '';
-					document.getElementById('hosting-provider').value = hosting.provider || '';
-					document.getElementById('hosting-plan').value = hosting.plan || '';
-					document.getElementById('hosting-server-ip').value = hosting.serverIp || '';
-					document.getElementById('hosting-installation-date').value = hosting.installationDate || '';
-					document.getElementById('hosting-price').value = hosting.price || '';
-					document.getElementById('hosting-renewal-interval').value = hosting.renewalInterval || 'monthly';
-					document.getElementById('hosting-renewal-reminder').checked = hosting.renewalReminder !== false;
-					document.getElementById('hosting-reminder-days').value = hosting.reminderDays || 30;
-				}
-			} else {
-				title.textContent = 'Add Hosting';
+		const modal = document.getElementById('hosting-modal');
+		const form = document.getElementById('hosting-form');
+		const title = document.getElementById('hosting-modal-title');
+		
+		form.reset();
+		document.getElementById('hosting-id').value = '';
+		this.updateClientSelects();
+		
+		if (id) {
+			title.textContent = 'Hosting Düzenle';
+			const hosting = this.hostings.find(h => h.id == id);
+			if (hosting) {
+				document.getElementById('hosting-id').value = hosting.id;
+				document.getElementById('hosting-client-id').value = hosting.clientId || '';
+				document.getElementById('hosting-provider').value = hosting.provider || '';
+				document.getElementById('hosting-plan').value = hosting.plan || '';
+				document.getElementById('hosting-server-type').value = hosting.serverType || 'external';
+				document.getElementById('hosting-server-ip').value = hosting.serverIp || '';
+				document.getElementById('hosting-start-date').value = hosting.startDate || '';
+				document.getElementById('hosting-expiration-date').value = hosting.expirationDate || '';
+				document.getElementById('hosting-price').value = hosting.price || '';
+				document.getElementById('hosting-currency').value = hosting.currency || 'USD';
+				document.getElementById('hosting-renewal-interval').value = hosting.renewalInterval || 'yearly';
+				document.getElementById('hosting-panel-url').value = hosting.panelUrl || '';
+				document.getElementById('hosting-panel-notes').value = hosting.panelNotes || '';
+				document.getElementById('hosting-notes').value = hosting.notes || '';
 			}
-			
-			modal.style.display = 'block';
-		},
+		} else {
+			title.textContent = 'Hosting Ekle';
+		}
+		
+		modal.style.display = 'block';
+	},
 
 		showWebsiteModal: function(id = null) {
 			const modal = document.getElementById('website-modal');
@@ -967,7 +1373,12 @@
 				this.showError('Müşteri kaydedilemedi: ' + data.error);
 			} else {
 				this.closeModal('client-modal');
+				const detailOpen = this.currentClientId;
 				this.loadClients();
+				// Refresh detail view if open
+				if (detailOpen) {
+					setTimeout(() => this.showClientDetail(detailOpen), 500);
+				}
 				this.showSuccess('Müşteri başarıyla kaydedildi');
 			}
 		})
@@ -1038,43 +1449,69 @@
 	},
 
 		saveHosting: function() {
-			const form = document.getElementById('hosting-form');
-			const formData = new FormData(form);
-			const data = Object.fromEntries(formData);
-			const id = document.getElementById('hosting-id').value;
+		const id = document.getElementById('hosting-id').value;
+		const clientId = document.getElementById('hosting-client-id').value;
+		const provider = document.getElementById('hosting-provider').value;
+		const plan = document.getElementById('hosting-plan').value;
+		const serverType = document.getElementById('hosting-server-type').value;
+		const serverIp = document.getElementById('hosting-server-ip').value;
+		const startDate = document.getElementById('hosting-start-date').value;
+		const expirationDate = document.getElementById('hosting-expiration-date').value;
+		const price = document.getElementById('hosting-price').value;
+		const currency = document.getElementById('hosting-currency').value;
+		const renewalInterval = document.getElementById('hosting-renewal-interval').value;
+		const panelUrl = document.getElementById('hosting-panel-url').value;
+		const panelNotes = document.getElementById('hosting-panel-notes').value;
+		const notes = document.getElementById('hosting-notes').value;
 
-			// Convert checkbox to boolean
-			data.renewalReminder = document.getElementById('hosting-renewal-reminder').checked;
-			data.clientId = parseInt(data.clientId);
-			data.price = parseFloat(data.price) || 0;
-			data.reminderDays = parseInt(data.reminderDays) || 30;
+		console.log('saveHosting:', { id, clientId, provider, serverType });
 
-			const url = id ? `${this.apiBase}/hostings/${id}` : `${this.apiBase}/hostings`;
-			const method = id ? 'PUT' : 'POST';
+		const url = id ? `${this.apiBase}/hostings/${id}` : `${this.apiBase}/hostings`;
+		const method = id ? 'PUT' : 'POST';
+
+		const params = new URLSearchParams();
+		params.append('clientId', clientId);
+		params.append('provider', provider);
+		params.append('plan', plan);
+		params.append('serverType', serverType);
+		params.append('serverIp', serverIp);
+		params.append('startDate', startDate);
+		params.append('expirationDate', expirationDate);
+		params.append('price', price);
+		params.append('currency', currency);
+		params.append('renewalInterval', renewalInterval);
+		params.append('panelUrl', panelUrl);
+		params.append('panelNotes', panelNotes);
+		params.append('notes', notes);
 
 		fetch(url, {
 			method: method,
 			headers: {
-				'Content-Type': 'application/json',
+				'Content-Type': 'application/x-www-form-urlencoded',
 				'requesttoken': OC.requestToken
 			},
-			body: JSON.stringify(data)
+			body: params.toString()
 		})
-			.then(response => response.json())
-			.then(result => {
-				if (result.error) {
-					this.showError(result.error);
-				} else {
-					this.closeModal('hosting-modal');
-					this.loadHostings();
-					this.showSuccess('Hosting saved successfully');
+		.then(response => response.json())
+		.then(result => {
+			console.log('Hosting save result:', result);
+			if (result.error) {
+				this.showError('Hosting kaydedilemedi: ' + result.error);
+			} else {
+				this.closeModal('hosting-modal');
+				const detailOpen = this.currentHostingId;
+				this.loadHostings();
+				if (detailOpen) {
+					setTimeout(() => this.showHostingDetail(detailOpen), 500);
 				}
-			})
-			.catch(error => {
-				console.error('Error saving hosting:', error);
-				this.showError('Failed to save hosting');
-			});
-		},
+				this.showSuccess('Hosting başarıyla kaydedildi');
+			}
+		})
+		.catch(error => {
+			console.error('Error saving hosting:', error);
+			this.showError('Hosting kaydedilemedi: ' + error.message);
+		});
+	},
 
 		saveWebsite: function() {
 			const form = document.getElementById('website-form');

@@ -21,7 +21,7 @@ class HostingMapper extends QBMapper {
 		$qb->select('*')
 			->from($this->getTableName())
 			->where($qb->expr()->eq('user_id', $qb->createNamedParameter($userId)))
-			->orderBy('installation_date', 'DESC');
+			->orderBy('created_at', 'DESC');
 		
 		return $this->findEntities($qb);
 	}
@@ -37,7 +37,7 @@ class HostingMapper extends QBMapper {
 			->from($this->getTableName())
 			->where($qb->expr()->eq('client_id', $qb->createNamedParameter($clientId)))
 			->andWhere($qb->expr()->eq('user_id', $qb->createNamedParameter($userId)))
-			->orderBy('installation_date', 'DESC');
+			->orderBy('created_at', 'DESC');
 		
 		return $this->findEntities($qb);
 	}
@@ -59,15 +59,5 @@ class HostingMapper extends QBMapper {
 		return $this->findEntity($qb);
 	}
 
-	public function insert(Entity $entity): Entity {
-		$entity->setCreatedAt(new \DateTime());
-		$entity->setUpdatedAt(new \DateTime());
-		return parent::insert($entity);
-	}
-
-	public function update(Entity $entity): Entity {
-		$entity->setUpdatedAt(new \DateTime());
-		return parent::update($entity);
-	}
 }
 

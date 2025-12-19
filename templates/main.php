@@ -239,12 +239,96 @@ style('domaincontrol', 'domaincontrol');
 
 	<!-- Hostings Tab -->
 	<div id="hostings-tab" class="tab-content">
-		<div class="domaincontrol-actions">
-			<button class="btn btn-primary" id="add-hosting-btn">
-				<span class="icon-add"></span> Add Hosting
-			</button>
+		<!-- Hosting List View -->
+		<div id="hostings-list-view">
+			<div class="domaincontrol-actions">
+				<button class="btn btn-primary" id="add-hosting-btn">
+					<span class="icon-add"></span> Hosting Ekle
+				</button>
+			</div>
+			<div id="hostings-list" class="domaincontrol-list"></div>
 		</div>
-		<div id="hostings-list" class="domaincontrol-list"></div>
+		
+		<!-- Hosting Detail View -->
+		<div id="hosting-detail-view" style="display: none;">
+			<div class="detail-header">
+				<button class="btn btn-back" id="back-to-hostings-btn">← Geri</button>
+				<h2 id="hosting-detail-name"></h2>
+				<div class="detail-actions">
+					<button class="btn btn-success" id="hosting-detail-pay-btn">💳 Ödeme Ekle</button>
+					<button class="btn btn-secondary" id="hosting-detail-edit-btn">Düzenle</button>
+					<button class="btn btn-danger" id="hosting-detail-delete-btn">Sil</button>
+				</div>
+			</div>
+			
+			<div class="detail-content">
+				<div class="detail-stats">
+					<div class="stat-card">
+						<div class="stat-card__icon">📅</div>
+						<div class="stat-card__content">
+							<div class="stat-card__label">Sonraki Ödeme</div>
+							<div class="stat-card__value" id="hosting-detail-expiry"></div>
+						</div>
+					</div>
+					<div class="stat-card">
+						<div class="stat-card__icon">⏳</div>
+						<div class="stat-card__content">
+							<div class="stat-card__label">Kalan Gün</div>
+							<div class="stat-card__value" id="hosting-detail-days-left"></div>
+						</div>
+					</div>
+					<div class="stat-card">
+						<div class="stat-card__icon">💰</div>
+						<div class="stat-card__content">
+							<div class="stat-card__label">Fiyat</div>
+							<div class="stat-card__value" id="hosting-detail-price"></div>
+						</div>
+					</div>
+					<div class="stat-card">
+						<div class="stat-card__icon">🖥️</div>
+						<div class="stat-card__content">
+							<div class="stat-card__label">Sunucu Tipi</div>
+							<div class="stat-card__value" id="hosting-detail-server-type"></div>
+						</div>
+					</div>
+				</div>
+				
+				<div class="detail-info-grid">
+					<div class="detail-info-card">
+						<h3>Genel Bilgiler</h3>
+						<table class="detail-table">
+							<tr><td>Müşteri</td><td id="hosting-detail-client"></td></tr>
+							<tr><td>Paket</td><td id="hosting-detail-plan"></td></tr>
+							<tr><td>Sunucu IP</td><td id="hosting-detail-ip"></td></tr>
+							<tr><td>Başlangıç</td><td id="hosting-detail-start"></td></tr>
+							<tr><td>Son Ödeme</td><td id="hosting-detail-last-payment"></td></tr>
+						</table>
+					</div>
+					
+					<div class="detail-info-card">
+						<h3>Panel Giriş Bilgileri</h3>
+						<p id="hosting-detail-panel-url" style="margin-bottom: 8px;"></p>
+						<pre id="hosting-detail-panel-notes" class="detail-notes"></pre>
+					</div>
+				</div>
+				
+				<div class="detail-info-grid">
+					<div class="detail-info-card">
+						<h3>🌐 Bağlı Domainler</h3>
+						<div id="hosting-domains-list" class="mini-list"></div>
+					</div>
+					<div class="detail-info-card">
+						<h3>🌍 Bağlı Websiteler</h3>
+						<div id="hosting-websites-list" class="mini-list"></div>
+					</div>
+				</div>
+				
+				<div class="detail-history-card">
+					<h3>💳 Ödeme Geçmişi</h3>
+					<div id="hosting-detail-payments" class="history-list"></div>
+				</div>
+			</div>
+		</div>
 	</div>
 
 	<!-- Websites Tab -->
@@ -437,63 +521,156 @@ style('domaincontrol', 'domaincontrol');
 
 <!-- Hosting Modal -->
 <div id="hosting-modal" class="modal">
-	<div class="modal-content">
+	<div class="modal-content modal-large">
 		<div class="modal-header">
-			<h3 id="hosting-modal-title">Add Hosting</h3>
+			<h3 id="hosting-modal-title">Hosting Ekle</h3>
 			<span class="modal-close" data-modal="hosting-modal">&times;</span>
 		</div>
 		<div class="modal-body">
 			<form id="hosting-form">
 				<input type="hidden" id="hosting-id" name="id">
-				<div class="form-group">
-					<label for="hosting-client-id">Client *</label>
-					<select id="hosting-client-id" name="clientId" required class="form-control"></select>
-				</div>
-				<div class="form-group">
-					<label for="hosting-provider">Provider *</label>
-					<input type="text" id="hosting-provider" name="provider" required class="form-control">
-				</div>
-				<div class="form-group">
-					<label for="hosting-plan">Plan</label>
-					<input type="text" id="hosting-plan" name="plan" class="form-control">
-				</div>
-				<div class="form-group">
-					<label for="hosting-server-ip">Server IP</label>
-					<input type="text" id="hosting-server-ip" name="serverIp" class="form-control">
-				</div>
-				<div class="form-group">
-					<label for="hosting-installation-date">Installation Date</label>
-					<input type="date" id="hosting-installation-date" name="installationDate" class="form-control">
+				<div class="form-row">
+					<div class="form-group">
+						<label for="hosting-client-id">Müşteri *</label>
+						<select id="hosting-client-id" name="clientId" required class="form-control">
+							<option value="">Müşteri Seçin</option>
+						</select>
+					</div>
+					<div class="form-group">
+						<label for="hosting-provider">Sağlayıcı *</label>
+						<input type="text" id="hosting-provider" name="provider" required class="form-control" placeholder="Vultr, Hetzner, DigitalOcean...">
+					</div>
 				</div>
 				<div class="form-row">
 					<div class="form-group">
-						<label for="hosting-price">Price</label>
-						<input type="number" id="hosting-price" name="price" step="0.01" class="form-control">
+						<label for="hosting-plan">Paket</label>
+						<input type="text" id="hosting-plan" name="plan" class="form-control" placeholder="VPS 4GB, Shared Pro...">
 					</div>
 					<div class="form-group">
-						<label for="hosting-renewal-interval">Renewal Interval</label>
-						<select id="hosting-renewal-interval" name="renewalInterval" class="form-control">
-							<option value="monthly" selected>Monthly</option>
-							<option value="yearly">Yearly</option>
-							<option value="biennial">Biennial</option>
+						<label for="hosting-server-type">Sunucu Tipi</label>
+						<select id="hosting-server-type" name="serverType" class="form-control">
+							<option value="own">🏠 Kendi Sunucum</option>
+							<option value="external" selected>🌐 Harici Sunucu</option>
 						</select>
 					</div>
 				</div>
 				<div class="form-row">
 					<div class="form-group">
-						<label>
-							<input type="checkbox" id="hosting-renewal-reminder" name="renewalReminder" checked>
-							Enable Renewal Reminder
-						</label>
+						<label for="hosting-server-ip">Sunucu IP</label>
+						<input type="text" id="hosting-server-ip" name="serverIp" class="form-control" placeholder="192.168.1.1">
 					</div>
 					<div class="form-group">
-						<label for="hosting-reminder-days">Reminder Days Before</label>
-						<input type="number" id="hosting-reminder-days" name="reminderDays" value="30" class="form-control">
+						<label for="hosting-renewal-interval">Ödeme Periyodu</label>
+						<select id="hosting-renewal-interval" name="renewalInterval" class="form-control">
+							<option value="monthly">Aylık</option>
+							<option value="quarterly">3 Aylık</option>
+							<option value="yearly" selected>Yıllık</option>
+							<option value="biennial">2 Yıllık</option>
+						</select>
 					</div>
 				</div>
+				<div class="form-row">
+					<div class="form-group">
+						<label for="hosting-start-date">Başlangıç Tarihi</label>
+						<input type="date" id="hosting-start-date" name="startDate" class="form-control">
+					</div>
+					<div class="form-group">
+						<label for="hosting-expiration-date">Sonraki Ödeme Tarihi</label>
+						<input type="date" id="hosting-expiration-date" name="expirationDate" class="form-control">
+					</div>
+				</div>
+				<div class="form-row">
+					<div class="form-group">
+						<label for="hosting-price">Fiyat</label>
+						<input type="number" id="hosting-price" name="price" step="0.01" class="form-control" placeholder="9.99">
+					</div>
+					<div class="form-group">
+						<label for="hosting-currency">Para Birimi</label>
+						<select id="hosting-currency" name="currency" class="form-control">
+							<option value="USD">$ USD</option>
+							<option value="EUR">€ EUR</option>
+							<option value="TRY">₺ TRY</option>
+							<option value="AZN">₼ AZN</option>
+							<option value="GBP">£ GBP</option>
+							<option value="RUB">₽ RUB</option>
+						</select>
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="hosting-panel-url">Panel URL</label>
+					<input type="text" id="hosting-panel-url" name="panelUrl" class="form-control" placeholder="https://panel.provider.com">
+				</div>
+				<div class="form-group">
+					<label for="hosting-panel-notes">Panel Giriş Bilgileri</label>
+					<textarea id="hosting-panel-notes" name="panelNotes" class="form-control" rows="2" placeholder="Kullanıcı: admin&#10;Şifre: ****"></textarea>
+				</div>
+				<div class="form-group">
+					<label for="hosting-notes">Genel Notlar</label>
+					<textarea id="hosting-notes" name="notes" class="form-control" rows="2" placeholder="Diğer notlar..."></textarea>
+				</div>
 				<div class="form-actions">
-					<button type="button" class="btn btn-secondary modal-cancel" data-modal="hosting-modal">Cancel</button>
-					<button type="submit" class="btn btn-primary">Save</button>
+					<button type="button" class="btn btn-secondary modal-cancel" data-modal="hosting-modal">İptal</button>
+					<button type="submit" class="btn btn-primary">Kaydet</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+
+<!-- Hosting Payment Modal -->
+<div id="hosting-payment-modal" class="modal">
+	<div class="modal-content">
+		<div class="modal-header">
+			<h3>💳 Ödeme Ekle</h3>
+			<span class="modal-close" data-modal="hosting-payment-modal">&times;</span>
+		</div>
+		<div class="modal-body">
+			<form id="hosting-payment-form">
+				<input type="hidden" id="payment-hosting-id" name="hostingId">
+				
+				<div class="domain-extend-info">
+					<p><strong>Hosting:</strong> <span id="payment-hosting-name"></span></p>
+					<p><strong>Mevcut Bitiş:</strong> <span id="payment-current-expiry"></span></p>
+					<p><strong>Yeni Bitiş:</strong> <span id="payment-new-expiry" class="text-success"></span></p>
+				</div>
+				
+				<div class="form-row">
+					<div class="form-group">
+						<label for="payment-amount">Ödeme Tutarı</label>
+						<input type="number" id="payment-amount" name="amount" step="0.01" class="form-control" placeholder="9.99">
+					</div>
+					<div class="form-group">
+						<label for="payment-currency">Para Birimi</label>
+						<select id="payment-currency" name="currency" class="form-control">
+							<option value="USD">$ USD</option>
+							<option value="EUR">€ EUR</option>
+							<option value="TRY">₺ TRY</option>
+							<option value="AZN">₼ AZN</option>
+							<option value="GBP">£ GBP</option>
+							<option value="RUB">₽ RUB</option>
+						</select>
+					</div>
+				</div>
+				
+				<div class="form-group">
+					<label for="payment-period">Ödeme Periyodu</label>
+					<select id="payment-period" name="period" class="form-control">
+						<option value="1">1 Ay</option>
+						<option value="3">3 Ay</option>
+						<option value="6">6 Ay</option>
+						<option value="12" selected>1 Yıl</option>
+						<option value="24">2 Yıl</option>
+					</select>
+				</div>
+				
+				<div class="form-group">
+					<label for="payment-note">Not</label>
+					<textarea id="payment-note" name="note" class="form-control" rows="2" placeholder="Ödeme notu..."></textarea>
+				</div>
+				
+				<div class="form-actions">
+					<button type="button" class="btn btn-secondary modal-cancel" data-modal="hosting-payment-modal">İptal</button>
+					<button type="submit" class="btn btn-success">Ödemeyi Kaydet</button>
 				</div>
 			</form>
 		</div>
