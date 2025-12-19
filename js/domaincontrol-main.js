@@ -1,6 +1,10 @@
 /**
  * Domain Control - Main JavaScript
- * Version: 2.1.1 - Build: 20241218-FIX
+ * Version: 2.3.0
+ * Build: 2024-12-18-FINAL
+ * 
+ * IMPORTANT: If you see "Initializing modern dashboard" in console,
+ * this file is NOT loaded! Upload this file to server.
  */
 (function() {
 	'use strict';
@@ -14,7 +18,7 @@
 		websites: [],
 
 	init: function() {
-		console.log('DomainControl: v2.2.0 Starting...');
+		console.log('DomainControl: v2.3.0 Starting...');
 		console.log('DomainControl: API Base:', this.apiBase);
 		try {
 			this.setupTabs();
@@ -22,7 +26,7 @@
 			this.setupButtons();
 			this.loadData();
 			this.updateDashboard();
-			console.log('DomainControl: v2.2.0 Ready!');
+			console.log('DomainControl: v2.3.0 Ready!');
 		} catch (e) {
 			console.error('DomainControl: Init error:', e);
 		}
@@ -114,6 +118,20 @@
 			if (this.currentHostingId && confirm('Bu hostingi silmek istediğinize emin misiniz?')) {
 				this.deleteHosting(this.currentHostingId);
 				this.hideHostingDetail();
+			}
+		});
+
+		// Website detail buttons
+		document.getElementById('back-to-websites-btn')?.addEventListener('click', () => this.hideWebsiteDetail());
+		document.getElementById('website-detail-edit-btn')?.addEventListener('click', () => {
+			if (this.currentWebsiteId) {
+				this.showWebsiteModal(this.currentWebsiteId);
+			}
+		});
+		document.getElementById('website-detail-delete-btn')?.addEventListener('click', () => {
+			if (this.currentWebsiteId && confirm('Bu websiteyi silmek istediğinize emin misiniz?')) {
+				this.deleteWebsite(this.currentWebsiteId);
+				this.hideWebsiteDetail();
 			}
 		});
 	},
@@ -293,20 +311,31 @@
 	},
 
 	loadWebsites: function() {
+		console.log('DomainControl: Loading websites...');
 		fetch(this.apiBase + '/websites', {
 			headers: {
 				'requesttoken': OC.requestToken
 			}
 		})
-			.then(response => response.json())
-			.then(data => {
-				this.websites = data;
-				this.renderWebsites();
-			})
-			.catch(error => {
-				console.error('Error loading websites:', error);
-				this.showError('Failed to load websites');
-			});
+		.then(response => {
+			console.log('Websites response status:', response.status);
+			return response.json();
+		})
+		.then(data => {
+			console.log('Websites loaded:', data);
+			if (data.error) {
+				throw new Error(data.error);
+			}
+			this.websites = Array.isArray(data) ? data : [];
+			this.renderWebsites();
+			this.updateDashboard();
+		})
+		.catch(error => {
+			console.error('Error loading websites:', error);
+			this.showError('Websiteler yüklenemedi: ' + error.message);
+			this.websites = [];
+			this.renderWebsites();
+		});
 	},
 
 		updateClientSelects: function() {
@@ -1092,52 +1121,136 @@
 	},
 
 	renderWebsites: function() {
-			const container = document.getElementById('websites-list');
-			if (this.websites.length === 0) {
-				container.innerHTML = '<p class="empty-state">No websites found. Add your first website to get started.</p>';
-				return;
-			}
+		const container = document.getElementById('websites-list');
+		if (!container) return;
+		
+		if (!this.websites || this.websites.length === 0) {
+			container.innerHTML = '<p class="empty-state">Henüz website eklenmemiş. İlk websitenizi ekleyin.</p>';
+			return;
+		}
 
-			let html = '<div class="domaincontrol-grid">';
-			this.websites.forEach(website => {
-				const client = this.clients.find(c => c.id === website.clientId);
-				const domain = this.domains.find(d => d.id === website.domainId);
-				const hosting = this.hostings.find(h => h.id === website.hostingId);
-				html += `
-					<div class="domaincontrol-card">
-						<div class="card-header">
-						<h4>${this.escapeHtml(website.software || 'Website')}</h4>
-						<div class="card-actions">
-							<button class="icon-edit edit-website-btn" data-id="${website.id}" title="Edit"></button>
-							<button class="icon-delete delete-website-btn" data-id="${website.id}" title="Delete"></button>
-						</div>
-						</div>
-						<div class="card-body">
-							<p><strong>Client:</strong> ${client ? this.escapeHtml(client.name) : 'N/A'}</p>
-							${domain ? `<p><strong>Domain:</strong> ${this.escapeHtml(domain.domainName)}</p>` : ''}
-							${hosting ? `<p><strong>Hosting:</strong> ${this.escapeHtml(hosting.provider)}</p>` : ''}
-							${website.installationDate ? `<p><strong>Installed:</strong> ${website.installationDate}</p>` : ''}
-							${website.notes ? `<p class="notes">${this.escapeHtml(website.notes)}</p>` : ''}
+		let html = '';
+		this.websites.forEach(website => {
+			const client = (this.clients || []).find(c => c.id == website.clientId);
+			const domain = (this.domains || []).find(d => d.id == website.domainId);
+			const hosting = (this.hostings || []).find(h => h.id == website.hostingId);
+			const statusIcon = this.getWebsiteStatusIcon(website.status);
+			const statusClass = website.status === 'active' ? 'status-ok' : (website.status === 'inactive' ? 'status-critical' : 'status-warning');
+			
+			html += `
+				<div class="list-item ${statusClass}" data-website-id="${website.id}" style="cursor: pointer;">
+					<div class="list-item__avatar">🌍</div>
+					<div class="list-item__content">
+						<div class="list-item__title">${this.escapeHtml(website.name || website.software || 'Website')}</div>
+						<div class="list-item__meta">
+							<span>👤 ${client ? this.escapeHtml(client.name) : 'Atanmamış'}</span>
+							${domain ? `<span>🌐 ${this.escapeHtml(domain.domainName)}</span>` : ''}
+							${website.software ? `<span>📦 ${this.escapeHtml(website.software)}</span>` : ''}
 						</div>
 					</div>
-				`;
+					<div class="list-item__stats">
+						<div class="list-item__stat">
+							<div class="list-item__stat-label">Durum</div>
+							<div class="list-item__stat-value">${statusIcon}</div>
+						</div>
+						<div class="list-item__stat">
+							<div class="list-item__stat-label">Hosting</div>
+							<div class="list-item__stat-value">${hosting ? this.escapeHtml(hosting.provider) : '-'}</div>
+						</div>
+					</div>
+					<div class="list-item__actions">
+						<button class="icon-edit edit-website-btn" data-id="${website.id}" title="Düzenle"></button>
+						<button class="icon-delete delete-website-btn" data-id="${website.id}" title="Sil"></button>
+					</div>
+				</div>
+			`;
 		});
-		html += '</div>';
 		container.innerHTML = html;
 		
 		// Attach event listeners
+		container.querySelectorAll('.list-item').forEach(item => {
+			item.addEventListener('click', (e) => {
+				if (e.target.closest('.list-item__actions')) return;
+				const websiteItem = e.target.closest('.list-item');
+				if (websiteItem) {
+					const id = websiteItem.getAttribute('data-website-id');
+					if (id) this.showWebsiteDetail(parseInt(id));
+				}
+			});
+		});
 		container.querySelectorAll('.edit-website-btn').forEach(btn => {
 			btn.addEventListener('click', (e) => {
+				e.stopPropagation();
 				const id = parseInt(e.target.getAttribute('data-id'));
 				this.showWebsiteModal(id);
 			});
 		});
 		container.querySelectorAll('.delete-website-btn').forEach(btn => {
 			btn.addEventListener('click', (e) => {
+				e.stopPropagation();
 				const id = parseInt(e.target.getAttribute('data-id'));
 				this.deleteWebsite(id);
 			});
 		});
+	},
+
+	getWebsiteStatusIcon: function(status) {
+		const icons = {
+			'active': '🟢 Aktif',
+			'maintenance': '🟡 Bakımda',
+			'development': '🔵 Geliştirme',
+			'inactive': '🔴 Pasif'
+		};
+		return icons[status] || '⚪ Bilinmiyor';
+	},
+
+	showWebsiteDetail: function(id) {
+		const website = this.websites.find(w => w.id == id);
+		if (!website) return;
+
+		const client = (this.clients || []).find(c => c.id == website.clientId);
+		const domain = (this.domains || []).find(d => d.id == website.domainId);
+		const hosting = (this.hostings || []).find(h => h.id == website.hostingId);
+
+		// Hide list, show detail
+		document.getElementById('websites-list-view').style.display = 'none';
+		document.getElementById('website-detail-view').style.display = 'block';
+
+		// Fill detail info
+		document.getElementById('website-detail-name').textContent = website.name || website.software || 'Website';
+		document.getElementById('website-detail-software').textContent = website.software || '-';
+		document.getElementById('website-detail-version').textContent = website.version || '-';
+		document.getElementById('website-detail-status').textContent = this.getWebsiteStatusIcon(website.status);
+		document.getElementById('website-detail-install-date').textContent = website.installationDate || '-';
+		
+		document.getElementById('website-detail-client').textContent = client ? client.name : 'Atanmamış';
+		document.getElementById('website-detail-domain').textContent = domain ? domain.domainName : '-';
+		document.getElementById('website-detail-hosting').textContent = hosting ? hosting.provider : '-';
+		
+		const urlEl = document.getElementById('website-detail-url');
+		if (website.url) {
+			urlEl.innerHTML = `<a href="${this.escapeHtml(website.url)}" target="_blank">${this.escapeHtml(website.url)}</a>`;
+		} else {
+			urlEl.textContent = '-';
+		}
+
+		// Admin info
+		const adminUrlEl = document.getElementById('website-detail-admin-url');
+		if (website.adminUrl) {
+			adminUrlEl.innerHTML = `<a href="${this.escapeHtml(website.adminUrl)}" target="_blank">${this.escapeHtml(website.adminUrl)}</a>`;
+		} else {
+			adminUrlEl.textContent = '';
+		}
+		document.getElementById('website-detail-admin-notes').textContent = website.adminNotes || 'Admin giriş bilgisi eklenmemiş';
+		document.getElementById('website-detail-notes').textContent = website.notes || 'Not bulunmuyor';
+
+		this.currentWebsiteId = website.id;
+	},
+
+	hideWebsiteDetail: function() {
+		document.getElementById('websites-list-view').style.display = 'block';
+		document.getElementById('website-detail-view').style.display = 'none';
+		this.currentWebsiteId = null;
 	},
 
 	setupForms: function() {
@@ -1281,34 +1394,40 @@
 	},
 
 		showWebsiteModal: function(id = null) {
-			const modal = document.getElementById('website-modal');
-			const form = document.getElementById('website-form');
-			const title = document.getElementById('website-modal-title');
-			
-			form.reset();
-			document.getElementById('website-id').value = '';
-			this.updateClientSelects();
-			this.updateDomainSelect();
-			this.updateHostingSelect();
-			
-			if (id) {
-				title.textContent = 'Edit Website';
-				const website = this.websites.find(w => w.id === id);
-				if (website) {
-					document.getElementById('website-id').value = website.id;
-					document.getElementById('website-client-id').value = website.clientId || '';
-					document.getElementById('website-domain-id').value = website.domainId || '';
-					document.getElementById('website-hosting-id').value = website.hostingId || '';
-					document.getElementById('website-software').value = website.software || '';
-					document.getElementById('website-installation-date').value = website.installationDate || '';
-					document.getElementById('website-notes').value = website.notes || '';
-				}
-			} else {
-				title.textContent = 'Add Website';
+		const modal = document.getElementById('website-modal');
+		const form = document.getElementById('website-form');
+		const title = document.getElementById('website-modal-title');
+		
+		form.reset();
+		document.getElementById('website-id').value = '';
+		this.updateClientSelects();
+		this.updateDomainSelect();
+		this.updateHostingSelect();
+		
+		if (id) {
+			title.textContent = 'Website Düzenle';
+			const website = this.websites.find(w => w.id == id);
+			if (website) {
+				document.getElementById('website-id').value = website.id;
+				document.getElementById('website-client-id').value = website.clientId || '';
+				document.getElementById('website-domain-id').value = website.domainId || '';
+				document.getElementById('website-hosting-id').value = website.hostingId || '';
+				document.getElementById('website-name').value = website.name || '';
+				document.getElementById('website-software').value = website.software || '';
+				document.getElementById('website-version').value = website.version || '';
+				document.getElementById('website-status').value = website.status || 'active';
+				document.getElementById('website-installation-date').value = website.installationDate || '';
+				document.getElementById('website-url').value = website.url || '';
+				document.getElementById('website-admin-url').value = website.adminUrl || '';
+				document.getElementById('website-admin-notes').value = website.adminNotes || '';
+				document.getElementById('website-notes').value = website.notes || '';
 			}
-			
-			modal.style.display = 'block';
-		},
+		} else {
+			title.textContent = 'Website Ekle';
+		}
+		
+		modal.style.display = 'block';
+	},
 
 		updateDomainSelect: function() {
 			const select = document.getElementById('website-domain-id');
@@ -1514,41 +1633,67 @@
 	},
 
 		saveWebsite: function() {
-			const form = document.getElementById('website-form');
-			const formData = new FormData(form);
-			const data = Object.fromEntries(formData);
-			const id = document.getElementById('website-id').value;
+		const id = document.getElementById('website-id').value;
+		const clientId = document.getElementById('website-client-id').value;
+		const domainId = document.getElementById('website-domain-id').value;
+		const hostingId = document.getElementById('website-hosting-id').value;
+		const name = document.getElementById('website-name').value;
+		const software = document.getElementById('website-software').value;
+		const version = document.getElementById('website-version').value;
+		const status = document.getElementById('website-status').value;
+		const installationDate = document.getElementById('website-installation-date').value;
+		const url = document.getElementById('website-url').value;
+		const adminUrl = document.getElementById('website-admin-url').value;
+		const adminNotes = document.getElementById('website-admin-notes').value;
+		const notes = document.getElementById('website-notes').value;
 
-			data.clientId = parseInt(data.clientId);
-			data.domainId = data.domainId ? parseInt(data.domainId) : 0;
-			data.hostingId = data.hostingId ? parseInt(data.hostingId) : 0;
+		console.log('saveWebsite:', { id, clientId, name, software });
 
-			const url = id ? `${this.apiBase}/websites/${id}` : `${this.apiBase}/websites`;
-			const method = id ? 'PUT' : 'POST';
+		const apiUrl = id ? `${this.apiBase}/websites/${id}` : `${this.apiBase}/websites`;
+		const method = id ? 'PUT' : 'POST';
 
-		fetch(url, {
+		const params = new URLSearchParams();
+		params.append('clientId', clientId);
+		params.append('domainId', domainId);
+		params.append('hostingId', hostingId);
+		params.append('name', name);
+		params.append('software', software);
+		params.append('version', version);
+		params.append('status', status);
+		params.append('installationDate', installationDate);
+		params.append('url', url);
+		params.append('adminUrl', adminUrl);
+		params.append('adminNotes', adminNotes);
+		params.append('notes', notes);
+
+		fetch(apiUrl, {
 			method: method,
 			headers: {
-				'Content-Type': 'application/json',
+				'Content-Type': 'application/x-www-form-urlencoded',
 				'requesttoken': OC.requestToken
 			},
-			body: JSON.stringify(data)
+			body: params.toString()
 		})
-			.then(response => response.json())
-			.then(result => {
-				if (result.error) {
-					this.showError(result.error);
-				} else {
-					this.closeModal('website-modal');
-					this.loadWebsites();
-					this.showSuccess('Website saved successfully');
+		.then(response => response.json())
+		.then(result => {
+			console.log('Website save result:', result);
+			if (result.error) {
+				this.showError('Website kaydedilemedi: ' + result.error);
+			} else {
+				this.closeModal('website-modal');
+				const detailOpen = this.currentWebsiteId;
+				this.loadWebsites();
+				if (detailOpen) {
+					setTimeout(() => this.showWebsiteDetail(detailOpen), 500);
 				}
-			})
-			.catch(error => {
-				console.error('Error saving website:', error);
-				this.showError('Failed to save website');
-			});
-		},
+				this.showSuccess('Website başarıyla kaydedildi');
+			}
+		})
+		.catch(error => {
+			console.error('Error saving website:', error);
+			this.showError('Website kaydedilemedi: ' + error.message);
+		});
+	},
 
 		editClient: function(id) {
 			this.showClientModal(id);

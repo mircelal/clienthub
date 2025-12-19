@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace OCA\DomainControl\Db;
 
 use OCP\AppFramework\Db\QBMapper;
-use OCP\AppFramework\Db\Entity;
 use OCP\IDBConnection;
 
 class WebsiteMapper extends QBMapper {
@@ -21,7 +20,7 @@ class WebsiteMapper extends QBMapper {
 		$qb->select('*')
 			->from($this->getTableName())
 			->where($qb->expr()->eq('user_id', $qb->createNamedParameter($userId)))
-			->orderBy('installation_date', 'DESC');
+			->orderBy('created_at', 'DESC');
 		
 		return $this->findEntities($qb);
 	}
@@ -37,7 +36,23 @@ class WebsiteMapper extends QBMapper {
 			->from($this->getTableName())
 			->where($qb->expr()->eq('client_id', $qb->createNamedParameter($clientId)))
 			->andWhere($qb->expr()->eq('user_id', $qb->createNamedParameter($userId)))
-			->orderBy('installation_date', 'DESC');
+			->orderBy('created_at', 'DESC');
+		
+		return $this->findEntities($qb);
+	}
+
+	/**
+	 * @param int $hostingId
+	 * @param string|null $userId
+	 * @return Website[]
+	 */
+	public function findByHosting(int $hostingId, ?string $userId): array {
+		$qb = $this->db->getQueryBuilder();
+		$qb->select('*')
+			->from($this->getTableName())
+			->where($qb->expr()->eq('hosting_id', $qb->createNamedParameter($hostingId)))
+			->andWhere($qb->expr()->eq('user_id', $qb->createNamedParameter($userId)))
+			->orderBy('created_at', 'DESC');
 		
 		return $this->findEntities($qb);
 	}
@@ -58,16 +73,4 @@ class WebsiteMapper extends QBMapper {
 		
 		return $this->findEntity($qb);
 	}
-
-	public function insert(Entity $entity): Entity {
-		$entity->setCreatedAt(new \DateTime());
-		$entity->setUpdatedAt(new \DateTime());
-		return parent::insert($entity);
-	}
-
-	public function update(Entity $entity): Entity {
-		$entity->setUpdatedAt(new \DateTime());
-		return parent::update($entity);
-	}
 }
-

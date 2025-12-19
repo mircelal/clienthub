@@ -37,6 +37,7 @@ return [
 		['name' => 'website#update', 'url' => '/api/websites/{id}', 'verb' => 'PUT'],
 		['name' => 'website#delete', 'url' => '/api/websites/{id}', 'verb' => 'DELETE'],
 		['name' => 'website#byClient', 'url' => '/api/clients/{clientId}/websites', 'verb' => 'GET'],
+		['name' => 'website#byHosting', 'url' => '/api/hostings/{hostingId}/websites', 'verb' => 'GET'],
 	],
 ];
 

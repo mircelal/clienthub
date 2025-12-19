@@ -333,12 +333,83 @@ style('domaincontrol', 'domaincontrol');
 
 	<!-- Websites Tab -->
 	<div id="websites-tab" class="tab-content">
-		<div class="domaincontrol-actions">
-			<button class="btn btn-primary" id="add-website-btn">
-				<span class="icon-add"></span> Add Website
-			</button>
+		<!-- Website List View -->
+		<div id="websites-list-view">
+			<div class="domaincontrol-actions">
+				<button class="btn btn-primary" id="add-website-btn">
+					<span class="icon-add"></span> Website Ekle
+				</button>
+			</div>
+			<div id="websites-list" class="domaincontrol-list"></div>
 		</div>
-		<div id="websites-list" class="domaincontrol-list"></div>
+		
+		<!-- Website Detail View -->
+		<div id="website-detail-view" style="display: none;">
+			<div class="detail-header">
+				<button class="btn btn-back" id="back-to-websites-btn">← Geri</button>
+				<h2 id="website-detail-name"></h2>
+				<div class="detail-actions">
+					<button class="btn btn-secondary" id="website-detail-edit-btn">Düzenle</button>
+					<button class="btn btn-danger" id="website-detail-delete-btn">Sil</button>
+				</div>
+			</div>
+			
+			<div class="detail-content">
+				<div class="detail-stats">
+					<div class="stat-card">
+						<div class="stat-card__icon">📦</div>
+						<div class="stat-card__content">
+							<div class="stat-card__label">Yazılım</div>
+							<div class="stat-card__value" id="website-detail-software"></div>
+						</div>
+					</div>
+					<div class="stat-card">
+						<div class="stat-card__icon">📌</div>
+						<div class="stat-card__content">
+							<div class="stat-card__label">Versiyon</div>
+							<div class="stat-card__value" id="website-detail-version"></div>
+						</div>
+					</div>
+					<div class="stat-card">
+						<div class="stat-card__icon">📊</div>
+						<div class="stat-card__content">
+							<div class="stat-card__label">Durum</div>
+							<div class="stat-card__value" id="website-detail-status"></div>
+						</div>
+					</div>
+					<div class="stat-card">
+						<div class="stat-card__icon">📅</div>
+						<div class="stat-card__content">
+							<div class="stat-card__label">Kurulum</div>
+							<div class="stat-card__value" id="website-detail-install-date"></div>
+						</div>
+					</div>
+				</div>
+				
+				<div class="detail-info-grid">
+					<div class="detail-info-card">
+						<h3>Genel Bilgiler</h3>
+						<table class="detail-table">
+							<tr><td>Müşteri</td><td id="website-detail-client"></td></tr>
+							<tr><td>Domain</td><td id="website-detail-domain"></td></tr>
+							<tr><td>Hosting</td><td id="website-detail-hosting"></td></tr>
+							<tr><td>URL</td><td id="website-detail-url"></td></tr>
+						</table>
+					</div>
+					
+					<div class="detail-info-card">
+						<h3>Admin Panel Bilgileri</h3>
+						<p id="website-detail-admin-url" style="margin-bottom: 8px;"></p>
+						<pre id="website-detail-admin-notes" class="detail-notes"></pre>
+					</div>
+				</div>
+				
+				<div class="detail-info-card">
+					<h3>Notlar</h3>
+					<p id="website-detail-notes"></p>
+				</div>
+			</div>
+		</div>
 	</div>
 </div>
 
@@ -679,45 +750,84 @@ style('domaincontrol', 'domaincontrol');
 
 <!-- Website Modal -->
 <div id="website-modal" class="modal">
-	<div class="modal-content">
+	<div class="modal-content modal-large">
 		<div class="modal-header">
-			<h3 id="website-modal-title">Add Website</h3>
+			<h3 id="website-modal-title">Website Ekle</h3>
 			<span class="modal-close" data-modal="website-modal">&times;</span>
 		</div>
 		<div class="modal-body">
 			<form id="website-form">
 				<input type="hidden" id="website-id" name="id">
-				<div class="form-group">
-					<label for="website-client-id">Client *</label>
-					<select id="website-client-id" name="clientId" required class="form-control"></select>
+				<div class="form-row">
+					<div class="form-group">
+						<label for="website-name">Website Adı *</label>
+						<input type="text" id="website-name" name="name" required class="form-control" placeholder="Örn: Müşteri Sitesi">
+					</div>
+					<div class="form-group">
+						<label for="website-client-id">Müşteri *</label>
+						<select id="website-client-id" name="clientId" required class="form-control">
+							<option value="">Müşteri Seçin</option>
+						</select>
+					</div>
+				</div>
+				<div class="form-row">
+					<div class="form-group">
+						<label for="website-domain-id">Domain</label>
+						<select id="website-domain-id" name="domainId" class="form-control">
+							<option value="">Domain Seçin (opsiyonel)</option>
+						</select>
+					</div>
+					<div class="form-group">
+						<label for="website-hosting-id">Hosting</label>
+						<select id="website-hosting-id" name="hostingId" class="form-control">
+							<option value="">Hosting Seçin (opsiyonel)</option>
+						</select>
+					</div>
+				</div>
+				<div class="form-row">
+					<div class="form-group">
+						<label for="website-software">Yazılım</label>
+						<input type="text" id="website-software" name="software" class="form-control" placeholder="WordPress, Laravel, Custom...">
+					</div>
+					<div class="form-group">
+						<label for="website-version">Versiyon</label>
+						<input type="text" id="website-version" name="version" class="form-control" placeholder="6.4.2">
+					</div>
+				</div>
+				<div class="form-row">
+					<div class="form-group">
+						<label for="website-status">Durum</label>
+						<select id="website-status" name="status" class="form-control">
+							<option value="active">🟢 Aktif</option>
+							<option value="maintenance">🟡 Bakımda</option>
+							<option value="development">🔵 Geliştirmede</option>
+							<option value="inactive">🔴 Pasif</option>
+						</select>
+					</div>
+					<div class="form-group">
+						<label for="website-installation-date">Kurulum Tarihi</label>
+						<input type="date" id="website-installation-date" name="installationDate" class="form-control">
+					</div>
 				</div>
 				<div class="form-group">
-					<label for="website-domain-id">Domain</label>
-					<select id="website-domain-id" name="domainId" class="form-control">
-						<option value="">None</option>
-					</select>
+					<label for="website-url">Site URL</label>
+					<input type="text" id="website-url" name="url" class="form-control" placeholder="https://example.com">
 				</div>
 				<div class="form-group">
-					<label for="website-hosting-id">Hosting</label>
-					<select id="website-hosting-id" name="hostingId" class="form-control">
-						<option value="">None</option>
-					</select>
+					<label for="website-admin-url">Admin Panel URL</label>
+					<input type="text" id="website-admin-url" name="adminUrl" class="form-control" placeholder="https://example.com/wp-admin">
 				</div>
 				<div class="form-group">
-					<label for="website-software">Software</label>
-					<input type="text" id="website-software" name="software" class="form-control" placeholder="e.g., WordPress, Drupal, Custom">
+					<label for="website-admin-notes">Admin Giriş Bilgileri</label>
+					<textarea id="website-admin-notes" name="adminNotes" class="form-control" rows="2" placeholder="Kullanıcı: admin&#10;Şifre: ****"></textarea>
 				</div>
 				<div class="form-group">
-					<label for="website-installation-date">Installation Date</label>
-					<input type="date" id="website-installation-date" name="installationDate" class="form-control">
-				</div>
-				<div class="form-group">
-					<label for="website-notes">Notes</label>
-					<textarea id="website-notes" name="notes" class="form-control" rows="4"></textarea>
+					<label for="website-notes">Genel Notlar</label>
+					<textarea id="website-notes" name="notes" class="form-control" rows="2" placeholder="Diğer notlar..."></textarea>
 				</div>
 				<div class="form-actions">
-					<button type="button" class="btn btn-secondary modal-cancel" data-modal="website-modal">Cancel</button>
-					<button type="submit" class="btn btn-primary">Save</button>
+					<button type="button" class="btn btn-secondary modal-cancel" data-modal="website-modal">İptal</button>
+					<button type="submit" class="btn btn-primary">Kaydet</button>
 				</div>
 			</form>
 		</div>
