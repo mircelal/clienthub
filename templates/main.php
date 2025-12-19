@@ -502,6 +502,15 @@ style('domaincontrol', 'domaincontrol');
 					<h3>Notlar</h3>
 					<div id="website-detail-notes" class="rich-text-content"></div>
 				</div>
+				
+				<div class="detail-info-card">
+					<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+						<h3 style="margin: 0;">📁 Dosyalar</h3>
+						<button class="btn btn-primary btn-sm" id="website-upload-file-btn">📤 Dosya Yükle</button>
+					</div>
+					<input type="file" id="website-file-input" multiple style="display: none;">
+					<div id="website-files-list" class="files-list"></div>
+				</div>
 			</div>
 		</div>
 	</div>

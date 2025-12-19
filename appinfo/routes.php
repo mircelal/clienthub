@@ -39,6 +39,11 @@ return [
 		['name' => 'website#byClient', 'url' => '/api/clients/{clientId}/websites', 'verb' => 'GET'],
 		['name' => 'website#byHosting', 'url' => '/api/hostings/{hostingId}/websites', 'verb' => 'GET'],
 		
+		// File routes
+		['name' => 'file#uploadWebsiteFile', 'url' => '/api/websites/{websiteId}/files', 'verb' => 'POST'],
+		['name' => 'file#listWebsiteFiles', 'url' => '/api/websites/{websiteId}/files', 'verb' => 'GET'],
+		['name' => 'file#deleteWebsiteFile', 'url' => '/api/websites/{websiteId}/files/{fileName}', 'verb' => 'DELETE'],
+		
 		// Service Type routes
 		['name' => 'service_type#index', 'url' => '/api/service-types', 'verb' => 'GET'],
 		['name' => 'service_type#show', 'url' => '/api/service-types/{id}', 'verb' => 'GET'],

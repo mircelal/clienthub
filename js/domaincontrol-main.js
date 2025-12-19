@@ -238,6 +238,16 @@
 				this.hideWebsiteDetail();
 			}
 		});
+		
+		// Website file upload
+		document.getElementById('website-upload-file-btn')?.addEventListener('click', () => {
+			document.getElementById('website-file-input')?.click();
+		});
+		document.getElementById('website-file-input')?.addEventListener('change', (e) => {
+			if (this.currentWebsiteId && e.target.files.length > 0) {
+				this.uploadWebsiteFiles(this.currentWebsiteId, Array.from(e.target.files));
+			}
+		});
 	},
 
 		switchTab: function(tabName) {
@@ -1464,6 +1474,141 @@
 		}
 
 		this.currentWebsiteId = website.id;
+		
+		// Load website files
+		this.loadWebsiteFiles(website.id);
+	},
+	
+	loadWebsiteFiles: function(websiteId) {
+		fetch(`${this.apiBase}/websites/${websiteId}/files`, {
+			headers: { 'requesttoken': OC.requestToken }
+		})
+		.then(r => r.json())
+		.then(files => {
+			const container = document.getElementById('website-files-list');
+			if (!container) return;
+			
+			if (!files || files.length === 0) {
+				container.innerHTML = '<p class="empty-message">Henüz dosya yüklenmemiş</p>';
+				return;
+			}
+			
+			let html = '<div class="files-grid">';
+			files.forEach(file => {
+				const fileSize = this.formatFileSize(file.size);
+				const fileIcon = this.getFileIcon(file.mimeType);
+				const fileDate = new Date(file.mtime * 1000).toLocaleDateString('tr-TR');
+				
+				// Generate file URL
+				const fileUrl = this.getWebsiteFileUrl(file.path, file.name);
+				
+				html += `
+					<div class="file-item">
+						<div class="file-icon">${fileIcon}</div>
+						<div class="file-info">
+							<div class="file-name">${this.escapeHtml(file.name)}</div>
+							<div class="file-meta">${fileSize} • ${fileDate}</div>
+						</div>
+						<div class="file-actions">
+							<a href="${fileUrl}" target="_blank" class="btn btn-sm btn-secondary" title="Aç">👁️</a>
+							<button class="btn btn-sm btn-danger delete-file-btn" data-file="${this.escapeHtml(file.name)}" title="Sil">🗑️</button>
+						</div>
+					</div>
+				`;
+			});
+			html += '</div>';
+			container.innerHTML = html;
+			
+			// Event listeners for delete buttons
+			container.querySelectorAll('.delete-file-btn').forEach(btn => {
+				btn.addEventListener('click', () => {
+					const fileName = btn.dataset.file;
+					if (confirm(`"${fileName}" dosyasını silmek istediğinize emin misiniz?`)) {
+						this.deleteWebsiteFile(websiteId, fileName);
+					}
+				});
+			});
+		})
+		.catch(e => {
+			console.error('Error loading website files:', e);
+			const container = document.getElementById('website-files-list');
+			if (container) {
+				container.innerHTML = '<p class="empty-message">Dosyalar yüklenirken hata oluştu</p>';
+			}
+		});
+	},
+	
+	uploadWebsiteFiles: function(websiteId, files) {
+		const formData = new FormData();
+		// Append files - PHP will handle as array if multiple
+		files.forEach(file => {
+			formData.append('file[]', file);
+		});
+		
+		fetch(`${this.apiBase}/websites/${websiteId}/files`, {
+			method: 'POST',
+			headers: { 'requesttoken': OC.requestToken },
+			body: formData
+		})
+		.then(r => r.json())
+		.then(result => {
+			if (result.error) throw new Error(result.error);
+			const fileCount = result.files ? result.files.length : 1;
+			this.showSuccess(`${fileCount} dosya başarıyla yüklendi`);
+			this.loadWebsiteFiles(websiteId);
+			// Clear file input
+			document.getElementById('website-file-input').value = '';
+		})
+		.catch(e => {
+			this.showError('Dosya yükleme hatası: ' + e.message);
+		});
+	},
+	
+	deleteWebsiteFile: function(websiteId, fileName) {
+		fetch(`${this.apiBase}/websites/${websiteId}/files/${encodeURIComponent(fileName)}`, {
+			method: 'DELETE',
+			headers: { 'requesttoken': OC.requestToken }
+		})
+		.then(r => r.json())
+		.then(result => {
+			if (result.error) throw new Error(result.error);
+			this.showSuccess('Dosya silindi');
+			this.loadWebsiteFiles(websiteId);
+		})
+		.catch(e => {
+			this.showError('Dosya silme hatası: ' + e.message);
+		});
+	},
+	
+	formatFileSize: function(bytes) {
+		if (bytes === 0) return '0 Bytes';
+		const k = 1024;
+		const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+		const i = Math.floor(Math.log(bytes) / Math.log(k));
+		return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+	},
+	
+	getFileIcon: function(mimeType) {
+		if (!mimeType) return '📄';
+		if (mimeType.startsWith('image/')) return '🖼️';
+		if (mimeType.startsWith('video/')) return '🎥';
+		if (mimeType.startsWith('audio/')) return '🎵';
+		if (mimeType.includes('pdf')) return '📕';
+		if (mimeType.includes('zip') || mimeType.includes('rar')) return '📦';
+		if (mimeType.includes('word')) return '📝';
+		if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return '📊';
+		if (mimeType.includes('database') || mimeType.includes('sql')) return '🗄️';
+		if (mimeType.includes('code') || mimeType.includes('text')) return '💻';
+		return '📄';
+	},
+	
+	getWebsiteFileUrl: function(filePath, fileName) {
+		// Generate URL to Nextcloud Files app
+		// Format: /apps/files/?dir=/path/to/dir&scrollto=filename
+		const dirPath = filePath.substring(0, filePath.lastIndexOf('/'));
+		const encodedDir = encodeURIComponent(dirPath);
+		const encodedFile = encodeURIComponent(fileName);
+		return OC.generateUrl('/apps/files/') + '?dir=' + encodedDir + '&scrollto=' + encodedFile;
 	},
 
 	hideWebsiteDetail: function() {
