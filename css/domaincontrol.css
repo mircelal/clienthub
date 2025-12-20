@@ -2152,3 +2152,217 @@ div#website-notes {
 	margin-left: 10px;
 	border-left: 2px dashed var(--color-border);
 }
+
+/* Modern Dashboard Styles */
+.dashboard-welcome {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-end;
+	margin-bottom: 40px;
+	padding: 0 5px;
+}
+
+.welcome-text h1 {
+	font-size: 32px;
+	font-weight: 700;
+	margin: 0 0 10px 0;
+	color: var(--color-main-text);
+}
+
+.welcome-text p {
+	font-size: 16px;
+	color: var(--color-text-maxcontrast);
+	margin: 0;
+}
+
+.welcome-date {
+	text-align: right;
+	font-size: 14px;
+	font-weight: 500;
+	color: var(--color-text-maxcontrast);
+	margin-bottom: 5px;
+}
+
+/* Enhanced Stat Cards */
+.stat-card {
+	display: flex;
+	align-items: center;
+	gap: 20px;
+	padding: 24px;
+	transition: transform 0.3s ease, box-shadow 0.3s ease;
+	border: none;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.stat-card:hover {
+	transform: translateY(-5px);
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.stat-card__icon {
+	font-size: 32px;
+	width: 60px;
+	height: 60px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: rgba(255, 255, 255, 0.2);
+	border-radius: 16px;
+}
+
+.stat-card--gradient-primary {
+	background: linear-gradient(135deg, #4776E6 0%, #8E54E9 100%);
+	color: white;
+}
+
+.stat-card--gradient-success {
+	background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+	color: white;
+}
+
+.stat-card--gradient-warning {
+	background: linear-gradient(135deg, #f09819 0%, #edde5d 100%);
+	color: white;
+}
+
+.stat-card--gradient-danger {
+	background: linear-gradient(135deg, #cb2d3e 0%, #ef473a 100%);
+	color: white;
+}
+
+.stat-card--gradient-primary .stat-card__label,
+.stat-card--gradient-success .stat-card__label,
+.stat-card--gradient-warning .stat-card__label,
+.stat-card--gradient-danger .stat-card__label {
+	color: rgba(255, 255, 255, 0.85);
+}
+
+.stat-card__value {
+	font-size: 28px;
+	font-weight: 700;
+}
+
+/* Dashboard Layout */
+.dashboard-main-row {
+	display: flex;
+	gap: 30px;
+	align-items: flex-start;
+}
+
+.dashboard-column--left {
+	flex: 2;
+}
+
+.dashboard-column--right {
+	flex: 1;
+}
+
+/* Mini Stats Grid */
+.mini-stats-grid {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 15px;
+}
+
+.mini-stat {
+	background: var(--color-main-background);
+	border: 1px solid var(--color-border);
+	padding: 15px;
+	border-radius: 12px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	text-align: center;
+}
+
+.mini-stat__label {
+	font-size: 11px;
+	text-transform: uppercase;
+	color: var(--color-text-maxcontrast);
+	letter-spacing: 0.5px;
+}
+
+.mini-stat__value {
+	font-size: 18px;
+	font-weight: 600;
+	margin-top: 5px;
+}
+
+/* Action Buttons */
+.action-buttons {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: 12px;
+}
+
+.btn-action {
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;
+	gap: 12px;
+	background: var(--color-main-background);
+	border: 1px solid var(--color-border);
+	padding: 14px 20px;
+	border-radius: 12px;
+	font-weight: 500;
+	transition: all 0.2s;
+	color: var(--color-main-text);
+}
+
+.btn-action:hover {
+	background: var(--color-primary-element-light);
+	border-color: var(--color-primary-element);
+	color: var(--color-primary-element);
+	transform: translateX(5px);
+}
+
+.action-icon {
+	font-size: 20px;
+}
+
+/* Dashboard Lists */
+.dashboard-list .list-item {
+	padding: 12px 15px;
+	background: transparent;
+	border-radius: 8px;
+	margin-bottom: 5px;
+}
+
+.dashboard-list .list-item:hover {
+	background: var(--color-background-hover);
+}
+
+/* Badge Improvements */
+.badge {
+	padding: 2px 10px;
+	border-radius: 12px;
+	font-weight: 600;
+	font-size: 12px;
+}
+
+.badge--danger {
+	background: var(--color-error);
+	color: white;
+}
+
+.badge--warning {
+	background: var(--color-warning);
+	color: white;
+}
+
+.badge--info {
+	background: var(--color-primary-element);
+	color: white;
+}
+
+.alert-panel--danger {
+	border-left: 4px solid var(--color-error);
+}
+
+.alert-panel--warning {
+	border-left: 4px solid var(--color-warning);
+}
+
+.alert-panel--info {
+	border-left: 4px solid var(--color-primary-element);
+}

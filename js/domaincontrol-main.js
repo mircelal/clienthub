@@ -39,6 +39,14 @@
 				this.loadData();
 				this.switchTab(this.currentTab);
 				this.updateDashboard();
+				this.updateDashboardDate();
+
+				// Set user name if available
+				if (typeof OC !== 'undefined' && OC.getCurrentUser()) {
+					const userNameEl = document.getElementById('current-user-name');
+					if (userNameEl) userNameEl.textContent = OC.getCurrentUser().uid;
+				}
+
 				console.log('ClientHub: v3.3.0 Ready!');
 			} catch (e) {
 				console.error('DomainControl: Init error:', e);
@@ -70,15 +78,39 @@
 			document.getElementById('add-project-btn')?.addEventListener('click', () => this.showProjectModal());
 			document.getElementById('add-task-btn')?.addEventListener('click', () => this.showTaskModal());
 
-			// Quick add buttons
-			document.getElementById('quick-add-client')?.addEventListener('click', () => this.showClientModal());
-			document.getElementById('quick-add-domain')?.addEventListener('click', () => this.showDomainModal());
-			document.getElementById('quick-add-hosting')?.addEventListener('click', () => this.showHostingModal());
-			document.getElementById('quick-add-website')?.addEventListener('click', () => this.showWebsiteModal());
-			document.getElementById('quick-add-invoice')?.addEventListener('click', () => this.showInvoiceModal());
-			document.getElementById('quick-add-payment')?.addEventListener('click', () => this.showPaymentModal());
-			document.getElementById('quick-add-project')?.addEventListener('click', () => this.showProjectModal());
-			document.getElementById('quick-add-task')?.addEventListener('click', () => this.showTaskModal());
+			// Quick add buttons with tab switching
+			document.getElementById('quick-add-client')?.addEventListener('click', () => {
+				this.switchTab('clients');
+				this.showClientModal();
+			});
+			document.getElementById('quick-add-domain')?.addEventListener('click', () => {
+				this.switchTab('domains');
+				this.showDomainModal();
+			});
+			document.getElementById('quick-add-hosting')?.addEventListener('click', () => {
+				this.switchTab('hostings');
+				this.showHostingModal();
+			});
+			document.getElementById('quick-add-website')?.addEventListener('click', () => {
+				this.switchTab('websites');
+				this.showWebsiteModal();
+			});
+			document.getElementById('quick-add-invoice')?.addEventListener('click', () => {
+				this.switchTab('invoices');
+				this.showInvoiceModal();
+			});
+			document.getElementById('quick-add-payment')?.addEventListener('click', () => {
+				this.switchTab('payments');
+				this.showPaymentModal();
+			});
+			document.getElementById('quick-add-project')?.addEventListener('click', () => {
+				this.switchTab('projects');
+				this.showProjectModal();
+			});
+			document.getElementById('quick-add-task')?.addEventListener('click', () => {
+				this.switchTab('tasks');
+				this.showTaskModal();
+			});
 
 			// Service type management
 			document.getElementById('manage-service-types-btn')?.addEventListener('click', () => this.showServiceTypesModal());
@@ -425,6 +457,13 @@
 			`;
 			});
 			recentContainer.innerHTML = html;
+		},
+
+		updateDashboardDate: function () {
+			const dateEl = document.getElementById('dashboard-current-date');
+			if (!dateEl) return;
+			const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+			dateEl.textContent = new Date().toLocaleDateString('tr-TR', options);
 		},
 
 		loadClients: function () {

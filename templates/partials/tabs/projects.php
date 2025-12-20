@@ -14,7 +14,7 @@
 		</div>
 		<div id="projects-list" class="domaincontrol-list"></div>
 	</div>
-	
+
 	<div id="project-detail-view" style="display: none;">
 		<div class="detail-header">
 			<button class="btn btn-back" id="back-to-projects-btn">← Geri</button>
@@ -28,14 +28,32 @@
 		</div>
 		<div class="detail-content">
 			<div class="detail-stats">
-				<div class="stat-card"><div class="stat-card__label">Müşteri</div><div class="stat-card__value" id="project-detail-client"></div></div>
-				<div class="stat-card"><div class="stat-card__label">Proje Türü</div><div class="stat-card__value" id="project-detail-type"></div></div>
-				<div class="stat-card"><div class="stat-card__label">Durum</div><div class="stat-card__value" id="project-detail-status"></div></div>
-				<div class="stat-card"><div class="stat-card__label">Başlangıç</div><div class="stat-card__value" id="project-detail-start"></div></div>
-				<div class="stat-card"><div class="stat-card__label">Deadline</div><div class="stat-card__value" id="project-detail-deadline"></div></div>
-				<div class="stat-card"><div class="stat-card__label">Bütçe</div><div class="stat-card__value" id="project-detail-budget"></div></div>
+				<div class="stat-card">
+					<div class="stat-card__label">Müşteri</div>
+					<div class="stat-card__value" id="project-detail-client"></div>
+				</div>
+				<div class="stat-card">
+					<div class="stat-card__label">Proje Türü</div>
+					<div class="stat-card__value" id="project-detail-type"></div>
+				</div>
+				<div class="stat-card">
+					<div class="stat-card__label">Durum</div>
+					<div class="stat-card__value" id="project-detail-status"></div>
+				</div>
+				<div class="stat-card">
+					<div class="stat-card__label">Başlangıç</div>
+					<div class="stat-card__value" id="project-detail-start"></div>
+				</div>
+				<div class="stat-card">
+					<div class="stat-card__label">Deadline</div>
+					<div class="stat-card__value" id="project-detail-deadline"></div>
+				</div>
+				<div class="stat-card">
+					<div class="stat-card__label">Bütçe</div>
+					<div class="stat-card__value" id="project-detail-budget"></div>
+				</div>
 			</div>
-			
+
 			<div class="detail-grid">
 				<div class="detail-info-card">
 					<h3>📝 Proje Açıklaması</h3>
@@ -46,11 +64,12 @@
 					<p id="project-detail-notes"></p>
 				</div>
 			</div>
-			
+
 			<div class="detail-grid">
 				<div class="detail-info-card">
 					<h3>🔗 Bağlı Öğeler</h3>
-					<p class="text-muted" style="font-size: 12px; margin-bottom: 10px;">Domain, hosting, website ve hizmetleri projeye bağlayın</p>
+					<p class="text-muted" style="font-size: 12px; margin-bottom: 10px;">Domain, hosting, website ve
+						hizmetleri projeye bağlayın</p>
 					<div id="project-linked-items"></div>
 				</div>
 				<div class="detail-info-card">
@@ -58,7 +77,7 @@
 					<div id="project-financials"></div>
 				</div>
 			</div>
-			
+
 			<div class="detail-info-card">
 				<h3>✅ Görevler</h3>
 				<div id="project-detail-tasks"></div>
@@ -66,4 +85,3 @@
 		</div>
 	</div>
 </div>
-

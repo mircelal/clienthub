@@ -6,7 +6,7 @@ return [
 		// Main page
 		['name' => 'page#index', 'url' => '/', 'verb' => 'GET'],
 		['name' => 'page#test', 'url' => '/test', 'verb' => 'GET'],
-		
+
 		// Client routes
 		['name' => 'client#index', 'url' => '/api/clients', 'verb' => 'GET'],
 		['name' => 'client#show', 'url' => '/api/clients/{id}', 'verb' => 'GET'],
@@ -14,7 +14,7 @@ return [
 		['name' => 'client#update', 'url' => '/api/clients/{id}', 'verb' => 'PUT'],
 		['name' => 'client#delete', 'url' => '/api/clients/{id}', 'verb' => 'DELETE'],
 		['name' => 'client#getContacts', 'url' => '/api/contacts', 'verb' => 'GET'],
-		
+
 		// Domain routes
 		['name' => 'domain#index', 'url' => '/api/domains', 'verb' => 'GET'],
 		['name' => 'domain#sendExpirationReminders', 'url' => '/api/domains/send-reminders', 'verb' => 'POST'],
@@ -23,7 +23,7 @@ return [
 		['name' => 'domain#update', 'url' => '/api/domains/{id}', 'verb' => 'PUT'],
 		['name' => 'domain#delete', 'url' => '/api/domains/{id}', 'verb' => 'DELETE'],
 		['name' => 'domain#byClient', 'url' => '/api/clients/{clientId}/domains', 'verb' => 'GET'],
-		
+
 		// Hosting routes
 		['name' => 'hosting#index', 'url' => '/api/hostings', 'verb' => 'GET'],
 		['name' => 'hosting#show', 'url' => '/api/hostings/{id}', 'verb' => 'GET'],
@@ -31,7 +31,7 @@ return [
 		['name' => 'hosting#update', 'url' => '/api/hostings/{id}', 'verb' => 'PUT'],
 		['name' => 'hosting#delete', 'url' => '/api/hostings/{id}', 'verb' => 'DELETE'],
 		['name' => 'hosting#byClient', 'url' => '/api/clients/{clientId}/hostings', 'verb' => 'GET'],
-		
+
 		// Website routes
 		['name' => 'website#index', 'url' => '/api/websites', 'verb' => 'GET'],
 		['name' => 'website#show', 'url' => '/api/websites/{id}', 'verb' => 'GET'],
@@ -40,17 +40,17 @@ return [
 		['name' => 'website#delete', 'url' => '/api/websites/{id}', 'verb' => 'DELETE'],
 		['name' => 'website#byClient', 'url' => '/api/clients/{clientId}/websites', 'verb' => 'GET'],
 		['name' => 'website#byHosting', 'url' => '/api/hostings/{hostingId}/websites', 'verb' => 'GET'],
-		
+
 		// File routes
 		['name' => 'file#uploadWebsiteFile', 'url' => '/api/websites/{websiteId}/files', 'verb' => 'POST'],
 		['name' => 'file#listWebsiteFiles', 'url' => '/api/websites/{websiteId}/files', 'verb' => 'GET'],
 		['name' => 'file#deleteWebsiteFile', 'url' => '/api/websites/{websiteId}/files/{fileName}', 'verb' => 'DELETE'],
-		
+
 		// Invoice File routes
 		['name' => 'file#uploadInvoiceFile', 'url' => '/api/invoices/{invoiceId}/files', 'verb' => 'POST'],
 		['name' => 'file#listInvoiceFiles', 'url' => '/api/invoices/{invoiceId}/files', 'verb' => 'GET'],
 		['name' => 'file#deleteInvoiceFile', 'url' => '/api/invoices/{invoiceId}/files/{fileName}', 'verb' => 'DELETE'],
-		
+
 		// Service Type routes
 		['name' => 'service_type#index', 'url' => '/api/service-types', 'verb' => 'GET'],
 		['name' => 'service_type#show', 'url' => '/api/service-types/{id}', 'verb' => 'GET'],
@@ -58,7 +58,7 @@ return [
 		['name' => 'service_type#update', 'url' => '/api/service-types/{id}', 'verb' => 'PUT'],
 		['name' => 'service_type#delete', 'url' => '/api/service-types/{id}', 'verb' => 'DELETE'],
 		['name' => 'service_type#initPredefined', 'url' => '/api/service-types/init', 'verb' => 'POST'],
-		
+
 		// Service routes
 		['name' => 'service#index', 'url' => '/api/services', 'verb' => 'GET'],
 		['name' => 'service#show', 'url' => '/api/services/{id}', 'verb' => 'GET'],
@@ -68,7 +68,7 @@ return [
 		['name' => 'service#byClient', 'url' => '/api/clients/{clientId}/services', 'verb' => 'GET'],
 		['name' => 'service#expiringSoon', 'url' => '/api/services/expiring-soon', 'verb' => 'GET'],
 		['name' => 'service#extend', 'url' => '/api/services/{id}/extend', 'verb' => 'POST'],
-		
+
 		// Invoice routes - specific routes BEFORE {id} routes
 		['name' => 'invoice#index', 'url' => '/api/invoices', 'verb' => 'GET'],
 		['name' => 'invoice#overdue', 'url' => '/api/invoices/overdue', 'verb' => 'GET'],
@@ -79,7 +79,7 @@ return [
 		['name' => 'invoice#update', 'url' => '/api/invoices/{id}', 'verb' => 'PUT'],
 		['name' => 'invoice#delete', 'url' => '/api/invoices/{id}', 'verb' => 'DELETE'],
 		['name' => 'invoice#byClient', 'url' => '/api/clients/{clientId}/invoices', 'verb' => 'GET'],
-		
+
 		// Invoice Item routes
 		['name' => 'invoice_item#index', 'url' => '/api/invoice-items', 'verb' => 'GET'],
 		['name' => 'invoice_item#show', 'url' => '/api/invoice-items/{id}', 'verb' => 'GET'],
@@ -87,7 +87,7 @@ return [
 		['name' => 'invoice_item#update', 'url' => '/api/invoice-items/{id}', 'verb' => 'PUT'],
 		['name' => 'invoice_item#delete', 'url' => '/api/invoice-items/{id}', 'verb' => 'DELETE'],
 		['name' => 'invoice_item#byInvoice', 'url' => '/api/invoices/{invoiceId}/items', 'verb' => 'GET'],
-		
+
 		// Payment routes - specific routes BEFORE {id} routes
 		['name' => 'payment#index', 'url' => '/api/payments', 'verb' => 'GET'],
 		['name' => 'payment#monthlyTotal', 'url' => '/api/payments/monthly-total', 'verb' => 'GET'],
@@ -97,7 +97,7 @@ return [
 		['name' => 'payment#delete', 'url' => '/api/payments/{id}', 'verb' => 'DELETE'],
 		['name' => 'payment#byClient', 'url' => '/api/clients/{clientId}/payments', 'verb' => 'GET'],
 		['name' => 'payment#byInvoice', 'url' => '/api/invoices/{invoiceId}/payments', 'verb' => 'GET'],
-		
+
 		// Project routes - specific routes BEFORE {id} routes
 		['name' => 'project#index', 'url' => '/api/projects', 'verb' => 'GET'],
 		['name' => 'project#active', 'url' => '/api/projects/active', 'verb' => 'GET'],
@@ -110,7 +110,7 @@ return [
 		['name' => 'project#addItem', 'url' => '/api/projects/{id}/items', 'verb' => 'POST'],
 		['name' => 'project#removeItem', 'url' => '/api/projects/{id}/items/{itemId}', 'verb' => 'DELETE'],
 		['name' => 'project#byClient', 'url' => '/api/clients/{clientId}/projects', 'verb' => 'GET'],
-		
+
 		// Task routes - specific routes BEFORE {id} routes
 		['name' => 'task#index', 'url' => '/api/tasks', 'verb' => 'GET'],
 		['name' => 'task#pending', 'url' => '/api/tasks/pending', 'verb' => 'GET'],
