@@ -1,97 +1,109 @@
 # ClientHub for Nextcloud
 
-ClientHub - Kapsamlı müşteri, proje ve iş yönetim sistemi. Tüm işletme süreçlerinizi tek bir yerden yönetin.
+Comprehensive client, project, and business management system. Manage all your business processes in one place.
 
-## Özellikler
+## Features
 
 ### 📊 Dashboard
-- Genel istatistikler ve özet bilgiler
-- Yaklaşan son kullanma tarihleri takibi
-- Ödeme durumu özeti
-- Aktif proje ve görev takibi
+- General statistics and summary information
+- Upcoming expiration date tracking
+- Payment status overview
+- Active project and task tracking
 
-### 👥 Müşteri Yönetimi
-- Müşteri bilgileri ve iletişim detayları
-- Notlar ve özel bilgiler
-- Müşteriye özel tüm kayıtların görüntülenmesi
+### 👥 Client Management
+- Client information and contact details
+- Notes and special information
+- View all records specific to a client
 
-### 🌐 Domain Yönetimi
-- Domain kayıt takibi
-- Son kullanma tarihi takibi
-- Yenileme hatırlatıcıları
-- Müşteri bazlı domain listeleme
+### 🌐 Domain Management
+- Domain registration tracking
+- Expiration date tracking
+- Renewal reminders
+- Client-based domain listing
 
-### 🖥️ Hosting Yönetimi
-- Hosting hesap yönetimi
-- Sunucu detayları ve bilgileri
-- Yenileme tarihleri takibi
-- Hosting bazlı website ilişkilendirme
+### 🖥️ Hosting Management
+- Hosting account management
+- Server details and information
+- Renewal date tracking
+- Hosting-based website association
 
-### 🌍 Website Yönetimi
-- Website kayıtları
-- Kurulu yazılım takibi
-- Website konfigürasyonları
-- Hosting ve müşteri ilişkilendirme
+### 🌍 Website Management
+- Website records
+- Installed software tracking
+- Website configurations
+- Hosting and client association
 
-### 🛠️ Hizmet Yönetimi
-- Hizmet türleri tanımlama (Domain, Hosting, SSL, vb.)
-- Müşterilere özel hizmet kayıtları
-- Hizmet yenileme tarihleri takibi
-- Yaklaşan son kullanma tarihleri uyarıları
-- Otomatik hizmet uzatma
+### 🛠️ Service Management
+- Service type definitions (Domain, Hosting, SSL, etc.)
+- Client-specific service records
+- Service renewal date tracking
+- Upcoming expiration date alerts
+- Automatic service extension
 
-### 📄 Fatura Yönetimi
-- Fatura oluşturma ve düzenleme
-- Fatura kalemleri yönetimi
-- Ödenmemiş faturalar takibi
-- Vadesi geçmiş faturalar uyarısı
-- Yaklaşan ödeme tarihleri takibi
-- Müşteri bazlı fatura listeleme
+### 📄 Invoice Management
+- Create and edit invoices
+- Invoice item management
+- Unpaid invoice tracking
+- Overdue invoice alerts
+- Upcoming payment date tracking
+- Client-based invoice listing
 
-### 💰 Ödeme Takibi
-- Ödeme kayıtları
-- Fatura-ödeme ilişkilendirme
-- Aylık toplam gelir takibi
-- Müşteri bazlı ödeme geçmişi
+### 💰 Payment Tracking
+- Payment records
+- Invoice-payment association
+- Monthly total revenue tracking
+- Client-based payment history
 
-### 📁 Proje Yönetimi
-- Proje oluşturma ve takibi
-- Proje kalemleri yönetimi
-- Proje durumu takibi (Aktif, Tamamlandı, Beklemede)
-- Yaklaşan deadline uyarıları
-- Müşteri bazlı proje listeleme
+### 📁 Project Management
+- Create and track projects
+- Project item management
+- Project status tracking (Active, Completed, On Hold)
+- Upcoming deadline alerts
+- Client-based project listing
 
-### ✅ Görev Yönetimi
-- Görev oluşturma ve takibi
-- Görev durumu (Beklemede, Devam Ediyor, Tamamlandı)
-- Görev öncelik seviyeleri
-- Vadesi geçmiş görevler uyarısı
-- Yaklaşan deadline takibi
-- Proje ve müşteri bazlı görev filtreleme
+### ✅ Task Management
+- Create and track tasks
+- Task status (Pending, In Progress, Completed)
+- Task priority levels
+- Overdue task alerts
+- Upcoming deadline tracking
+- Project and client-based task filtering
 
-## Gereksinimler
+## Requirements
 
-- Nextcloud 25 veya üzeri
-- PHP 8.0 veya üzeri
+- Nextcloud 25 or higher
+- PHP 8.0 or higher
 
-## Kurulum
+## Installation
 
-1. Repository'yi klonlayın veya indirin
-2. `domaincontrol` klasörünü Nextcloud `apps/` dizinine kopyalayın
-3. Uygulamayı etkinleştirin:
+1. Clone or download this repository
+2. Copy the `domaincontrol` folder to your Nextcloud `apps/` directory
+3. Enable the app via command line:
    ```bash
    cd /path/to/nextcloud
    php occ app:enable domaincontrol
    ```
-4. Uygulama Nextcloud navigasyon menüsünde görünecektir
+4. The app will appear in your Nextcloud navigation menu
 
-## Kullanım
+## Usage
 
-1. Nextcloud navigasyon menüsünden "ClientHub" seçeneğine tıklayın
-2. Dashboard'dan genel durumu görüntüleyin
-3. İlgili sekmeden (Müşteriler, Domainler, Hosting, vb.) yeni kayıtlar ekleyin
-4. Her kayıt için detaylı bilgileri girebilir ve takip edebilirsiniz
+1. Click on "ClientHub" in the Nextcloud navigation menu
+2. View the general status from the Dashboard
+3. Add new records from the relevant tab (Clients, Domains, Hosting, etc.)
+4. You can enter detailed information for each record and track them
 
-## Lisans
+## Contributing
+
+Contributions are welcome! Feel free to:
+- Report bugs
+- Suggest new features
+- Submit pull requests
+- Improve documentation
+
+## License
 
 AGPL-3.0
+
+## Author
+
+ClientHub Team
