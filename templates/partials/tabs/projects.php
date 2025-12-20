@@ -79,6 +79,45 @@
 			</div>
 
 			<div class="detail-info-card">
+				<div class="time-tracking-header">
+					<h3>⏱️ Zaman Takibi</h3>
+					<div class="time-tracking-total">
+						<span class="total-label">Toplam:</span>
+						<span class="total-time" id="total-time-display">00:00:00</span>
+					</div>
+				</div>
+				<div id="project-time-tracking">
+					<div class="time-tracking-controls">
+						<div class="timer-display-compact">
+							<div class="timer-time-compact" id="timer-display">00:00:00</div>
+							<div class="timer-status-compact" id="timer-status">Durduruldu</div>
+						</div>
+						<div class="timer-actions-compact">
+							<button class="btn btn-sm btn-success" id="timer-start-btn">
+								▶️ Başlat
+							</button>
+							<button class="btn btn-sm btn-danger" id="timer-stop-btn" style="display: none;">
+								⏹️ Durdur
+							</button>
+						</div>
+						<div class="timer-description-compact">
+							<input type="text" id="timer-description-input" class="form-control form-control-sm" 
+								placeholder="Açıklama (opsiyonel)">
+						</div>
+					</div>
+					<div class="time-entries-list-compact">
+						<div class="time-entries-header">
+							<span class="entries-title">Zaman Kayıtları</span>
+							<span class="entries-count" id="entries-count">0 kayıt</span>
+						</div>
+						<div id="time-entries-container" class="time-entries-container">
+							<p class="empty-message">Henüz zaman kaydı yok</p>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="detail-info-card">
 				<h3>✅ Görevler</h3>
 				<div id="project-detail-tasks"></div>
 			</div>

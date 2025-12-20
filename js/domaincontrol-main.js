@@ -28,6 +28,9 @@
 		currentInvoiceId: null,
 		currentProjectId: null,
 		currentTaskId: null,
+		timerInterval: null,
+		currentRunningEntry: null,
+		timerButtonsSetup: false,
 
 		init: function () {
 			console.log('ClientHub: v3.3.0 Starting...');
@@ -4399,6 +4402,9 @@
 
 			// Load project invoices and calculate financials
 			this.loadProjectFinancials(id);
+
+			// Load time tracking
+			this.loadTimeTracking(id);
 		},
 
 		loadProjectFinancials: function (projectId) {
@@ -4603,9 +4609,17 @@
 		},
 
 		hideProjectDetail: function () {
+			// Stop timer display if running
+			if (this.timerInterval) {
+				clearInterval(this.timerInterval);
+				this.timerInterval = null;
+			}
+			
 			document.getElementById('projects-list-view').style.display = 'block';
 			document.getElementById('project-detail-view').style.display = 'none';
 			this.currentProjectId = null;
+			this.currentRunningEntry = null;
+			this.timerButtonsSetup = false; // Reset for next project
 		},
 
 		showProjectModal: function (id = null) {
@@ -5210,6 +5224,329 @@
 					}
 				})
 				.catch(e => this.showError('Durum değiştirme hatası'));
+		},
+
+		// ===== TIME TRACKING =====
+		timerInterval: null,
+		currentRunningEntry: null,
+
+		loadTimeTracking: function (projectId) {
+			// Setup timer buttons only once
+			if (!this.timerButtonsSetup) {
+				this.setupTimerButtons(projectId);
+				this.timerButtonsSetup = true;
+			}
+
+			// Load time entries
+			fetch(`${this.apiBase}/projects/${projectId}/time-entries`, {
+				headers: { 'requesttoken': OC.requestToken }
+			})
+				.then(r => r.json())
+				.then(data => {
+					if (data.error) throw new Error(data.error);
+					this.renderTimeEntries(data.entries || []);
+					this.updateTotalTime(data.totalDuration || 0);
+				})
+				.catch(e => {
+					console.error('Time entries load error:', e);
+					this.renderTimeEntries([]);
+					this.updateTotalTime(0);
+				});
+
+			// Check for running timer
+			fetch(`${this.apiBase}/projects/${projectId}/time-entries/running`, {
+				headers: { 'requesttoken': OC.requestToken }
+			})
+				.then(r => r.json())
+				.then(running => {
+					if (running && running.id) {
+						this.currentRunningEntry = running;
+						this.startTimerDisplay(running);
+					} else {
+						this.stopTimerDisplay();
+						this.currentRunningEntry = null;
+					}
+				})
+				.catch(e => {
+					console.error('Running timer check error:', e);
+					this.stopTimerDisplay();
+					this.currentRunningEntry = null;
+				});
+		},
+
+		setupTimerButtons: function (projectId) {
+			const startBtn = document.getElementById('timer-start-btn');
+			const stopBtn = document.getElementById('timer-stop-btn');
+
+			// Remove all existing listeners by cloning and replacing
+			if (startBtn) {
+				const newStartBtn = startBtn.cloneNode(true);
+				startBtn.parentNode.replaceChild(newStartBtn, startBtn);
+				newStartBtn.addEventListener('click', (e) => {
+					e.preventDefault();
+					e.stopPropagation();
+					if (newStartBtn.disabled) return;
+					newStartBtn.disabled = true;
+					this.startTimer(projectId).finally(() => {
+						newStartBtn.disabled = false;
+					});
+				});
+			}
+
+			if (stopBtn) {
+				const newStopBtn = stopBtn.cloneNode(true);
+				stopBtn.parentNode.replaceChild(newStopBtn, stopBtn);
+				newStopBtn.addEventListener('click', (e) => {
+					e.preventDefault();
+					e.stopPropagation();
+					if (newStopBtn.disabled) return;
+					newStopBtn.disabled = true;
+					this.stopTimer(projectId).finally(() => {
+						newStopBtn.disabled = false;
+					});
+				});
+			}
+		},
+
+		startTimer: function (projectId) {
+			// Check if already running
+			if (this.currentRunningEntry) {
+				this.showError('Zaten çalışan bir zaman kaydı var');
+				return Promise.resolve();
+			}
+
+			const description = document.getElementById('timer-description-input')?.value || '';
+
+			const data = new URLSearchParams({
+				description: description
+			});
+
+			return fetch(`${this.apiBase}/projects/${projectId}/time-entries/start`, {
+				method: 'POST',
+				headers: {
+					'requesttoken': OC.requestToken,
+					'Content-Type': 'application/x-www-form-urlencoded'
+				},
+				body: data.toString()
+			})
+				.then(r => r.json())
+				.then(entry => {
+					if (entry.error) throw new Error(entry.error);
+					this.currentRunningEntry = entry;
+					this.startTimerDisplay(entry);
+					this.showSuccess('Zaman takibi başlatıldı');
+					// Clear description input
+					const descInput = document.getElementById('timer-description-input');
+					if (descInput) descInput.value = '';
+					// Reload to get updated list
+					this.loadTimeTracking(projectId);
+				})
+				.catch(e => {
+					this.showError('Zaman başlatma hatası: ' + e.message);
+					throw e;
+				});
+		},
+
+		stopTimer: function (projectId) {
+			if (!this.currentRunningEntry) {
+				this.showError('Çalışan zaman kaydı bulunamadı');
+				return Promise.resolve();
+			}
+
+			return fetch(`${this.apiBase}/projects/${projectId}/time-entries/stop`, {
+				method: 'POST',
+				headers: { 'requesttoken': OC.requestToken }
+			})
+				.then(r => r.json())
+				.then(entry => {
+					if (entry.error) throw new Error(entry.error);
+					this.stopTimerDisplay();
+					this.currentRunningEntry = null;
+					this.showSuccess('Zaman takibi durduruldu');
+					// Reload time entries
+					this.loadTimeTracking(projectId);
+				})
+				.catch(e => {
+					this.showError('Zaman durdurma hatası: ' + e.message);
+					throw e;
+				});
+		},
+
+		startTimerDisplay: function (entry) {
+			const startBtn = document.getElementById('timer-start-btn');
+			const stopBtn = document.getElementById('timer-stop-btn');
+
+			if (startBtn) {
+				startBtn.style.display = 'none';
+				startBtn.disabled = false;
+			}
+			if (stopBtn) {
+				stopBtn.style.display = 'inline-block';
+				stopBtn.disabled = false;
+			}
+			this.updateTimerStatus(true);
+
+			// Start interval to update display
+			if (this.timerInterval) clearInterval(this.timerInterval);
+
+			// Parse start time as UTC to avoid timezone issues
+			// PHP returns 'Y-m-d H:i:s' in UTC, so we need to treat it as UTC
+			const startTimeStr = entry.startTime;
+			// If it doesn't have timezone info, assume UTC
+			const startTime = startTimeStr.includes('+') || startTimeStr.includes('Z') 
+				? new Date(startTimeStr).getTime()
+				: new Date(startTimeStr + ' UTC').getTime();
+			
+			this.timerInterval = setInterval(() => {
+				const now = Date.now();
+				const elapsed = Math.floor((now - startTime) / 1000);
+				this.updateTimerDisplay(elapsed);
+			}, 1000);
+
+			// Initial update
+			const elapsed = Math.floor((Date.now() - startTime) / 1000);
+			this.updateTimerDisplay(elapsed);
+		},
+
+		stopTimerDisplay: function () {
+			const startBtn = document.getElementById('timer-start-btn');
+			const stopBtn = document.getElementById('timer-stop-btn');
+
+			if (startBtn) startBtn.style.display = 'inline-block';
+			if (stopBtn) stopBtn.style.display = 'none';
+			this.updateTimerStatus(false);
+
+			if (this.timerInterval) {
+				clearInterval(this.timerInterval);
+				this.timerInterval = null;
+			}
+
+			this.updateTimerDisplay(0);
+		},
+
+		updateTimerDisplay: function (seconds) {
+			const display = document.getElementById('timer-display');
+			if (!display) return;
+
+			const hours = Math.floor(seconds / 3600);
+			const minutes = Math.floor((seconds % 3600) / 60);
+			const secs = seconds % 60;
+
+			display.textContent = 
+				String(hours).padStart(2, '0') + ':' +
+				String(minutes).padStart(2, '0') + ':' +
+				String(secs).padStart(2, '0');
+		},
+
+		updateTimerStatus: function (isRunning) {
+			const statusEl = document.getElementById('timer-status');
+			if (statusEl) {
+				statusEl.textContent = isRunning ? 'Çalışıyor...' : 'Durduruldu';
+			}
+		},
+
+		renderTimeEntries: function (entries) {
+			const container = document.getElementById('time-entries-container');
+			const countEl = document.getElementById('entries-count');
+			
+			if (!container) return;
+
+			// Update count
+			if (countEl) {
+				const count = entries ? entries.length : 0;
+				countEl.textContent = count + ' kayıt';
+			}
+
+			if (!entries || entries.length === 0) {
+				container.innerHTML = '<p class="empty-message" style="padding: 20px; text-align: center; color: var(--color-text-maxcontrast);">Henüz zaman kaydı yok</p>';
+				return;
+			}
+
+			let html = '';
+			entries.forEach(entry => {
+				const startTime = new Date(entry.startTime);
+				const endTime = entry.endTime ? new Date(entry.endTime) : null;
+				const duration = entry.duration || 0;
+				const hours = Math.floor(duration / 3600);
+				const minutes = Math.floor((duration % 3600) / 60);
+				const secs = duration % 60;
+				const durationStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+
+				const dateStr = startTime.toLocaleDateString('tr-TR', { 
+					day: '2-digit', 
+					month: '2-digit', 
+					year: 'numeric' 
+				});
+				const timeStr = startTime.toLocaleTimeString('tr-TR', { 
+					hour: '2-digit', 
+					minute: '2-digit' 
+				});
+				const endTimeStr = endTime ? endTime.toLocaleTimeString('tr-TR', { 
+					hour: '2-digit', 
+					minute: '2-digit' 
+				}) : '';
+
+				html += `
+					<div class="time-entry-item">
+						<div class="time-entry-item-content">
+							<div class="time-entry-description">
+								${this.escapeHtml(entry.description || 'Açıklama yok')}
+							</div>
+							<div class="time-entry-date">
+								${dateStr} ${timeStr}${endTimeStr ? ' - ' + endTimeStr : ''}
+							</div>
+						</div>
+						<div class="time-entry-duration">
+							${durationStr}
+						</div>
+						<button class="btn btn-sm btn-danger time-entry-delete delete-time-entry-btn" data-id="${entry.id}" title="Sil">
+							🗑️
+						</button>
+					</div>
+				`;
+			});
+
+			container.innerHTML = html;
+
+			// Add delete button listeners
+			container.querySelectorAll('.delete-time-entry-btn').forEach(btn => {
+				btn.addEventListener('click', () => {
+					const entryId = parseInt(btn.dataset.id);
+					if (confirm('Bu zaman kaydını silmek istediğinize emin misiniz?')) {
+						this.deleteTimeEntry(entryId);
+					}
+				});
+			});
+		},
+
+		deleteTimeEntry: function (entryId) {
+			fetch(`${this.apiBase}/time-entries/${entryId}`, {
+				method: 'DELETE',
+				headers: { 'requesttoken': OC.requestToken }
+			})
+				.then(r => r.json())
+				.then(result => {
+					if (result.error) throw new Error(result.error);
+					this.showSuccess('Zaman kaydı silindi');
+					if (this.currentProjectId) {
+						this.loadTimeTracking(this.currentProjectId);
+					}
+				})
+				.catch(e => this.showError('Silme hatası: ' + e.message));
+		},
+
+		updateTotalTime: function (totalSeconds) {
+			const display = document.getElementById('total-time-display');
+			if (!display) return;
+
+			const hours = Math.floor(totalSeconds / 3600);
+			const minutes = Math.floor((totalSeconds % 3600) / 60);
+			const secs = totalSeconds % 60;
+
+			display.textContent = 
+				String(hours).padStart(2, '0') + ':' +
+				String(minutes).padStart(2, '0') + ':' +
+				String(secs).padStart(2, '0');
 		},
 
 		// ===== FILTER =====

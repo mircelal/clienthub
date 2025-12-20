@@ -2366,3 +2366,218 @@ div#website-notes {
 .alert-panel--info {
 	border-left: 4px solid var(--color-primary-element);
 }
+
+/* Time Tracking Styles - Compact & User Friendly */
+.time-tracking-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 16px;
+	padding-bottom: 12px;
+	border-bottom: 2px solid var(--color-border);
+}
+
+.time-tracking-header h3 {
+	margin: 0;
+	font-size: 16px;
+	font-weight: 600;
+}
+
+.time-tracking-total {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 13px;
+}
+
+.total-label {
+	color: var(--color-text-maxcontrast);
+	font-weight: 500;
+}
+
+.total-time {
+	font-weight: 700;
+	font-size: 15px;
+	color: var(--color-primary-element);
+	font-family: 'Courier New', monospace;
+}
+
+.time-tracking-controls {
+	padding: 16px;
+	background: var(--color-main-background);
+	border-radius: 8px;
+	border: 1px solid var(--color-border);
+	margin-bottom: 16px;
+}
+
+.timer-display-compact {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 12px;
+	padding: 10px 12px;
+	background: var(--color-background-dark);
+	border-radius: 6px;
+}
+
+.timer-time-compact {
+	font-size: 24px;
+	font-weight: 600;
+	font-family: 'Courier New', monospace;
+	color: var(--color-primary-element);
+	letter-spacing: 1px;
+}
+
+.timer-status-compact {
+	font-size: 11px;
+	color: var(--color-text-maxcontrast);
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	padding: 4px 8px;
+	background: var(--color-background-hover);
+	border-radius: 4px;
+}
+
+.timer-actions-compact {
+	display: flex;
+	gap: 8px;
+	margin-bottom: 12px;
+}
+
+.timer-actions-compact .btn {
+	flex: 1;
+	padding: 8px 12px;
+	font-size: 13px;
+}
+
+.timer-description-compact {
+	margin-top: 0;
+}
+
+.timer-description-compact input {
+	width: 100%;
+	padding: 8px 12px;
+	border: 1px solid var(--color-border);
+	border-radius: 6px;
+	font-size: 13px;
+	background: var(--color-main-background);
+}
+
+.timer-description-compact input:focus {
+	outline: none;
+	border-color: var(--color-primary-element);
+	box-shadow: 0 0 0 2px rgba(var(--color-primary-element-rgb), 0.1);
+}
+
+.time-entries-list-compact {
+	margin-top: 16px;
+}
+
+.time-entries-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 10px;
+	padding-bottom: 8px;
+	border-bottom: 1px solid var(--color-border);
+}
+
+.entries-title {
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+
+.entries-count {
+	font-size: 11px;
+	color: var(--color-text-maxcontrast);
+}
+
+.time-entries-container {
+	max-height: 350px;
+	overflow-y: auto;
+	background: var(--color-main-background);
+	border-radius: 6px;
+	border: 1px solid var(--color-border);
+}
+
+.time-entries-container::-webkit-scrollbar {
+	width: 6px;
+}
+
+.time-entries-container::-webkit-scrollbar-track {
+	background: var(--color-background-dark);
+	border-radius: 3px;
+}
+
+.time-entries-container::-webkit-scrollbar-thumb {
+	background: var(--color-border);
+	border-radius: 3px;
+}
+
+.time-entries-container::-webkit-scrollbar-thumb:hover {
+	background: var(--color-text-maxcontrast);
+}
+
+.time-entry-item {
+	padding: 10px 12px;
+	border-bottom: 1px solid var(--color-border);
+	transition: background-color 0.15s;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 12px;
+}
+
+.time-entry-item:last-child {
+	border-bottom: none;
+}
+
+.time-entry-item:hover {
+	background: var(--color-background-hover);
+}
+
+.time-entry-item-content {
+	flex: 1;
+	min-width: 0;
+}
+
+.time-entry-description {
+	font-size: 13px;
+	font-weight: 500;
+	color: var(--color-main-text);
+	margin-bottom: 4px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.time-entry-date {
+	font-size: 11px;
+	color: var(--color-text-maxcontrast);
+}
+
+.time-entry-duration {
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--color-primary-element);
+	font-family: 'Courier New', monospace;
+	white-space: nowrap;
+}
+
+.time-entry-delete {
+	padding: 4px 8px;
+	font-size: 12px;
+	opacity: 0.6;
+	transition: opacity 0.2s;
+}
+
+.time-entry-item:hover .time-entry-delete {
+	opacity: 1;
+}
+
+.time-entry-delete:hover {
+	opacity: 1;
+	background: var(--color-error);
+	color: white;
+}

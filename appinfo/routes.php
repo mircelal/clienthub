@@ -123,5 +123,13 @@ return [
 		['name' => 'task#toggleStatus', 'url' => '/api/tasks/{id}/toggle', 'verb' => 'POST'],
 		['name' => 'task#byProject', 'url' => '/api/projects/{projectId}/tasks', 'verb' => 'GET'],
 		['name' => 'task#byClient', 'url' => '/api/clients/{clientId}/tasks', 'verb' => 'GET'],
+
+		// Time Entry routes
+		['name' => 'time_entry#byProject', 'url' => '/api/projects/{projectId}/time-entries', 'verb' => 'GET'],
+		['name' => 'time_entry#getRunning', 'url' => '/api/projects/{projectId}/time-entries/running', 'verb' => 'GET'],
+		['name' => 'time_entry#start', 'url' => '/api/projects/{projectId}/time-entries/start', 'verb' => 'POST'],
+		['name' => 'time_entry#stop', 'url' => '/api/projects/{projectId}/time-entries/stop', 'verb' => 'POST'],
+		['name' => 'time_entry#update', 'url' => '/api/time-entries/{id}', 'verb' => 'PUT'],
+		['name' => 'time_entry#delete', 'url' => '/api/time-entries/{id}', 'verb' => 'DELETE'],
 	],
 ];
