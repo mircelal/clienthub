@@ -37,8 +37,17 @@
 							<option value="todo">Yapılacak</option>
 							<option value="in_progress">Devam Ediyor</option>
 							<option value="done">Tamamlandı</option>
+							<option value="cancelled">İptal Edildi</option>
 						</select>
 					</div>
+				</div>
+				<div class="form-group">
+					<label for="task-parent-id">Üst Görev</label>
+					<select id="task-parent-id" name="parentId" class="form-control">
+						<option value="">Üst Görev Yok</option>
+					</select>
+				</div>
+				<div class="form-row">
 					<div class="form-group">
 						<label for="task-priority">Öncelik</label>
 						<select id="task-priority" name="priority" class="form-control">
@@ -52,6 +61,11 @@
 						<input type="date" id="task-due-date" name="dueDate" class="form-control">
 					</div>
 				</div>
+				<div class="form-group">
+					<label for="task-notes">Notlar (Dahili kullanım için)</label>
+					<textarea id="task-notes" name="notes" class="form-control" rows="3"
+						placeholder="Görevin teknik detayları veya özel notlar..."></textarea>
+				</div>
 				<div class="form-actions">
 					<button type="button" class="btn btn-secondary modal-cancel" data-modal="task-modal">İptal</button>
 					<button type="submit" class="btn btn-primary">Kaydet</button>
@@ -60,4 +74,3 @@
 		</div>
 	</div>
 </div>
-

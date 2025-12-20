@@ -37,6 +37,7 @@
 				this.setupForms();
 				this.setupButtons();
 				this.loadData();
+				this.switchTab(this.currentTab);
 				this.updateDashboard();
 				console.log('ClientHub: v3.3.0 Ready!');
 			} catch (e) {
@@ -48,7 +49,9 @@
 			const tabs = document.querySelectorAll('.tab-button');
 			tabs.forEach(tab => {
 				tab.addEventListener('click', (e) => {
-					const tabName = e.target.getAttribute('data-tab');
+					e.preventDefault();
+					const target = e.currentTarget;
+					const tabName = target.getAttribute('data-tab');
 					this.switchTab(tabName);
 				});
 			});
@@ -148,6 +151,21 @@
 			document.getElementById('back-to-tasks-btn')?.addEventListener('click', () => this.hideTaskDetail());
 			document.getElementById('task-toggle-btn')?.addEventListener('click', () => {
 				if (this.currentTaskId) this.toggleTaskStatus(this.currentTaskId);
+			});
+			document.getElementById('task-postpone-btn')?.addEventListener('click', () => {
+				if (this.currentTaskId) this.postponeTask(this.currentTaskId);
+			});
+			document.getElementById('task-cancel-btn')?.addEventListener('click', () => {
+				if (this.currentTaskId) this.cancelTask(this.currentTaskId);
+			});
+			document.getElementById('task-add-note-btn')?.addEventListener('click', () => {
+				if (this.currentTaskId) this.showTaskModal(this.currentTaskId); // Re-use modal for notes
+			});
+			document.getElementById('add-subtask-btn')?.addEventListener('click', () => {
+				if (this.currentTaskId) {
+					const task = this.tasks.find(t => t.id == this.currentTaskId);
+					this.showTaskModal(null, task.projectId, task.id);
+				}
 			});
 			document.getElementById('task-detail-edit-btn')?.addEventListener('click', () => {
 				if (this.currentTaskId) this.showTaskModal(this.currentTaskId);
@@ -275,13 +293,13 @@
 
 			this.currentTab = tabName;
 
-			// Update tab buttons
-			document.querySelectorAll('.tab-button').forEach(btn => {
-				btn.classList.remove('active');
+			document.querySelectorAll('#app-navigation li').forEach(li => {
+				li.classList.remove('active');
 			});
-			const activeButton = document.querySelector(`[data-tab="${tabName}"]`);
+			const activeButton = document.querySelector(`.tab-button[data-tab="${tabName}"]`);
 			if (activeButton) {
-				activeButton.classList.add('active');
+				const li = activeButton.closest('li');
+				if (li) li.classList.add('active');
 			}
 
 			// Update tab content
@@ -4237,17 +4255,31 @@
 					`<span class="status-badge status-badge--draft">${daysLeft} gün</span>` : '';
 				const typeLabel = proj.projectType ? projectTypeLabels[proj.projectType] || proj.projectType : '';
 
+				// Calculate progress
+				const projectTasks = this.tasks.filter(t => t.projectId == proj.id);
+				const totalActive = projectTasks.filter(t => t.status !== 'cancelled').length;
+				const doneTasks = projectTasks.filter(t => t.status === 'done').length;
+				const progress = totalActive > 0 ? Math.round((doneTasks / totalActive) * 100) : 0;
+
 				html += `
-				<div class="list-item project-item" data-id="${proj.id}">
+				<div class="list-item project-item" data-id="${proj.id}" style="position: relative;">
 					<div class="list-item__content">
 						<div class="list-item__title">${this.escapeHtml(proj.name)}</div>
 						<div class="list-item__meta">
 							${typeLabel ? `<span class="project-type-badge">${typeLabel}</span> • ` : ''}
-							${client ? client.name : 'Bilinmeyen'} • Deadline: ${proj.deadline || '-'}
+							${client ? `<strong>${client.name}</strong>` : 'Bilinmeyen'} • Deadline: ${proj.deadline || '-'}
 						</div>
 					</div>
+					
+					<div class="project-progress-mini" style="flex-shrink: 0; margin: 0 40px; text-align: right;">
+						<div style="font-size: 11px; margin-bottom: 4px; color: var(--color-text-maxcontrast);">İlerleme: ${doneTasks}/${totalActive}</div>
+						<div class="progress-bar" style="width: 120px; height: 8px; background: var(--color-background-dark); border-radius: 4px; overflow: hidden;">
+							<div style="width: ${progress}%; height: 100%; background: ${progress === 100 ? 'var(--color-success)' : 'var(--color-primary-element)'}; transition: width 0.3s;"></div>
+						</div>
+					</div>
+
 					<div class="list-item__stats">
-						${proj.budget ? `<span>${proj.budget} ${proj.currency || 'USD'}</span>` : ''}
+						${proj.budget ? `<span style="font-weight: 600;">${proj.budget} ${proj.currency || 'USD'}</span>` : ''}
 						${deadlineBadge}
 						<span class="status-badge project-status--${proj.status}">${statusTexts[proj.status] || proj.status}</span>
 					</div>
@@ -4430,15 +4462,17 @@
 					// Calculate progress
 					const totalTasks = tasks.length;
 					const doneTasks = tasks.filter(t => t.status === 'done').length;
-					const progress = Math.round((doneTasks / totalTasks) * 100);
+					const cancelledTasks = tasks.filter(t => t.status === 'cancelled').length;
+					const activeTasks = totalTasks - cancelledTasks;
+					const progress = activeTasks > 0 ? Math.round((doneTasks / activeTasks) * 100) : 0;
 
 					const priorityTexts = { low: 'Düşük', medium: 'Orta', high: 'Yüksek' };
-					const statusTexts = { todo: 'Yapılacak', in_progress: 'Devam Ediyor', done: 'Tamamlandı' };
+					const statusTexts = { todo: 'Yapılacak', in_progress: 'Devam Ediyor', done: 'Tamamlandı', cancelled: 'İptal Edildi' };
 
 					let html = `
 				<div class="project-progress" style="margin-bottom: 20px;">
 					<div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-						<span><strong>İlerleme:</strong> ${doneTasks}/${totalTasks} görev tamamlandı</span>
+						<span><strong>İlerleme:</strong> ${doneTasks}/${activeTasks} görev tamamlandı ${cancelledTasks > 0 ? `(${cancelledTasks} iptal)` : ''}</span>
 						<span><strong>${progress}%</strong></span>
 					</div>
 				<div class="progress-bar" style="height: 12px; background: var(--color-background-dark); border-radius: 6px; overflow: hidden;">
@@ -4449,10 +4483,10 @@
 		`;
 
 					tasks.forEach(task => {
-						const overdue = task.dueDate && this.calculateDaysLeft(task.dueDate) < 0 && task.status !== 'done';
+						const overdue = task.dueDate && this.calculateDaysLeft(task.dueDate) < 0 && task.status !== 'done' && task.status !== 'cancelled';
 						html += `
-					<div class="task-list-item ${overdue ? 'status-critical' : ''}" data-task-id="${task.id}">
-						<input type="checkbox" class="project-task-cb" data-id="${task.id}" ${task.status === 'done' ? 'checked' : ''} style="margin-right: 12px; width: 20px; height: 20px;">
+					<div class="task-list-item ${overdue ? 'status-critical' : ''} ${task.status === 'cancelled' ? 'task--cancelled' : ''}" data-task-id="${task.id}">
+						<input type="checkbox" class="project-task-cb" data-id="${task.id}" ${task.status === 'done' ? 'checked' : ''} ${task.status === 'cancelled' ? 'disabled' : ''} style="margin-right: 12px; width: 20px; height: 20px;">
 						<div style="flex: 1;">
 							<span class="task-list-item__title task-status--${task.status}">${this.escapeHtml(task.title)}</span>
 							<div class="list-item__meta" style="font-size: 12px; margin-top: 4px;">
@@ -4756,7 +4790,7 @@
 
 		// ===== TASKS =====
 		loadTasks: function () {
-			fetch(this.apiBase + '/tasks', {
+			return fetch(this.apiBase + '/tasks', {
 				headers: { 'requesttoken': OC.requestToken }
 			})
 				.then(r => r.json())
@@ -4764,6 +4798,7 @@
 					this.tasks = Array.isArray(data) ? data : [];
 					this.renderTasks();
 					this.updateDashboard();
+					this.updateTaskFilterCounts();
 				})
 				.catch(e => {
 					console.error('Error loading tasks:', e);
@@ -4771,11 +4806,29 @@
 				});
 		},
 
+		updateTaskFilterCounts: function () {
+			const counts = {
+				all: this.tasks.filter(t => !t.parentId).length,
+				todo: this.tasks.filter(t => !t.parentId && t.status === 'todo').length,
+				in_progress: this.tasks.filter(t => !t.parentId && t.status === 'in_progress').length,
+				done: this.tasks.filter(t => !t.parentId && t.status === 'done').length,
+				cancelled: this.tasks.filter(t => !t.parentId && t.status === 'cancelled').length
+			};
+
+			document.querySelectorAll('#tasks-tab .btn-filter').forEach(btn => {
+				const filter = btn.getAttribute('data-filter');
+				if (counts[filter] !== undefined) {
+					const label = btn.textContent.split('(')[0].trim();
+					btn.textContent = `${label} (${counts[filter]})`;
+				}
+			});
+		},
+
 		renderTasks: function (filter = 'all') {
 			const list = document.getElementById('tasks-list');
 			if (!list) return;
 
-			let filtered = this.tasks;
+			let filtered = this.tasks.filter(t => !t.parentId); // Only show top-level tasks in list
 			if (filter !== 'all') filtered = filtered.filter(t => t.status === filter);
 
 			if (filtered.length === 0) {
@@ -4783,26 +4836,46 @@
 				return;
 			}
 
-			const statusTexts = { todo: 'Yapılacak', in_progress: 'Devam Ediyor', done: 'Tamamlandı' };
+			const statusTexts = { todo: 'Yapılacak', in_progress: 'Devam Ediyor', done: 'Tamamlandı', cancelled: 'İptal Edildi' };
 			const priorityTexts = { low: 'Düşük', medium: 'Orta', high: 'Yüksek' };
 
 			let html = '';
 			filtered.forEach(task => {
 				const project = this.projects.find(p => p.id == task.projectId);
 				const daysLeft = task.dueDate ? this.calculateDaysLeft(task.dueDate) : null;
-				const overdue = daysLeft !== null && daysLeft < 0 && task.status !== 'done';
+				const overdue = daysLeft !== null && daysLeft < 0 && task.status !== 'done' && task.status !== 'cancelled';
+				const subtasks = this.tasks.filter(t => t.parentId == task.id);
+				const completedSubtasks = subtasks.filter(t => t.status === 'done').length;
+
+				const priorityClass = task.priority === 'high' ? 'priority-high-bg' : (task.priority === 'medium' ? 'priority-medium-bg' : 'priority-low-bg');
+
+				const priorityTexts = { low: 'Düşük', medium: 'Orta', high: 'Yüksek' };
+				const priorityIcons = { low: '📉', medium: '📊', high: '🔥' };
+
+				const today = new Date().toISOString().split('T')[0];
+				const isToday = task.dueDate === today;
 
 				html += `
-				<div class="list-item task-item ${overdue ? 'status-critical' : ''}" data-id="${task.id}">
+				<div class="list-item task-item ${overdue ? 'status-critical' : ''} ${task.status === 'cancelled' ? 'task--cancelled' : ''}" data-id="${task.id}" style="position: relative; overflow: hidden;">
+					<div class="priority-indicator ${priorityClass}"></div>
 					<div class="list-item__content">
-						<input type="checkbox" class="task-checkbox" data-id="${task.id}" ${task.status === 'done' ? 'checked' : ''} style="margin-right: 12px; width: 20px; height: 20px;">
-						<div>
-							<div class="list-item__title task-status--${task.status}">${this.escapeHtml(task.title)}</div>
-							<div class="list-item__meta">${project ? project.name : 'Genel'} • ${task.dueDate || 'Tarih yok'}</div>
+						<div style="display: flex; align-items: flex-start;">
+							<input type="checkbox" class="task-checkbox" data-id="${task.id}" ${task.status === 'done' ? 'checked' : ''} ${task.status === 'cancelled' ? 'disabled' : ''} style="margin-right: 18px; width: 22px; height: 22px; margin-top: 4px;">
+							<div>
+								<div class="list-item__title task-status--${task.status}">
+									${this.escapeHtml(task.title)}
+									${isToday ? '<span class="status-badge status-badge--draft" style="margin-left: 8px; font-size: 10px;">BUGÜN</span>' : ''}
+								</div>
+								<div class="list-item__meta">
+									<span style="color: var(--color-primary-element); font-weight: 500;">${project ? project.name : 'Genel'}</span>
+									 • ${task.dueDate || 'Tarih yok'}
+									${subtasks.length > 0 ? ` • <span class="subtask-count">📋 ${completedSubtasks}/${subtasks.length} alt görev</span>` : ''}
+								</div>
+							</div>
 						</div>
 					</div>
 					<div class="list-item__stats">
-						<span class="priority-badge priority-badge--${task.priority}">${priorityTexts[task.priority] || task.priority}</span>
+						<span class="priority-badge priority-badge--${task.priority}">${priorityIcons[task.priority]} ${priorityTexts[task.priority] || task.priority}</span>
 						<span class="status-badge task-status--${task.status}">${statusTexts[task.status] || task.status}</span>
 					</div>
 				</div>
@@ -4813,7 +4886,7 @@
 			// Event delegation for task items
 			list.querySelectorAll('.task-item').forEach(item => {
 				item.addEventListener('click', (e) => {
-					if (e.target.classList.contains('task-checkbox')) return; // Don't navigate on checkbox click
+					if (e.target.classList.contains('task-checkbox')) return;
 					const id = item.getAttribute('data-id');
 					this.showTaskDetail(parseInt(id));
 				});
@@ -4863,12 +4936,13 @@
 
 			const project = this.projects.find(p => p.id == task.projectId);
 			const client = this.clients.find(c => c.id == task.clientId);
-			const statusTexts = { todo: 'Yapılacak', in_progress: 'Devam Ediyor', done: 'Tamamlandı' };
+			const parent = this.tasks.find(t => t.id == task.parentId);
+			const statusTexts = { todo: 'Yapılacak', in_progress: 'Devam Ediyor', done: 'Tamamlandı', cancelled: 'İptal Edildi' };
 			const priorityTexts = { low: 'Düşük', medium: 'Orta', high: 'Yüksek' };
 			const daysLeft = task.dueDate ? this.calculateDaysLeft(task.dueDate) : null;
 
 			document.getElementById('task-detail-title').textContent = task.title;
-			document.getElementById('task-detail-project').textContent = project ? project.name : (client ? client.name : 'Genel');
+			document.getElementById('task-detail-project').textContent = parent ? `Alt Görev (${parent.title})` : (project ? project.name : (client ? client.name : 'Genel'));
 
 			// Status with badge
 			const statusEl = document.getElementById('task-detail-status');
@@ -4881,14 +4955,79 @@
 			// Due date with days left
 			const dueDateEl = document.getElementById('task-detail-due-date');
 			if (task.dueDate) {
-				const overdue = daysLeft !== null && daysLeft < 0 && task.status !== 'done';
-				const dueClass = overdue ? 'status-badge--overdue' : (daysLeft <= 7 ? 'status-badge--draft' : '');
+				const overdue = daysLeft !== null && daysLeft < 0 && task.status !== 'done' && task.status !== 'cancelled';
+				const dueClass = overdue ? 'status-badge--overdue' : (daysLeft <= 3 ? 'status-badge--draft' : '');
 				dueDateEl.innerHTML = `${task.dueDate} ${daysLeft !== null ? `<span class="status-badge ${dueClass}">${daysLeft < 0 ? 'Geçti!' : daysLeft + ' gün'}</span>` : ''}`;
 			} else {
 				dueDateEl.textContent = '-';
 			}
 
-			document.getElementById('task-detail-description').textContent = task.description || '-';
+			document.getElementById('task-detail-description').innerHTML = task.description ? task.description.replace(/\n/g, '<br>') : '-';
+			document.getElementById('task-detail-notes').innerHTML = task.notes ? task.notes.replace(/\n/g, '<br>') : '<p class="text-muted">Not eklenmemiş.</p>';
+
+			this.renderSubtasks(id);
+		},
+
+		renderSubtasks: function (parentId) {
+			const container = document.getElementById('subtasks-list');
+			if (!container) return;
+
+			const subtasks = this.tasks.filter(t => t.parentId == parentId);
+			if (subtasks.length === 0) {
+				container.innerHTML = '<p class="text-muted">Alt görev bulunmuyor.</p>';
+				return;
+			}
+
+			let html = '<div class="subtask-items">';
+			subtasks.forEach(st => {
+				html += `
+					<div class="subtask-item ${st.status === 'done' ? 'done' : ''} ${st.status === 'cancelled' ? 'cancelled' : ''}">
+						<input type="checkbox" onclick="DomainControl.toggleTaskStatus(${st.id})" ${st.status === 'done' ? 'checked' : ''} ${st.status === 'cancelled' ? 'disabled' : ''}>
+						<span class="subtask-item__title" onclick="DomainControl.showTaskDetail(${st.id})">${this.escapeHtml(st.title)}</span>
+						<span class="subtask-item__date">${st.dueDate || ''}</span>
+					</div>
+				`;
+			});
+			html += '</div>';
+			container.innerHTML = html;
+		},
+
+		postponeTask: function (id) {
+			const newDate = prompt('Yeni tarihi girin (YYYY-MM-DD):', date('Y-m-d'));
+			if (!newDate) return;
+
+			const task = this.tasks.find(t => t.id == id);
+			if (!task) return;
+
+			const data = new URLSearchParams({ dueDate: newDate });
+			fetch(`${this.apiBase}/tasks/${id}`, {
+				method: 'PUT',
+				headers: { 'requesttoken': OC.requestToken, 'Content-Type': 'application/x-www-form-urlencoded' },
+				body: data.toString()
+			})
+				.then(r => r.json())
+				.then(result => {
+					this.loadTasks();
+					this.showTaskDetail(id);
+					this.showSuccess('Zaman planı güncellendi');
+				});
+		},
+
+		cancelTask: function (id) {
+			if (!confirm('Bu görevi iptal etmek istediğinize emin misiniz?')) return;
+
+			const data = new URLSearchParams({ status: 'cancelled' });
+			fetch(`${this.apiBase}/tasks/${id}`, {
+				method: 'PUT',
+				headers: { 'requesttoken': OC.requestToken, 'Content-Type': 'application/x-www-form-urlencoded' },
+				body: data.toString()
+			})
+				.then(r => r.json())
+				.then(result => {
+					this.loadTasks();
+					this.showTaskDetail(id);
+					this.showSuccess('Görev iptal edildi');
+				});
 		},
 
 		hideTaskDetail: function () {
@@ -4897,7 +5036,7 @@
 			this.currentTaskId = null;
 		},
 
-		showTaskModal: function (id = null, projectId = null) {
+		showTaskModal: function (id = null, projectId = null, parentId = null) {
 			const modal = document.getElementById('task-modal');
 			const form = document.getElementById('task-form');
 			if (!modal || !form) return;
@@ -4907,21 +5046,61 @@
 			this.updateClientSelect('task-client-id');
 			this.updateProjectSelects();
 
-			if (projectId) {
-				document.getElementById('task-project-id').value = projectId;
+			const clientSelect = document.getElementById('task-client-id');
+			const projectSelect = document.getElementById('task-project-id');
+			const parentSelect = document.getElementById('task-parent-id');
+
+			if (clientSelect) clientSelect.disabled = false;
+			if (projectSelect) projectSelect.disabled = false;
+
+			// Populate Parent task select
+			if (parentSelect) {
+				parentSelect.innerHTML = '<option value="">Üst Görev Yok</option>';
+				this.tasks.filter(t => !t.parentId && t.id != id).forEach(p => {
+					parentSelect.innerHTML += `<option value="${p.id}">${this.escapeHtml(p.title)}</option>`;
+				});
+			}
+
+			if (parentId) {
+				const parentTask = this.tasks.find(t => t.id == parentId);
+				if (parentTask) {
+					if (parentSelect) parentSelect.value = parentId;
+					if (projectSelect) {
+						projectSelect.value = parentTask.projectId || '';
+						projectSelect.disabled = true;
+					}
+					if (clientSelect) {
+						clientSelect.value = parentTask.clientId || '';
+						clientSelect.disabled = true;
+					}
+				}
+			} else if (projectId) {
+				if (projectSelect) projectSelect.value = projectId;
+				const proj = this.projects.find(p => p.id == projectId);
+				if (proj && clientSelect) {
+					clientSelect.value = proj.clientId || '';
+					clientSelect.disabled = true;
+				}
 			}
 
 			if (id) {
 				const task = this.tasks.find(t => t.id == id);
 				if (task) {
 					document.getElementById('task-id').value = task.id;
-					document.getElementById('task-project-id').value = task.projectId || '';
-					document.getElementById('task-client-id').value = task.clientId || '';
+					if (projectSelect) projectSelect.value = task.projectId || '';
+					if (clientSelect) clientSelect.value = task.clientId || '';
+					if (parentSelect) parentSelect.value = task.parentId || '';
 					document.getElementById('task-title').value = task.title || '';
 					document.getElementById('task-description').value = task.description || '';
+					document.getElementById('task-notes').value = task.notes || '';
 					document.getElementById('task-status').value = task.status || 'todo';
 					document.getElementById('task-priority').value = task.priority || 'medium';
 					document.getElementById('task-due-date').value = task.dueDate || '';
+
+					if (task.parentId) {
+						if (projectSelect) projectSelect.disabled = true;
+						if (clientSelect) clientSelect.disabled = true;
+					}
 				}
 			}
 			modal.style.display = 'block';
@@ -4929,11 +5108,16 @@
 
 		saveTask: function () {
 			const id = document.getElementById('task-id').value;
+
+			// Re-enable disabled fields for form submission if they are not picked up by URLSearchParams
+			// Or just pull the values directly
 			const data = new URLSearchParams({
 				projectId: document.getElementById('task-project-id').value,
 				clientId: document.getElementById('task-client-id').value,
+				parentId: document.getElementById('task-parent-id').value,
 				title: document.getElementById('task-title').value,
 				description: document.getElementById('task-description').value,
+				notes: document.getElementById('task-notes').value,
 				status: document.getElementById('task-status').value,
 				priority: document.getElementById('task-priority').value,
 				dueDate: document.getElementById('task-due-date').value
@@ -4949,8 +5133,10 @@
 				.then(result => {
 					if (result.error) throw new Error(result.error);
 					this.closeModal('task-modal');
-					this.loadTasks();
-					if (this.currentProjectId) this.loadProjectTasks(this.currentProjectId);
+					this.loadTasks().then(() => {
+						if (this.currentTaskId) this.showTaskDetail(this.currentTaskId);
+						if (this.currentProjectId) this.loadProjectTasks(this.currentProjectId);
+					});
 					this.showSuccess('Görev kaydedildi');
 				})
 				.catch(e => this.showError('Kaydetme hatası: ' + e.message));

@@ -5,35 +5,67 @@ script('domaincontrol', 'reports');
 style('domaincontrol', 'domaincontrol');
 ?>
 
-<div id="domaincontrol-app" class="domaincontrol-container">
-	<div class="domaincontrol-header">
-		<h2>ClientHub</h2>
-		<p class="domaincontrol-subtitle">Kapsamlı müşteri, proje ve iş yönetim sistemi</p>
+<div id="app">
+	<div id="app-navigation">
+		<ul class="with-icon">
+			<li data-id="dashboard" class="active">
+				<a href="#" class="icon-home tab-button" data-tab="dashboard">Dashboard</a>
+			</li>
+			<li data-id="clients">
+				<a href="#" class="icon-contacts tab-button" data-tab="clients">Müşteriler</a>
+			</li>
+			<li data-id="domains">
+				<a href="#" class="icon-public tab-button" data-tab="domains">Domainler</a>
+			</li>
+			<li data-id="hostings">
+				<a href="#" class="icon-category-office tab-button" data-tab="hostings">Hosting</a>
+			</li>
+			<li data-id="websites">
+				<a href="#" class="icon-link tab-button" data-tab="websites">Websiteler</a>
+			</li>
+			<li data-id="services">
+				<a href="#" class="icon-settings tab-button" data-tab="services">Hizmetler</a>
+			</li>
+			<li data-id="invoices">
+				<a href="#" class="icon-files tab-button" data-tab="invoices">Faturalar</a>
+			</li>
+			<li data-id="projects">
+				<a href="#" class="icon-folder tab-button" data-tab="projects">Projeler</a>
+			</li>
+			<li data-id="tasks">
+				<a href="#" class="icon-checkmark tab-button" data-tab="tasks">Görevler</a>
+			</li>
+			<li data-id="reports">
+				<a href="#" class="icon-stats tab-button" data-tab="reports">Raporlar</a>
+			</li>
+		</ul>
+
+		<div id="app-settings">
+			<div id="app-settings-header">
+				<button class="settings-button" data-apps-slide-toggle="#app-settings-content">
+					Ayarlar
+				</button>
+			</div>
+			<div id="app-settings-content">
+				<!-- Settings content -->
+			</div>
+		</div>
 	</div>
 
-	<div class="domaincontrol-tabs">
-		<button class="tab-button active" data-tab="dashboard">📊 Dashboard</button>
-		<button class="tab-button" data-tab="clients">👥 Müşteriler</button>
-		<button class="tab-button" data-tab="domains">🌐 Domainler</button>
-		<button class="tab-button" data-tab="hostings">🖥️ Hosting</button>
-		<button class="tab-button" data-tab="websites">🌍 Websiteler</button>
-		<button class="tab-button" data-tab="services">🛠️ Hizmetler</button>
-		<button class="tab-button" data-tab="invoices">📄 Faturalar</button>
-		<button class="tab-button" data-tab="projects">📁 Projeler</button>
-		<button class="tab-button" data-tab="tasks">✅ Görevler</button>
-		<button class="tab-button" data-tab="reports">📊 Raporlar</button>
+	<div id="app-content">
+		<div id="app-content-wrapper">
+			<?php include __DIR__ . '/partials/tabs/dashboard.php'; ?>
+			<?php include __DIR__ . '/partials/tabs/clients.php'; ?>
+			<?php include __DIR__ . '/partials/tabs/domains.php'; ?>
+			<?php include __DIR__ . '/partials/tabs/hostings.php'; ?>
+			<?php include __DIR__ . '/partials/tabs/websites.php'; ?>
+			<?php include __DIR__ . '/partials/tabs/services.php'; ?>
+			<?php include __DIR__ . '/partials/tabs/invoices.php'; ?>
+			<?php include __DIR__ . '/partials/tabs/projects.php'; ?>
+			<?php include __DIR__ . '/partials/tabs/tasks.php'; ?>
+			<?php include __DIR__ . '/partials/tabs/reports.php'; ?>
+		</div>
 	</div>
-
-	<?php include __DIR__ . '/partials/tabs/dashboard.php'; ?>
-	<?php include __DIR__ . '/partials/tabs/clients.php'; ?>
-	<?php include __DIR__ . '/partials/tabs/domains.php'; ?>
-	<?php include __DIR__ . '/partials/tabs/hostings.php'; ?>
-	<?php include __DIR__ . '/partials/tabs/websites.php'; ?>
-	<?php include __DIR__ . '/partials/tabs/services.php'; ?>
-	<?php include __DIR__ . '/partials/tabs/invoices.php'; ?>
-	<?php include __DIR__ . '/partials/tabs/projects.php'; ?>
-	<?php include __DIR__ . '/partials/tabs/tasks.php'; ?>
-	<?php include __DIR__ . '/partials/tabs/reports.php'; ?>
 
 	<?php include __DIR__ . '/partials/modals/client-modal.php'; ?>
 	<?php include __DIR__ . '/partials/modals/domain-modal.php'; ?>
