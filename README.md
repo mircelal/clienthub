@@ -106,4 +106,4 @@ AGPL-3.0
 
 ## Author
 
-ClientHub Team
+Calal Mir
