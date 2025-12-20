@@ -79,39 +79,46 @@
 			</div>
 
 			<div class="detail-info-card">
-				<div class="time-tracking-header">
-					<h3>⏱️ Zaman Takibi</h3>
-					<div class="time-tracking-total">
-						<span class="total-label">Toplam:</span>
-						<span class="total-time" id="total-time-display">00:00:00</span>
+				<div class="time-tracking-header-premium">
+					<div class="time-tracking-title-section">
+						<h3>⏱️ Zaman Takibi</h3>
+						<div class="time-tracking-total-premium">
+							<span class="total-label-premium">Toplam Süre</span>
+							<span class="total-time-premium" id="total-time-display">00:00:00</span>
+						</div>
 					</div>
 				</div>
-				<div id="project-time-tracking">
-					<div class="time-tracking-controls">
-						<div class="timer-display-compact">
-							<div class="timer-time-compact" id="timer-display">00:00:00</div>
-							<div class="timer-status-compact" id="timer-status">Durduruldu</div>
+				<div id="project-time-tracking" class="time-tracking-layout-premium">
+					<div class="time-tracking-left-panel">
+						<div class="timer-display-premium">
+							<div class="timer-time-premium" id="timer-display">00:00:00</div>
+							<div class="timer-status-premium" id="timer-status">Durduruldu</div>
 						</div>
-						<div class="timer-actions-compact">
-							<button class="btn btn-sm btn-success" id="timer-start-btn">
-								▶️ Başlat
+						<div class="timer-actions-premium">
+							<button class="btn btn-premium btn-start" id="timer-start-btn">
+								<span class="btn-icon icon-play"></span>
+								<span class="btn-text">Başlat</span>
 							</button>
-							<button class="btn btn-sm btn-danger" id="timer-stop-btn" style="display: none;">
-								⏹️ Durdur
+							<button class="btn btn-premium btn-stop" id="timer-stop-btn" style="display: none;">
+								<span class="btn-icon icon-stop"></span>
+								<span class="btn-text">Durdur</span>
 							</button>
 						</div>
-						<div class="timer-description-compact">
-							<input type="text" id="timer-description-input" class="form-control form-control-sm" 
-								placeholder="Açıklama (opsiyonel)">
+						<div class="timer-description-premium">
+							<label class="input-label">Çalışma Açıklaması</label>
+							<input type="text" id="timer-description-input" class="input-premium" 
+								placeholder="Ne üzerinde çalışıyorsunuz?">
 						</div>
 					</div>
-					<div class="time-entries-list-compact">
-						<div class="time-entries-header">
-							<span class="entries-title">Zaman Kayıtları</span>
-							<span class="entries-count" id="entries-count">0 kayıt</span>
+					<div class="time-tracking-right-panel">
+						<div class="time-entries-header-premium">
+							<div class="entries-title-section">
+								<span class="entries-title-premium">Zaman Kayıtları</span>
+								<span class="entries-count-premium" id="entries-count">0 kayıt</span>
+							</div>
 						</div>
-						<div id="time-entries-container" class="time-entries-container">
-							<p class="empty-message">Henüz zaman kaydı yok</p>
+						<div id="time-entries-container" class="time-entries-container-premium">
+							<p class="empty-message-premium">Henüz zaman kaydı yok</p>
 						</div>
 					</div>
 				</div>

@@ -3465,7 +3465,7 @@
 
 		// ===== INVOICES =====
 		loadInvoices: function () {
-			fetch(this.apiBase + '/invoices', {
+			return fetch(this.apiBase + '/invoices', {
 				headers: { 'requesttoken': OC.requestToken }
 			})
 				.then(r => r.json())
@@ -3473,10 +3473,12 @@
 					this.invoices = Array.isArray(data) ? data : [];
 					this.renderInvoices();
 					this.updateDashboard();
+					return this.invoices;
 				})
 				.catch(e => {
 					console.error('Error loading invoices:', e);
 					this.invoices = [];
+					return [];
 				});
 		},
 
@@ -4408,14 +4410,6 @@
 		},
 
 		loadProjectFinancials: function (projectId) {
-			// Get invoices related to this project
-			const projectInvoices = (this.invoices || []).filter(inv => {
-				// Check if invoice has items linked to this project
-				// For now, we'll calculate from payments
-				return false;
-			});
-
-			// Calculate from project budget and any linked invoices
 			const proj = this.projects.find(p => p.id == projectId);
 			if (!proj) return;
 
@@ -4424,31 +4418,135 @@
 
 			const budget = parseFloat(proj.budget) || 0;
 
-			// Find invoices for this client with project-related items
-			const clientInvoices = (this.invoices || []).filter(inv => inv.clientId == proj.clientId);
-			let totalInvoiced = 0;
-			let totalPaid = 0;
-
-			clientInvoices.forEach(inv => {
-				// For simplicity, we'll show all client invoices
-				// In a more advanced setup, we'd filter by project-linked items
+			// Find invoices related to this project (by checking notes for project name)
+			const projectInvoices = (this.invoices || []).filter(inv => {
+				if (inv.clientId != proj.clientId) return false;
+				// Check if invoice notes contains project name
+				if (inv.notes && inv.notes.includes(`Proje: ${proj.name}`)) {
+					return true;
+				}
+				return false;
 			});
 
+			// Calculate totals
+			let totalInvoiced = 0;
+			let totalPaid = 0;
+			let totalPending = 0;
+
+			projectInvoices.forEach(inv => {
+				const total = parseFloat(inv.totalAmount) || 0;
+				const paid = parseFloat(inv.paidAmount) || 0;
+				totalInvoiced += total;
+				totalPaid += paid;
+				totalPending += (total - paid);
+			});
+
+			const statusTexts = {
+				draft: 'Taslak',
+				sent: 'Gönderildi',
+				paid: 'Ödendi',
+				overdue: 'Gecikmiş',
+				cancelled: 'İptal'
+			};
+
+			const statusColors = {
+				draft: '#6b7280',
+				sent: '#3b82f6',
+				paid: '#10b981',
+				overdue: '#ef4444',
+				cancelled: '#9ca3af'
+			};
+
+			let invoicesHtml = '';
+			if (projectInvoices.length > 0) {
+				invoicesHtml = `
+					<div class="project-invoices-list" style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--color-border);">
+						<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+							<strong style="font-size: 13px; color: var(--color-main-text);">Proje Faturaları</strong>
+							<span style="font-size: 11px; color: var(--color-text-maxcontrast);">${projectInvoices.length} fatura</span>
+						</div>
+						<div style="max-height: 300px; overflow-y: auto;">
+							${projectInvoices.map(inv => {
+								const statusColor = statusColors[inv.status] || '#6b7280';
+								const statusText = statusTexts[inv.status] || inv.status;
+								return `
+									<div class="project-invoice-item" data-invoice-id="${inv.id}" style="padding: 12px; border: 1px solid var(--color-border); border-radius: 8px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s;">
+										<div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 6px;">
+											<div>
+												<div style="font-weight: 600; font-size: 13px; color: var(--color-main-text); margin-bottom: 4px;">
+													${this.escapeHtml(inv.invoiceNumber || 'Fatura #' + inv.id)}
+												</div>
+												<div style="font-size: 11px; color: var(--color-text-maxcontrast);">
+													${inv.issueDate || '-'}
+												</div>
+											</div>
+											<span style="font-size: 10px; padding: 4px 8px; border-radius: 12px; background: ${statusColor}20; color: ${statusColor}; font-weight: 600;">
+												${statusText}
+											</span>
+										</div>
+										<div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+											<div style="font-size: 12px; color: var(--color-text-maxcontrast);">
+												Toplam: <strong style="color: var(--color-main-text);">${(parseFloat(inv.totalAmount) || 0).toFixed(2)} ${inv.currency || 'USD'}</strong>
+											</div>
+											<div style="font-size: 12px; color: var(--color-text-maxcontrast);">
+												Ödenen: <strong style="color: #10b981;">${(parseFloat(inv.paidAmount) || 0).toFixed(2)} ${inv.currency || 'USD'}</strong>
+											</div>
+										</div>
+									</div>
+								`;
+							}).join('')}
+						</div>
+					</div>
+				`;
+			}
+
 			container.innerHTML = `
-			<div class="financial-summary">
-				<div class="financial-item">
-					<span class="financial-label">Bütçe:</span>
-					<span class="financial-value">${budget.toFixed(2)} ${proj.currency || 'USD'}</span>
+				<div class="financial-summary">
+					<div class="financial-item" style="margin-bottom: 12px;">
+						<span class="financial-label">Bütçe:</span>
+						<span class="financial-value">${budget.toFixed(2)} ${proj.currency || 'USD'}</span>
+					</div>
+					${totalInvoiced > 0 ? `
+						<div class="financial-item" style="margin-bottom: 12px;">
+							<span class="financial-label">Toplam Faturalanan:</span>
+							<span class="financial-value">${totalInvoiced.toFixed(2)} ${proj.currency || 'USD'}</span>
+						</div>
+						<div class="financial-item" style="margin-bottom: 12px;">
+							<span class="financial-label">Ödenen:</span>
+							<span class="financial-value" style="color: #10b981;">${totalPaid.toFixed(2)} ${proj.currency || 'USD'}</span>
+						</div>
+						${totalPending > 0 ? `
+							<div class="financial-item">
+								<span class="financial-label">Bekleyen:</span>
+								<span class="financial-value" style="color: #f59e0b;">${totalPending.toFixed(2)} ${proj.currency || 'USD'}</span>
+							</div>
+						` : ''}
+					` : ''}
 				</div>
-			</div>
-			<p class="text-muted" style="font-size: 12px; margin-top: 8px;">
-				Detaylı finansal takip için proje ile ilişkili fatura oluşturun.
-			</p>
-			<button class="btn btn-sm btn-primary create-project-invoice-btn" style="margin-top: 8px;">📄 Fatura Oluştur</button>
-		`;
+				${invoicesHtml}
+				<div style="margin-top: 16px;">
+					<button class="btn btn-sm btn-primary create-project-invoice-btn" style="width: 100%;">
+						📄 Fatura Oluştur
+					</button>
+				</div>
+			`;
 
 			container.querySelector('.create-project-invoice-btn')?.addEventListener('click', () => {
 				this.createInvoiceFromProject(projectId);
+			});
+
+			// Add click listeners for invoice items
+			container.querySelectorAll('.project-invoice-item').forEach(item => {
+				item.addEventListener('click', () => {
+					const invoiceId = parseInt(item.dataset.invoiceId);
+					if (invoiceId) {
+						this.hideProjectDetail();
+						this.switchTab('invoices');
+						setTimeout(() => {
+							this.showInvoiceDetail(invoiceId);
+						}, 300);
+					}
+				});
 			});
 		},
 
@@ -4456,7 +4554,7 @@
 			const proj = this.projects.find(p => p.id == projectId);
 			if (!proj) return;
 
-			// Create invoice and redirect to invoice detail
+			// Create invoice and stay on project detail page
 			const data = new URLSearchParams({
 				clientId: proj.clientId,
 				currency: proj.currency || 'USD',
@@ -4475,13 +4573,12 @@
 				.then(r => r.json())
 				.then(result => {
 					if (result.error) throw new Error(result.error);
-					this.loadInvoices();
-					this.hideProjectDetail();
-					this.switchTab('invoices');
-					setTimeout(() => {
-						this.showInvoiceDetail(result.id);
-						this.showSuccess('Fatura oluşturuldu. Şimdi kalem ekleyebilirsiniz.');
-					}, 300);
+					// Reload invoices to get the new one
+					this.loadInvoices().then(() => {
+						// Reload project financials to show the new invoice
+						this.loadProjectFinancials(projectId);
+						this.showSuccess('Fatura oluşturuldu ve proje finansal bilgilerine eklendi.');
+					});
 				})
 				.catch(e => this.showError('Fatura oluşturma hatası: ' + e.message));
 		},
@@ -5381,7 +5478,7 @@
 				startBtn.disabled = false;
 			}
 			if (stopBtn) {
-				stopBtn.style.display = 'inline-block';
+				stopBtn.style.display = 'flex';
 				stopBtn.disabled = false;
 			}
 			this.updateTimerStatus(true);
@@ -5412,8 +5509,14 @@
 			const startBtn = document.getElementById('timer-start-btn');
 			const stopBtn = document.getElementById('timer-stop-btn');
 
-			if (startBtn) startBtn.style.display = 'inline-block';
-			if (stopBtn) stopBtn.style.display = 'none';
+			if (startBtn) {
+				startBtn.style.display = 'flex';
+				startBtn.disabled = false;
+			}
+			if (stopBtn) {
+				stopBtn.style.display = 'none';
+				stopBtn.disabled = false;
+			}
 			this.updateTimerStatus(false);
 
 			if (this.timerInterval) {
@@ -5458,7 +5561,7 @@
 			}
 
 			if (!entries || entries.length === 0) {
-				container.innerHTML = '<p class="empty-message" style="padding: 20px; text-align: center; color: var(--color-text-maxcontrast);">Henüz zaman kaydı yok</p>';
+				container.innerHTML = '<p class="empty-message-premium">Henüz zaman kaydı yok</p>';
 				return;
 			}
 
