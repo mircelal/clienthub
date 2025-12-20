@@ -63,7 +63,15 @@
 					</div>
 					<div class="mini-stat">
 						<span class="mini-stat__label">Gelir (Bu Ay)</span>
-						<span class="mini-stat__value"><span id="stat-monthly-income">0</span> ₺</span>
+						<span class="mini-stat__value"><span id="stat-monthly-income">0</span> ₼</span>
+					</div>
+					<div class="mini-stat">
+						<span class="mini-stat__label">Gider (Bu Ay)</span>
+						<span class="mini-stat__value"><span id="stat-monthly-expense">0</span> ₼</span>
+					</div>
+					<div class="mini-stat">
+						<span class="mini-stat__label">Net Kar/Zarar</span>
+						<span class="mini-stat__value"><span id="stat-net-profit">0</span> ₼</span>
 					</div>
 				</div>
 			</div>
@@ -127,6 +135,16 @@
 					</header>
 					<div id="upcoming-tasks-list" class="alert-panel__body">
 						<p class="empty-message">Yaklaşan görev yok</p>
+					</div>
+				</div>
+
+				<div class="alert-panel alert-panel--warning">
+					<header>
+						<h3>💳 Yaklaşan Borç Ödemeleri</h3>
+						<span id="upcoming-debts-count" class="badge badge--warning">0</span>
+					</header>
+					<div id="upcoming-debts-list" class="alert-panel__body">
+						<p class="empty-message">Yaklaşan borç ödemesi yok</p>
 					</div>
 				</div>
 			</div>

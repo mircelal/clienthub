@@ -250,5 +250,101 @@
 				<canvas id="payment-trend-chart"></canvas>
 			</div>
 		</div>
+
+		<!-- Gelir/Gider Analizi -->
+		<div class="report-section">
+			<div class="section-header">
+				<h3>💰 Gelir/Gider Analizi</h3>
+				<p class="section-description">Gelir ve gider karşılaştırması, kategori bazlı analiz</p>
+			</div>
+			<div class="report-cards">
+				<div class="stat-card stat-card--success">
+					<div class="stat-card__icon">📈</div>
+					<div class="stat-card__content">
+						<div class="stat-card__value" id="report-total-transaction-income">0.00 ₼</div>
+						<div class="stat-card__label">Toplam Gelir</div>
+						<div class="stat-card__subtitle">Tüm işlemler</div>
+					</div>
+				</div>
+				<div class="stat-card stat-card--danger">
+					<div class="stat-card__icon">📉</div>
+					<div class="stat-card__content">
+						<div class="stat-card__value" id="report-total-transaction-expense">0.00 ₼</div>
+						<div class="stat-card__label">Toplam Gider</div>
+						<div class="stat-card__subtitle">Tüm işlemler</div>
+					</div>
+				</div>
+				<div class="stat-card stat-card--primary">
+					<div class="stat-card__icon">💵</div>
+					<div class="stat-card__content">
+						<div class="stat-card__value" id="report-net-transaction">0.00 ₼</div>
+						<div class="stat-card__label">Net Kar/Zarar</div>
+						<div class="stat-card__subtitle">Gelir - Gider</div>
+					</div>
+				</div>
+			</div>
+			<div class="report-chart-container">
+				<canvas id="income-expense-chart"></canvas>
+			</div>
+			<div class="report-chart-container">
+				<canvas id="expense-category-chart"></canvas>
+			</div>
+		</div>
+
+		<!-- Nakit Akışı -->
+		<div class="report-section">
+			<div class="section-header">
+				<h3>💸 Nakit Akışı</h3>
+				<p class="section-description">Aylık gelir ve gider akışı</p>
+			</div>
+			<div class="report-chart-container">
+				<canvas id="cash-flow-chart"></canvas>
+			</div>
+		</div>
+
+		<!-- Borç/Alacak Durumu -->
+		<div class="report-section">
+			<div class="section-header">
+				<h3>💳 Borç/Alacak Durumu</h3>
+				<p class="section-description">Toplam borçlar, alacaklar ve ödeme durumu</p>
+			</div>
+			<div class="report-cards">
+				<div class="stat-card stat-card--danger">
+					<div class="stat-card__icon">💸</div>
+					<div class="stat-card__content">
+						<div class="stat-card__value" id="report-total-debts">0.00 ₼</div>
+						<div class="stat-card__label">Toplam Borçlar</div>
+						<div class="stat-card__subtitle">Ödenmemiş borçlar</div>
+					</div>
+				</div>
+				<div class="stat-card stat-card--success">
+					<div class="stat-card__icon">💰</div>
+					<div class="stat-card__content">
+						<div class="stat-card__value" id="report-total-credits">0.00 ₼</div>
+						<div class="stat-card__label">Toplam Alacaklar</div>
+						<div class="stat-card__subtitle">Tahsil edilmemiş</div>
+					</div>
+				</div>
+				<div class="stat-card stat-card--warning">
+					<div class="stat-card__icon">⏰</div>
+					<div class="stat-card__content">
+						<div class="stat-card__value" id="report-upcoming-debt-payments">0</div>
+						<div class="stat-card__label">Yaklaşan Ödemeler</div>
+						<div class="stat-card__subtitle">30 gün içinde</div>
+					</div>
+				</div>
+				<div class="stat-card stat-card--danger">
+					<div class="stat-card__icon">🚨</div>
+					<div class="stat-card__content">
+						<div class="stat-card__value" id="report-overdue-debts">0</div>
+						<div class="stat-card__label">Gecikmiş Borçlar</div>
+						<div class="stat-card__subtitle">Acil ödeme gerekli</div>
+					</div>
+				</div>
+			</div>
+			<div class="report-chart-container">
+				<canvas id="debt-status-chart"></canvas>
+			</div>
+		</div>
 	</div>
 </div>

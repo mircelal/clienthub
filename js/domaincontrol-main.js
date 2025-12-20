@@ -24,10 +24,15 @@
 		payments: [],
 		projects: [],
 		tasks: [],
+		transactions: [],
+		transactionCategories: [],
+		debts: [],
 		currentServiceId: null,
 		currentInvoiceId: null,
 		currentProjectId: null,
 		currentTaskId: null,
+		currentTransactionId: null,
+		currentDebtId: null,
 		timerInterval: null,
 		currentRunningEntry: null,
 		timerButtonsSetup: false,
@@ -80,6 +85,8 @@
 			document.getElementById('add-invoice-btn')?.addEventListener('click', () => this.showInvoiceModal());
 			document.getElementById('add-project-btn')?.addEventListener('click', () => this.showProjectModal());
 			document.getElementById('add-task-btn')?.addEventListener('click', () => this.showTaskModal());
+			document.getElementById('add-transaction-btn')?.addEventListener('click', () => this.showTransactionModal());
+			document.getElementById('add-debt-btn')?.addEventListener('click', () => this.showDebtModal());
 
 			// Quick add buttons with tab switching
 			document.getElementById('quick-add-client')?.addEventListener('click', () => {
@@ -198,6 +205,33 @@
 
 			// Task detail buttons
 			document.getElementById('back-to-tasks-btn')?.addEventListener('click', () => this.hideTaskDetail());
+
+			// Transaction detail buttons
+			document.getElementById('back-to-transactions-btn')?.addEventListener('click', () => this.hideTransactionDetail());
+			document.getElementById('transaction-detail-edit-btn')?.addEventListener('click', () => {
+				if (this.currentTransactionId) this.showTransactionModal(this.currentTransactionId);
+			});
+			document.getElementById('transaction-detail-delete-btn')?.addEventListener('click', () => {
+				if (this.currentTransactionId && confirm('Bu işlemi silmek istediğinize emin misiniz?')) {
+					this.deleteTransaction(this.currentTransactionId);
+					this.hideTransactionDetail();
+				}
+			});
+
+			// Debt detail buttons
+			document.getElementById('back-to-debts-btn')?.addEventListener('click', () => this.hideDebtDetail());
+			document.getElementById('debt-detail-edit-btn')?.addEventListener('click', () => {
+				if (this.currentDebtId) this.showDebtModal(this.currentDebtId);
+			});
+			document.getElementById('debt-detail-delete-btn')?.addEventListener('click', () => {
+				if (this.currentDebtId && confirm('Bu borç/alacağı silmek istediğinize emin misiniz?')) {
+					this.deleteDebt(this.currentDebtId);
+					this.hideDebtDetail();
+				}
+			});
+			document.getElementById('debt-add-payment-btn')?.addEventListener('click', () => {
+				if (this.currentDebtId) this.showDebtPaymentModal(this.currentDebtId);
+			});
 			document.getElementById('task-toggle-btn')?.addEventListener('click', () => {
 				if (this.currentTaskId) this.toggleTaskStatus(this.currentTaskId);
 			});
@@ -378,6 +412,7 @@
 			this.loadPayments();
 			this.loadProjects();
 			this.loadTasks();
+			this.loadTransactionCategories();
 		},
 
 		loadTabData: function (tabName) {
@@ -408,6 +443,12 @@
 					break;
 				case 'tasks':
 					this.loadTasks();
+					break;
+				case 'transactions':
+					this.loadTransactions();
+					break;
+				case 'debts':
+					this.loadDebts();
 					break;
 				case 'reports':
 					if (window.Reports && window.Reports.loadReports) {
@@ -1955,6 +1996,30 @@
 				this.saveTask();
 			});
 
+			// Transaction form
+			document.getElementById('transaction-form')?.addEventListener('submit', (e) => {
+				e.preventDefault();
+				this.saveTransaction();
+			});
+
+			// Transaction Category form
+			document.getElementById('transaction-category-form')?.addEventListener('submit', (e) => {
+				e.preventDefault();
+				this.saveTransactionCategory();
+			});
+
+			// Debt form
+			document.getElementById('debt-form')?.addEventListener('submit', (e) => {
+				e.preventDefault();
+				this.saveDebt();
+			});
+
+			// Debt Payment form
+			document.getElementById('debt-payment-form')?.addEventListener('submit', (e) => {
+				e.preventDefault();
+				this.saveDebtPayment();
+			});
+
 			// Update new expiry when years change
 			document.getElementById('extend-years').addEventListener('change', () => {
 				this.updateNewExpiryDate();
@@ -2836,9 +2901,11 @@
 			this.loadOverdueInvoices();
 			this.loadUpcomingPayments();
 			this.loadUpcomingTasks();
+			this.loadUpcomingDebts();
 		},
 
 		loadMonthlyIncome: function () {
+			// Load from payments (existing invoices)
 			fetch(this.apiBase + '/payments/monthly-total', {
 				headers: { 'requesttoken': OC.requestToken }
 			})
@@ -2846,6 +2913,34 @@
 				.then(data => {
 					const el = document.getElementById('stat-monthly-income');
 					if (el) el.textContent = (data.total || 0).toFixed(2);
+				})
+				.catch(() => { });
+
+			// Load from transactions
+			const yearMonth = new Date().toISOString().slice(0, 7);
+			fetch(this.apiBase + '/transactions/monthly-summary?yearMonth=' + yearMonth, {
+				headers: { 'requesttoken': OC.requestToken }
+			})
+				.then(r => r.json())
+				.then(data => {
+					const incomeEl = document.getElementById('stat-monthly-income');
+					const expenseEl = document.getElementById('stat-monthly-expense');
+					const netEl = document.getElementById('stat-net-profit');
+					
+					if (incomeEl) {
+						const currentIncome = parseFloat(incomeEl.textContent || 0);
+						incomeEl.textContent = (currentIncome + (data.totalIncome || 0)).toFixed(2);
+					}
+					if (expenseEl) {
+						expenseEl.textContent = (data.totalExpense || 0).toFixed(2);
+					}
+					if (netEl) {
+						const currentIncome = parseFloat(document.getElementById('stat-monthly-income')?.textContent || 0);
+						const expense = data.totalExpense || 0;
+						const net = currentIncome - expense;
+						netEl.textContent = net.toFixed(2);
+						netEl.parentElement.style.color = net >= 0 ? '#10b981' : '#ef4444';
+					}
 				})
 				.catch(() => { });
 		},
@@ -2947,6 +3042,41 @@
 								<div class="alert-item__subtitle">${project ? project.name : 'Genel'}</div>
 							</div>
 							<span class="alert-item__badge alert-item__badge--info">${daysLeft} gün</span>
+						</div>
+					`;
+					});
+					list.innerHTML = html;
+				})
+				.catch(() => { });
+		},
+
+		loadUpcomingDebts: function () {
+			fetch(this.apiBase + '/debts/upcoming-payments?days=30', {
+				headers: { 'requesttoken': OC.requestToken }
+			})
+				.then(r => r.json())
+				.then(debts => {
+					const list = document.getElementById('upcoming-debts-list');
+					const count = document.getElementById('upcoming-debts-count');
+					if (count) count.textContent = debts.length;
+					if (!list) return;
+
+					if (debts.length === 0) {
+						list.innerHTML = '<p class="empty-message">Yaklaşan borç ödemesi yok</p>';
+						return;
+					}
+
+					let html = '';
+					debts.forEach(debt => {
+						const daysLeft = debt.nextPaymentDate ? Math.ceil((new Date(debt.nextPaymentDate) - new Date()) / (1000 * 60 * 60 * 24)) : 0;
+						const remaining = parseFloat(debt.totalAmount) - parseFloat(debt.paidAmount || 0);
+						html += `
+						<div class="alert-item" data-id="${debt.id}">
+							<div class="alert-item__info">
+								<div class="alert-item__title">${this.escapeHtml(debt.creditorDebtorName || 'Borç/Alacak')}</div>
+								<div class="alert-item__subtitle">${this.formatCurrency(remaining, debt.currency)} kalan</div>
+							</div>
+							<span class="alert-item__badge alert-item__badge--warning">${daysLeft} gün</span>
 						</div>
 					`;
 					});
@@ -6146,6 +6276,8 @@
 			if (this.currentTab === 'invoices') this.renderInvoices(filter);
 			else if (this.currentTab === 'projects') this.renderProjects(filter);
 			else if (this.currentTab === 'tasks') this.renderTasks(filter);
+			else if (this.currentTab === 'transactions') this.renderTransactions();
+			else if (this.currentTab === 'debts') this.renderDebts();
 		},
 
 		// ===== HELPER =====
@@ -6158,6 +6290,44 @@
 				select.innerHTML += `<option value="${c.id}">${this.escapeHtml(c.name)}</option>`;
 			});
 			if (currentValue) select.value = currentValue;
+		},
+
+		updateProjectSelect: function (selectId) {
+			const select = document.getElementById(selectId);
+			if (!select) return;
+			const currentValue = select.value;
+			select.innerHTML = '<option value="">Proje Seçin</option>';
+			this.projects.forEach(p => {
+				select.innerHTML += `<option value="${p.id}">${this.escapeHtml(p.name)}</option>`;
+			});
+			if (currentValue) select.value = currentValue;
+		},
+
+		saveTransactionCategory: function () {
+			const id = document.getElementById('transaction-category-id').value;
+			const data = new URLSearchParams({
+				type: document.getElementById('transaction-category-type').value,
+				name: document.getElementById('transaction-category-name').value,
+				icon: document.getElementById('transaction-category-icon').value || '',
+				color: document.getElementById('transaction-category-color').value || ''
+			});
+
+			const url = id ? `${this.apiBase}/transaction-categories/${id}` : `${this.apiBase}/transaction-categories`;
+			fetch(url, {
+				method: id ? 'PUT' : 'POST',
+				headers: { 'requesttoken': OC.requestToken, 'Content-Type': 'application/x-www-form-urlencoded' },
+				body: data.toString()
+			})
+				.then(r => r.json())
+				.then(category => {
+					if (category.error) throw new Error(category.error);
+					this.showSuccess('Kategori kaydedildi');
+					this.closeModal('transaction-category-modal');
+					this.loadTransactionCategories();
+				})
+				.catch(e => {
+					this.showError('Kaydetme hatası: ' + e.message);
+				});
 		},
 
 		showError: function (message) {
@@ -6369,6 +6539,683 @@
 						btn.disabled = false;
 						btn.innerHTML = '📧 E-posta Test Et';
 					}
+				});
+		},
+
+		// Transaction Category Functions
+		loadTransactionCategories: function () {
+			fetch(`${this.apiBase}/transaction-categories`, {
+				headers: { 'requesttoken': OC.requestToken }
+			})
+				.then(r => r.json())
+				.then(categories => {
+					this.transactionCategories = categories || [];
+				})
+				.catch(e => {
+					console.error('Error loading transaction categories:', e);
+					this.transactionCategories = [];
+				});
+		},
+
+		// Transaction Functions
+		loadTransactions: function () {
+			fetch(`${this.apiBase}/transactions`, {
+				headers: { 'requesttoken': OC.requestToken }
+			})
+				.then(r => r.json())
+				.then(transactions => {
+					this.transactions = transactions || [];
+					this.renderTransactions();
+				})
+				.catch(e => {
+					console.error('Error loading transactions:', e);
+					this.transactions = [];
+					this.renderTransactions();
+				});
+		},
+
+		renderTransactions: function () {
+			const list = document.getElementById('transactions-list');
+			if (!list) return;
+
+			if (this.transactions.length === 0) {
+				list.innerHTML = '<p class="empty-message">Henüz işlem kaydı yok</p>';
+				return;
+			}
+
+			const activeFilter = document.querySelector('.filter-buttons .btn-filter.active')?.getAttribute('data-filter') || 'all';
+			let filtered = this.transactions;
+
+			if (activeFilter === 'income') {
+				filtered = this.transactions.filter(t => t.type === 'income');
+			} else if (activeFilter === 'expense') {
+				filtered = this.transactions.filter(t => t.type === 'expense');
+			}
+
+			const html = filtered.map(trans => {
+				const category = this.transactionCategories.find(c => c.id == trans.categoryId);
+				const client = this.clients.find(c => c.id == trans.clientId);
+				const project = this.projects.find(p => p.id == trans.projectId);
+				const typeLabel = trans.type === 'income' ? '💰 Gelir' : '💸 Gider';
+				const typeClass = trans.type === 'income' ? 'text-success' : 'text-danger';
+				const date = trans.transactionDate ? new Date(trans.transactionDate).toLocaleDateString('tr-TR') : '-';
+
+				return `
+					<div class="list-item transaction-item" data-id="${trans.id}">
+						<div class="list-item__icon" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; background: ${trans.type === 'income' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)'}; border-radius: 12px; font-size: 24px; flex-shrink: 0;">
+							${category?.icon || (trans.type === 'income' ? '💰' : '💸')}
+						</div>
+						<div class="list-item__content" style="flex: 1; min-width: 0;">
+							<div class="list-item__title" style="font-weight: 600; font-size: 15px; margin-bottom: 6px;">${this.escapeHtml(trans.description || 'Açıklama yok')}</div>
+							<div class="list-item__subtitle" style="font-size: 13px; color: var(--color-text-maxcontrast); display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+								<span class="${typeClass}" style="font-weight: 500;">${typeLabel}</span>
+								${category ? `<span style="display: inline-flex; align-items: center; gap: 4px;"><span style="color: ${category.color || '#3b82f6'};">${category.icon || '📁'}</span> ${this.escapeHtml(category.name)}</span>` : ''}
+								${client ? `<span>👤 ${this.escapeHtml(client.name)}</span>` : ''}
+								${project ? `<span>📂 ${this.escapeHtml(project.name)}</span>` : ''}
+								<span>📅 ${date}</span>
+							</div>
+						</div>
+						<div class="list-item__actions" style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-shrink: 0;">
+							<span class="amount ${typeClass}" style="font-weight: 700; font-size: 16px; white-space: nowrap;">
+								${trans.type === 'income' ? '+' : '-'}${parseFloat(trans.amount || 0).toFixed(2)} ${trans.currency || 'USD'}
+							</span>
+							<button class="btn btn-sm btn-secondary" onclick="DomainControl.showTransactionDetail(${trans.id}); event.stopPropagation();" style="padding: 6px 12px; font-size: 13px;">Görüntüle</button>
+						</div>
+					</div>
+				`;
+			}).join('');
+
+			list.innerHTML = html;
+
+			// Event delegation for clicks
+			list.querySelectorAll('.transaction-item').forEach(item => {
+				item.addEventListener('click', (e) => {
+					if (!e.target.closest('.btn')) {
+						const id = parseInt(item.getAttribute('data-id'));
+						this.showTransactionDetail(id);
+					}
+				});
+			});
+		},
+
+		showTransactionModal: function (id = null) {
+			const modal = document.getElementById('transaction-modal');
+			const form = document.getElementById('transaction-form');
+			if (!modal || !form) return;
+
+			form.reset();
+			document.getElementById('transaction-id').value = '';
+			document.getElementById('transaction-date').value = new Date().toISOString().split('T')[0];
+			this.updateClientSelect('transaction-client-id');
+			this.updateProjectSelect('transaction-project-id');
+			this.updateCategorySelect();
+
+			if (id) {
+				const trans = this.transactions.find(t => t.id == id);
+				if (trans) {
+					document.getElementById('transaction-id').value = trans.id;
+					document.getElementById('transaction-type').value = trans.type || '';
+					document.getElementById('transaction-category-id').value = trans.categoryId || '';
+					document.getElementById('transaction-amount').value = trans.amount || '';
+					document.getElementById('transaction-currency').value = trans.currency || 'USD';
+					document.getElementById('transaction-date').value = trans.transactionDate || '';
+					document.getElementById('transaction-description').value = trans.description || '';
+					document.getElementById('transaction-payment-method').value = trans.paymentMethod || '';
+					document.getElementById('transaction-client-id').value = trans.clientId || '';
+					document.getElementById('transaction-project-id').value = trans.projectId || '';
+					document.getElementById('transaction-reference').value = trans.reference || '';
+					document.getElementById('transaction-notes').value = trans.notes || '';
+					document.getElementById('transaction-modal-title').textContent = 'İşlem Düzenle';
+					this.updateCategorySelect(trans.type);
+				}
+			} else {
+				document.getElementById('transaction-modal-title').textContent = 'İşlem Ekle';
+			}
+
+			// Update categories when type changes
+			document.getElementById('transaction-type')?.addEventListener('change', (e) => {
+				this.updateCategorySelect(e.target.value);
+			});
+
+			modal.style.display = 'block';
+		},
+
+		updateCategorySelect: function (type = null) {
+			const select = document.getElementById('transaction-category-id');
+			if (!select) return;
+
+			const selectedValue = select.value;
+			select.innerHTML = '<option value="">Kategori Seçin</option>';
+
+			if (type) {
+				const categories = this.transactionCategories.filter(c => c.type === type);
+				categories.forEach(cat => {
+					const option = document.createElement('option');
+					option.value = cat.id;
+					option.textContent = `${cat.icon || ''} ${cat.name}`;
+					select.appendChild(option);
+				});
+			} else {
+				this.transactionCategories.forEach(cat => {
+					const option = document.createElement('option');
+					option.value = cat.id;
+					option.textContent = `${cat.icon || ''} ${cat.name}`;
+					select.appendChild(option);
+				});
+			}
+
+			if (selectedValue) {
+				select.value = selectedValue;
+			}
+		},
+
+		saveTransaction: function () {
+			const id = document.getElementById('transaction-id').value;
+			const data = new URLSearchParams({
+				type: document.getElementById('transaction-type').value,
+				categoryId: document.getElementById('transaction-category-id').value || '',
+				amount: document.getElementById('transaction-amount').value,
+				currency: document.getElementById('transaction-currency').value,
+				transactionDate: document.getElementById('transaction-date').value,
+				description: document.getElementById('transaction-description').value,
+				paymentMethod: document.getElementById('transaction-payment-method').value || '',
+				clientId: document.getElementById('transaction-client-id').value || '',
+				projectId: document.getElementById('transaction-project-id').value || '',
+				reference: document.getElementById('transaction-reference').value || '',
+				notes: document.getElementById('transaction-notes').value || ''
+			});
+
+			const url = id ? `${this.apiBase}/transactions/${id}` : `${this.apiBase}/transactions`;
+			fetch(url, {
+				method: id ? 'PUT' : 'POST',
+				headers: { 'requesttoken': OC.requestToken, 'Content-Type': 'application/x-www-form-urlencoded' },
+				body: data.toString()
+			})
+				.then(r => r.json())
+				.then(trans => {
+					if (trans.error) throw new Error(trans.error);
+					this.showSuccess('İşlem kaydedildi');
+					this.closeModal('transaction-modal');
+					this.loadTransactions();
+				})
+				.catch(e => {
+					this.showError('Kaydetme hatası: ' + e.message);
+				});
+		},
+
+		showTransactionDetail: function (id) {
+			const trans = this.transactions.find(t => t.id == id);
+			if (!trans) return;
+
+			this.currentTransactionId = id;
+			document.getElementById('transactions-list-view').style.display = 'none';
+			document.getElementById('transaction-detail-view').style.display = 'block';
+
+			const category = this.transactionCategories.find(c => c.id == trans.categoryId);
+			const client = this.clients.find(c => c.id == trans.clientId);
+			const project = this.projects.find(p => p.id == trans.projectId);
+
+			document.getElementById('transaction-detail-title').textContent = trans.description || 'İşlem Detayı';
+			document.getElementById('transaction-detail-type').textContent = trans.type === 'income' ? '💰 Gelir' : '💸 Gider';
+			document.getElementById('transaction-detail-category').textContent = category ? `${category.icon || ''} ${category.name}` : '-';
+			document.getElementById('transaction-detail-amount').textContent = `${parseFloat(trans.amount || 0).toFixed(2)} ${trans.currency || 'USD'}`;
+			document.getElementById('transaction-detail-date').textContent = trans.transactionDate ? new Date(trans.transactionDate).toLocaleDateString('tr-TR') : '-';
+			document.getElementById('transaction-detail-payment-method').textContent = trans.paymentMethod || '-';
+			document.getElementById('transaction-detail-client').textContent = client ? client.name : '-';
+			document.getElementById('transaction-detail-description').textContent = trans.description || '-';
+			document.getElementById('transaction-detail-project').textContent = project ? project.name : '-';
+			document.getElementById('transaction-detail-notes').textContent = trans.notes || '-';
+		},
+
+		hideTransactionDetail: function () {
+			document.getElementById('transactions-list-view').style.display = 'block';
+			document.getElementById('transaction-detail-view').style.display = 'none';
+			this.currentTransactionId = null;
+		},
+
+		deleteTransaction: function (id) {
+			fetch(`${this.apiBase}/transactions/${id}`, {
+				method: 'DELETE',
+				headers: { 'requesttoken': OC.requestToken }
+			})
+				.then(r => r.json())
+				.then(data => {
+					if (data.error) throw new Error(data.error);
+					this.showSuccess('İşlem silindi');
+					this.loadTransactions();
+					this.hideTransactionDetail();
+				})
+				.catch(e => {
+					this.showError('Silme hatası: ' + e.message);
+				});
+		},
+
+		// Debt Functions
+		loadDebts: function () {
+			fetch(`${this.apiBase}/debts`, {
+				headers: { 'requesttoken': OC.requestToken }
+			})
+				.then(r => r.json())
+				.then(debts => {
+					this.debts = debts || [];
+					this.renderDebts();
+				})
+				.catch(e => {
+					console.error('Error loading debts:', e);
+					this.debts = [];
+					this.renderDebts();
+				});
+		},
+
+		renderDebts: function () {
+			const list = document.getElementById('debts-list');
+			if (!list) return;
+
+			if (this.debts.length === 0) {
+				list.innerHTML = '<p class="empty-message">Henüz borç/alacak kaydı yok</p>';
+				return;
+			}
+
+			const activeFilter = document.querySelector('#debts-list-view .filter-buttons .btn-filter.active')?.getAttribute('data-filter') || 'all';
+			let filtered = this.debts;
+
+			if (activeFilter === 'debt') {
+				filtered = this.debts.filter(d => d.type === 'debt');
+			} else if (activeFilter === 'credit') {
+				filtered = this.debts.filter(d => d.type === 'credit');
+			} else if (activeFilter === 'upcoming') {
+				const today = new Date();
+				today.setHours(0, 0, 0, 0);
+				const futureDate = new Date(today);
+				futureDate.setDate(futureDate.getDate() + 30);
+				filtered = this.debts.filter(d => {
+					if (d.status !== 'active' || !d.nextPaymentDate) return false;
+					const nextDate = new Date(d.nextPaymentDate);
+					return nextDate >= today && nextDate <= futureDate;
+				});
+			} else if (activeFilter === 'overdue') {
+				const today = new Date();
+				today.setHours(0, 0, 0, 0);
+				filtered = this.debts.filter(d => {
+					if (d.status !== 'active') return false;
+					if (d.nextPaymentDate) {
+						const nextDate = new Date(d.nextPaymentDate);
+						return nextDate < today;
+					}
+					if (d.dueDate) {
+						const dueDate = new Date(d.dueDate);
+						return dueDate < today;
+					}
+					return false;
+				});
+			}
+
+			const html = filtered.map(debt => {
+				const typeLabel = debt.type === 'debt' ? '💸 Borç' : '💰 Alacak';
+				const typeClass = debt.type === 'debt' ? 'text-danger' : 'text-success';
+				const remaining = parseFloat(debt.totalAmount || 0) - parseFloat(debt.paidAmount || 0);
+				const progress = debt.totalAmount > 0 ? (debt.paidAmount / debt.totalAmount) * 100 : 0;
+				const statusLabels = {
+					active: 'Aktif',
+					paid: 'Ödendi',
+					overdue: 'Gecikmiş',
+					cancelled: 'İptal'
+				};
+				const statusColors = {
+					active: '#3b82f6',
+					paid: '#10b981',
+					overdue: '#ef4444',
+					cancelled: '#6b7280'
+				};
+
+				return `
+					<div class="list-item debt-item" data-id="${debt.id}">
+						<div class="list-item__icon" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; background: ${debt.type === 'debt' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)'}; border-radius: 12px; font-size: 24px; flex-shrink: 0;">
+							${debt.type === 'debt' ? '💸' : '💰'}
+						</div>
+						<div class="list-item__content" style="flex: 1; min-width: 0;">
+							<div class="list-item__title" style="font-weight: 600; font-size: 15px; margin-bottom: 6px;">${this.escapeHtml(debt.creditorDebtorName || debt.description || 'Borç/Alacak')}</div>
+							<div class="list-item__subtitle" style="font-size: 13px; color: var(--color-text-maxcontrast); display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 8px;">
+								<span class="${typeClass}" style="font-weight: 500;">${typeLabel}</span>
+								<span>💵 Toplam: ${parseFloat(debt.totalAmount || 0).toFixed(2)} ${debt.currency || 'USD'}</span>
+								<span class="${remaining > 0 ? 'text-warning' : 'text-success'}" style="font-weight: 500;">⚖️ Kalan: ${remaining.toFixed(2)} ${debt.currency || 'USD'}</span>
+								${debt.nextPaymentDate ? `<span>📅 Sonraki: ${new Date(debt.nextPaymentDate).toLocaleDateString('tr-TR')}</span>` : ''}
+							</div>
+							<div style="width: 100%; height: 6px; background: var(--color-border); border-radius: 3px; overflow: hidden;">
+								<div style="width: ${progress}%; height: 100%; background: ${statusColors[debt.status] || '#3b82f6'}; transition: width 0.3s; border-radius: 3px;"></div>
+							</div>
+						</div>
+						<div class="list-item__actions" style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-shrink: 0;">
+							<span class="status-badge" style="background: ${statusColors[debt.status] || '#3b82f6'}20; color: ${statusColors[debt.status] || '#3b82f6'}; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; white-space: nowrap;">
+								${statusLabels[debt.status] || debt.status}
+							</span>
+							<button class="btn btn-sm btn-secondary" onclick="DomainControl.showDebtDetail(${debt.id}); event.stopPropagation();" style="padding: 6px 12px; font-size: 13px;">Görüntüle</button>
+						</div>
+					</div>
+				`;
+			}).join('');
+
+			list.innerHTML = html;
+
+			// Event delegation for clicks
+			list.querySelectorAll('.debt-item').forEach(item => {
+				item.addEventListener('click', (e) => {
+					if (!e.target.closest('.btn')) {
+						const id = parseInt(item.getAttribute('data-id'));
+						this.showDebtDetail(id);
+					}
+				});
+			});
+		},
+
+		showDebtModal: function (id = null) {
+			const modal = document.getElementById('debt-modal');
+			const form = document.getElementById('debt-form');
+			if (!modal || !form) return;
+
+			form.reset();
+			document.getElementById('debt-id').value = '';
+			document.getElementById('debt-start-date').value = new Date().toISOString().split('T')[0];
+			this.updateClientSelect('debt-client-id');
+
+			if (id) {
+				const debt = this.debts.find(d => d.id == id);
+				if (debt) {
+					document.getElementById('debt-id').value = debt.id;
+					document.getElementById('debt-type').value = debt.type || '';
+					document.getElementById('debt-debt-type').value = debt.debtType || '';
+					document.getElementById('debt-creditor-debtor-name').value = debt.creditorDebtorName || '';
+					document.getElementById('debt-client-id').value = debt.clientId || '';
+					document.getElementById('debt-total-amount').value = debt.totalAmount || '';
+					document.getElementById('debt-currency').value = debt.currency || 'USD';
+					document.getElementById('debt-start-date').value = debt.startDate || '';
+					document.getElementById('debt-due-date').value = debt.dueDate || '';
+					document.getElementById('debt-next-payment-date').value = debt.nextPaymentDate || '';
+					document.getElementById('debt-payment-frequency').value = debt.paymentFrequency || '';
+					document.getElementById('debt-payment-amount').value = debt.paymentAmount || '';
+					document.getElementById('debt-interest-rate').value = debt.interestRate || '';
+					document.getElementById('debt-description').value = debt.description || '';
+					document.getElementById('debt-status').value = debt.status || 'active';
+					document.getElementById('debt-notes').value = debt.notes || '';
+					document.getElementById('debt-modal-title').textContent = 'Borç/Alacak Düzenle';
+				}
+			} else {
+				document.getElementById('debt-modal-title').textContent = 'Borç/Alacak Ekle';
+			}
+
+			modal.style.display = 'block';
+		},
+
+		saveDebt: function () {
+			const id = document.getElementById('debt-id').value;
+			const data = new URLSearchParams({
+				type: document.getElementById('debt-type').value,
+				debtType: document.getElementById('debt-debt-type').value,
+				creditorDebtorName: document.getElementById('debt-creditor-debtor-name').value || '',
+				clientId: document.getElementById('debt-client-id').value || '',
+				totalAmount: document.getElementById('debt-total-amount').value,
+				currency: document.getElementById('debt-currency').value,
+				startDate: document.getElementById('debt-start-date').value || '',
+				dueDate: document.getElementById('debt-due-date').value || '',
+				nextPaymentDate: document.getElementById('debt-next-payment-date').value || '',
+				paymentFrequency: document.getElementById('debt-payment-frequency').value || '',
+				paymentAmount: document.getElementById('debt-payment-amount').value || '',
+				interestRate: document.getElementById('debt-interest-rate').value || '',
+				description: document.getElementById('debt-description').value || '',
+				status: document.getElementById('debt-status').value,
+				notes: document.getElementById('debt-notes').value || ''
+			});
+
+			const url = id ? `${this.apiBase}/debts/${id}` : `${this.apiBase}/debts`;
+			fetch(url, {
+				method: id ? 'PUT' : 'POST',
+				headers: { 'requesttoken': OC.requestToken, 'Content-Type': 'application/x-www-form-urlencoded' },
+				body: data.toString()
+			})
+				.then(r => r.json())
+				.then(debt => {
+					if (debt.error) throw new Error(debt.error);
+					this.showSuccess('Borç/Alacak kaydedildi');
+					this.closeModal('debt-modal');
+					this.loadDebts();
+				})
+				.catch(e => {
+					this.showError('Kaydetme hatası: ' + e.message);
+				});
+		},
+
+		showDebtDetail: function (id) {
+			fetch(`${this.apiBase}/debts/${id}`, {
+				headers: { 'requesttoken': OC.requestToken }
+			})
+				.then(r => r.json())
+				.then(debt => {
+					if (!debt || debt.error) {
+						this.showError('Borç/Alacak bulunamadı');
+						return;
+					}
+
+					this.currentDebtId = id;
+					document.getElementById('debts-list-view').style.display = 'none';
+					document.getElementById('debt-detail-view').style.display = 'block';
+
+					const client = this.clients.find(c => c.id == debt.clientId);
+					const remaining = parseFloat(debt.totalAmount || 0) - parseFloat(debt.paidAmount || 0);
+					const progress = debt.totalAmount > 0 ? (debt.paidAmount / debt.totalAmount) * 100 : 0;
+
+					document.getElementById('debt-detail-title').textContent = debt.creditorDebtorName || debt.description || 'Borç/Alacak Detayı';
+					document.getElementById('debt-detail-type').textContent = debt.type === 'debt' ? '💸 Borç' : '💰 Alacak';
+					
+					const debtTypeLabels = {
+						credit_card: '💳 Kredi Kartı',
+						loan: '🏦 Kredi',
+						physical: '🤝 Fiziksel Borç',
+						other: '📋 Diğer'
+					};
+					document.getElementById('debt-detail-debt-type').textContent = debtTypeLabels[debt.debtType] || debt.debtType;
+					document.getElementById('debt-detail-total').textContent = `${parseFloat(debt.totalAmount || 0).toFixed(2)} ${debt.currency || 'USD'}`;
+					document.getElementById('debt-detail-paid').textContent = `${parseFloat(debt.paidAmount || 0).toFixed(2)} ${debt.currency || 'USD'}`;
+					document.getElementById('debt-detail-remaining').textContent = `${remaining.toFixed(2)} ${debt.currency || 'USD'}`;
+					
+					const statusLabels = {
+						active: 'Aktif',
+						paid: 'Ödendi',
+						overdue: 'Gecikmiş',
+						cancelled: 'İptal'
+					};
+					const statusColors = {
+						active: '#3b82f6',
+						paid: '#10b981',
+						overdue: '#ef4444',
+						cancelled: '#6b7280'
+					};
+					const statusEl = document.getElementById('debt-detail-status');
+					statusEl.innerHTML = `<span class="status-badge" style="background: ${statusColors[debt.status] || '#3b82f6'}20; color: ${statusColors[debt.status] || '#3b82f6'};">${statusLabels[debt.status] || debt.status}</span>`;
+
+					// Payment progress
+					const progressEl = document.getElementById('debt-payment-progress');
+					if (progressEl) {
+						progressEl.innerHTML = `
+							<div style="margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+								<span style="font-size: 13px; font-weight: 600; color: var(--color-main-text);">Ödeme Durumu</span>
+								<span style="font-size: 13px; color: var(--color-text-maxcontrast);">${progress.toFixed(1)}%</span>
+							</div>
+							<div style="width: 100%; height: 8px; background: var(--color-border); border-radius: 4px; overflow: hidden;">
+								<div style="width: ${progress}%; height: 100%; background: ${statusColors[debt.status] || '#3b82f6'}; transition: width 0.3s;"></div>
+							</div>
+						`;
+					}
+
+					document.getElementById('debt-detail-creditor-debtor').textContent = debt.creditorDebtorName || '-';
+					document.getElementById('debt-detail-client').textContent = client ? client.name : '-';
+					
+					// Format dates properly
+					if (debt.startDate) {
+						try {
+							const startDate = new Date(debt.startDate + 'T00:00:00');
+							document.getElementById('debt-detail-start-date').textContent = startDate.toLocaleDateString('tr-TR', { year: 'numeric', month: 'long', day: 'numeric' });
+						} catch (e) {
+							document.getElementById('debt-detail-start-date').textContent = debt.startDate;
+						}
+					} else {
+						document.getElementById('debt-detail-start-date').textContent = '-';
+					}
+					
+					if (debt.dueDate) {
+						try {
+							const dueDate = new Date(debt.dueDate + 'T00:00:00');
+							document.getElementById('debt-detail-due-date').textContent = dueDate.toLocaleDateString('tr-TR', { year: 'numeric', month: 'long', day: 'numeric' });
+						} catch (e) {
+							document.getElementById('debt-detail-due-date').textContent = debt.dueDate;
+						}
+					} else {
+						document.getElementById('debt-detail-due-date').textContent = '-';
+					}
+					
+					if (debt.nextPaymentDate) {
+						try {
+							const nextDate = new Date(debt.nextPaymentDate + 'T00:00:00');
+							document.getElementById('debt-detail-next-payment').textContent = nextDate.toLocaleDateString('tr-TR', { year: 'numeric', month: 'long', day: 'numeric' });
+						} catch (e) {
+							document.getElementById('debt-detail-next-payment').textContent = debt.nextPaymentDate;
+						}
+					} else {
+						document.getElementById('debt-detail-next-payment').textContent = '-';
+					}
+					
+					const frequencyLabels = {
+						daily: 'Günlük',
+						weekly: 'Haftalık',
+						monthly: 'Aylık',
+						one_time: 'Tek Seferlik'
+					};
+					document.getElementById('debt-detail-frequency').textContent = frequencyLabels[debt.paymentFrequency] || '-';
+					document.getElementById('debt-detail-payment-amount').textContent = debt.paymentAmount ? `${parseFloat(debt.paymentAmount).toFixed(2)} ${debt.currency || 'USD'}` : '-';
+					document.getElementById('debt-detail-interest').textContent = debt.interestRate ? `${parseFloat(debt.interestRate).toFixed(2)}%` : '-';
+					document.getElementById('debt-detail-description').textContent = debt.description || '-';
+					document.getElementById('debt-detail-notes').textContent = debt.notes || '-';
+
+					// Render payments
+					this.renderDebtPayments(debt.payments || []);
+				})
+				.catch(e => {
+					console.error('Error loading debt details:', e);
+					this.showError('Borç/Alacak yüklenemedi: ' + e.message);
+				});
+		},
+
+		renderDebtPayments: function (payments) {
+			const container = document.getElementById('debt-detail-payments');
+			if (!container) return;
+
+			if (!payments || payments.length === 0) {
+				container.innerHTML = '<p class="empty-message">Henüz ödeme kaydı yok</p>';
+				return;
+			}
+
+			const html = payments.map(payment => {
+				const date = payment.paymentDate ? new Date(payment.paymentDate).toLocaleDateString('tr-TR') : '-';
+				return `
+					<div class="payment-item" style="padding: 12px; border: 1px solid var(--color-border); border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+						<div>
+							<div style="font-weight: 600; font-size: 13px; color: var(--color-main-text); margin-bottom: 4px;">
+								${parseFloat(payment.amount || 0).toFixed(2)} ${payment.currency || 'USD'}
+							</div>
+							<div style="font-size: 12px; color: var(--color-text-maxcontrast);">
+								${date} ${payment.paymentMethod ? '• ' + payment.paymentMethod : ''}
+								${payment.reference ? '• Ref: ' + this.escapeHtml(payment.reference) : ''}
+							</div>
+							${payment.notes ? `<div style="font-size: 11px; color: var(--color-text-maxcontrast); margin-top: 4px;">${this.escapeHtml(payment.notes)}</div>` : ''}
+						</div>
+						<button class="btn btn-sm btn-danger" onclick="DomainControl.deleteDebtPayment(${payment.id})" title="Sil">🗑️</button>
+					</div>
+				`;
+			}).join('');
+
+			container.innerHTML = html;
+		},
+
+		hideDebtDetail: function () {
+			document.getElementById('debts-list-view').style.display = 'block';
+			document.getElementById('debt-detail-view').style.display = 'none';
+			this.currentDebtId = null;
+		},
+
+		deleteDebt: function (id) {
+			fetch(`${this.apiBase}/debts/${id}`, {
+				method: 'DELETE',
+				headers: { 'requesttoken': OC.requestToken }
+			})
+				.then(r => r.json())
+				.then(data => {
+					if (data.error) throw new Error(data.error);
+					this.showSuccess('Borç/Alacak silindi');
+					this.loadDebts();
+					this.hideDebtDetail();
+				})
+				.catch(e => {
+					this.showError('Silme hatası: ' + e.message);
+				});
+		},
+
+		showDebtPaymentModal: function (debtId) {
+			const modal = document.getElementById('debt-payment-modal');
+			const form = document.getElementById('debt-payment-form');
+			if (!modal || !form) return;
+
+			form.reset();
+			document.getElementById('debt-payment-debt-id').value = debtId;
+			document.getElementById('debt-payment-date').value = new Date().toISOString().split('T')[0];
+
+			modal.style.display = 'block';
+		},
+
+		saveDebtPayment: function () {
+			const debtId = document.getElementById('debt-payment-debt-id').value;
+			const data = new URLSearchParams({
+				amount: document.getElementById('debt-payment-amount').value,
+				paymentDate: document.getElementById('debt-payment-date').value,
+				paymentMethod: document.getElementById('debt-payment-method').value || '',
+				reference: document.getElementById('debt-payment-reference').value || '',
+				notes: document.getElementById('debt-payment-notes').value || ''
+			});
+
+			fetch(`${this.apiBase}/debts/${debtId}/payments`, {
+				method: 'POST',
+				headers: { 'requesttoken': OC.requestToken, 'Content-Type': 'application/x-www-form-urlencoded' },
+				body: data.toString()
+			})
+				.then(r => r.json())
+				.then(payment => {
+					if (payment.error) throw new Error(payment.error);
+					this.showSuccess('Ödeme eklendi');
+					this.closeModal('debt-payment-modal');
+					if (this.currentDebtId) {
+						this.showDebtDetail(this.currentDebtId);
+					}
+				})
+				.catch(e => {
+					this.showError('Ödeme ekleme hatası: ' + e.message);
+				});
+		},
+
+		deleteDebtPayment: function (id) {
+			if (!confirm('Bu ödemeyi silmek istediğinize emin misiniz?')) return;
+
+			fetch(`${this.apiBase}/debt-payments/${id}`, {
+				method: 'DELETE',
+				headers: { 'requesttoken': OC.requestToken }
+			})
+				.then(r => r.json())
+				.then(data => {
+					if (data.error) throw new Error(data.error);
+					this.showSuccess('Ödeme silindi');
+					if (this.currentDebtId) {
+						this.showDebtDetail(this.currentDebtId);
+					}
+				})
+				.catch(e => {
+					this.showError('Silme hatası: ' + e.message);
 				});
 		}
 	};

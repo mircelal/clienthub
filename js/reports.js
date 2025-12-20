@@ -70,6 +70,8 @@
 			const domains = DomainControl.domains || [];
 			const hostings = DomainControl.hostings || [];
 			const websites = DomainControl.websites || [];
+			const transactions = DomainControl.transactions || [];
+			const debts = DomainControl.debts || [];
 
 			// Calculate filtered data based on period
 			const filteredPayments = this.filterByPeriod(payments, 'paymentDate');
@@ -174,6 +176,54 @@
 			// Render expiring services list
 			this.renderExpiringServices(services, clients);
 
+			// Transaction stats
+			const transactionIncome = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+			const transactionExpense = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+			const netTransaction = transactionIncome - transactionExpense;
+			
+			this.updateElement('report-total-transaction-income', this.formatCurrency(transactionIncome) + ' ₼');
+			this.updateElement('report-total-transaction-expense', this.formatCurrency(transactionExpense) + ' ₼');
+			this.updateElement('report-net-transaction', this.formatCurrency(netTransaction) + ' ₼');
+			
+			// Debt stats
+			const totalDebts = debts.filter(d => d.type === 'debt' && d.status === 'active').reduce((sum, d) => {
+				const remaining = parseFloat(d.totalAmount || 0) - parseFloat(d.paidAmount || 0);
+				return sum + remaining;
+			}, 0);
+			const totalCredits = debts.filter(d => d.type === 'credit' && d.status === 'active').reduce((sum, d) => {
+				const remaining = parseFloat(d.totalAmount || 0) - parseFloat(d.paidAmount || 0);
+				return sum + remaining;
+			}, 0);
+			
+			const today = new Date();
+			today.setHours(0, 0, 0, 0);
+			const thirtyDaysFromToday = new Date(today);
+			thirtyDaysFromToday.setDate(thirtyDaysFromToday.getDate() + 30);
+			
+			const upcomingDebtPayments = debts.filter(d => {
+				if (d.status !== 'active' || !d.nextPaymentDate) return false;
+				const nextDate = new Date(d.nextPaymentDate);
+				return nextDate >= today && nextDate <= thirtyDaysFromToday;
+			}).length;
+			
+			const overdueDebts = debts.filter(d => {
+				if (d.status !== 'active') return false;
+				if (d.nextPaymentDate) {
+					const nextDate = new Date(d.nextPaymentDate);
+					return nextDate < today;
+				}
+				if (d.dueDate) {
+					const dueDate = new Date(d.dueDate);
+					return dueDate < today;
+				}
+				return false;
+			}).length;
+			
+			this.updateElement('report-total-debts', this.formatCurrency(totalDebts) + ' ₼');
+			this.updateElement('report-total-credits', this.formatCurrency(totalCredits) + ' ₼');
+			this.updateElement('report-upcoming-debt-payments', upcomingDebtPayments);
+			this.updateElement('report-overdue-debts', overdueDebts);
+
 			// Render charts
 			this.renderIncomeTrendChart(payments);
 			this.renderInvoiceStatusChart(invoices);
@@ -181,6 +231,10 @@
 			this.renderProjectStatusChart(projects);
 			this.renderServiceTypeIncomeChart(services, serviceTypes, payments);
 			this.renderPaymentTrendChart(payments);
+			this.renderIncomeExpenseChart(transactions);
+			this.renderExpenseCategoryChart(transactions);
+			this.renderCashFlowChart(transactions);
+			this.renderDebtStatusChart(debts);
 		},
 
 		filterByPeriod: function(data, dateField) {
@@ -624,6 +678,225 @@
 			const div = document.createElement('div');
 			div.textContent = text;
 			return div.innerHTML;
+		},
+
+		renderIncomeExpenseChart: function(transactions) {
+			const ctx = document.getElementById('income-expense-chart');
+			if (!ctx) return;
+
+			if (this.charts.incomeExpense) {
+				this.charts.incomeExpense.destroy();
+			}
+
+			const monthlyData = {};
+			transactions.forEach(t => {
+				if (!t.transactionDate) return;
+				const date = new Date(t.transactionDate);
+				const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+				if (!monthlyData[monthKey]) {
+					monthlyData[monthKey] = { income: 0, expense: 0 };
+				}
+				if (t.type === 'income') {
+					monthlyData[monthKey].income += parseFloat(t.amount) || 0;
+				} else {
+					monthlyData[monthKey].expense += parseFloat(t.amount) || 0;
+				}
+			});
+
+			const sortedMonths = Object.keys(monthlyData).sort().slice(-12);
+			const labels = sortedMonths.map(m => {
+				const [year, month] = m.split('-');
+				return `${month}/${year}`;
+			});
+
+			this.charts.incomeExpense = new Chart(ctx, {
+				type: 'bar',
+				data: {
+					labels: labels,
+					datasets: [{
+						label: 'Gelir (₼)',
+						data: sortedMonths.map(m => monthlyData[m].income),
+						backgroundColor: 'rgba(16, 185, 129, 0.6)',
+						borderColor: 'rgb(16, 185, 129)',
+						borderWidth: 1
+					}, {
+						label: 'Gider (₼)',
+						data: sortedMonths.map(m => monthlyData[m].expense),
+						backgroundColor: 'rgba(239, 68, 68, 0.6)',
+						borderColor: 'rgb(239, 68, 68)',
+						borderWidth: 1
+					}]
+				},
+				options: {
+					responsive: true,
+					maintainAspectRatio: false,
+					plugins: {
+						legend: { display: true, position: 'top' }
+					},
+					scales: {
+						y: {
+							beginAtZero: true,
+							ticks: {
+								callback: function(value) {
+									return value.toLocaleString('az-AZ') + ' ₼';
+								}
+							}
+						}
+					}
+				}
+			});
+		},
+
+		renderExpenseCategoryChart: function(transactions) {
+			const ctx = document.getElementById('expense-category-chart');
+			if (!ctx) return;
+
+			if (this.charts.expenseCategory) {
+				this.charts.expenseCategory.destroy();
+			}
+
+			const categoryData = {};
+			transactions.filter(t => t.type === 'expense').forEach(t => {
+				const categoryId = t.categoryId || 'other';
+				if (!categoryData[categoryId]) {
+					categoryData[categoryId] = 0;
+				}
+				categoryData[categoryId] += parseFloat(t.amount) || 0;
+			});
+
+			const DomainControl = window.DomainControl;
+			const categories = DomainControl?.transactionCategories || [];
+			const labels = Object.keys(categoryData).map(id => {
+				const cat = categories.find(c => c.id == id);
+				return cat ? cat.name : 'Diğer';
+			});
+			const data = Object.values(categoryData);
+
+			this.charts.expenseCategory = new Chart(ctx, {
+				type: 'doughnut',
+				data: {
+					labels: labels,
+					datasets: [{
+						data: data,
+						backgroundColor: [
+							'rgba(239, 68, 68, 0.6)',
+							'rgba(245, 158, 11, 0.6)',
+							'rgba(59, 130, 246, 0.6)',
+							'rgba(139, 92, 246, 0.6)',
+							'rgba(236, 72, 153, 0.6)',
+							'rgba(6, 182, 212, 0.6)',
+							'rgba(34, 197, 94, 0.6)',
+							'rgba(251, 146, 60, 0.6)'
+						]
+					}]
+				},
+				options: {
+					responsive: true,
+					maintainAspectRatio: false,
+					plugins: {
+						legend: { display: true, position: 'right' }
+					}
+				}
+			});
+		},
+
+		renderCashFlowChart: function(transactions) {
+			const ctx = document.getElementById('cash-flow-chart');
+			if (!ctx) return;
+
+			if (this.charts.cashFlow) {
+				this.charts.cashFlow.destroy();
+			}
+
+			const monthlyData = {};
+			transactions.forEach(t => {
+				if (!t.transactionDate) return;
+				const date = new Date(t.transactionDate);
+				const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+				if (!monthlyData[monthKey]) {
+					monthlyData[monthKey] = 0;
+				}
+				if (t.type === 'income') {
+					monthlyData[monthKey] += parseFloat(t.amount) || 0;
+				} else {
+					monthlyData[monthKey] -= parseFloat(t.amount) || 0;
+				}
+			});
+
+			const sortedMonths = Object.keys(monthlyData).sort().slice(-12);
+			const labels = sortedMonths.map(m => {
+				const [year, month] = m.split('-');
+				return `${month}/${year}`;
+			});
+			const data = sortedMonths.map(m => monthlyData[m]);
+
+			this.charts.cashFlow = new Chart(ctx, {
+				type: 'line',
+				data: {
+					labels: labels,
+					datasets: [{
+						label: 'Nakit Akışı (₼)',
+						data: data,
+						borderColor: 'rgb(59, 130, 246)',
+						backgroundColor: 'rgba(59, 130, 246, 0.1)',
+						tension: 0.4,
+						fill: true
+					}]
+				},
+				options: {
+					responsive: true,
+					maintainAspectRatio: false,
+					plugins: {
+						legend: { display: true, position: 'top' }
+					},
+					scales: {
+						y: {
+							ticks: {
+								callback: function(value) {
+									return value.toLocaleString('az-AZ') + ' ₼';
+								}
+							}
+						}
+					}
+				}
+			});
+		},
+
+		renderDebtStatusChart: function(debts) {
+			const ctx = document.getElementById('debt-status-chart');
+			if (!ctx) return;
+
+			if (this.charts.debtStatus) {
+				this.charts.debtStatus.destroy();
+			}
+
+			const activeDebts = debts.filter(d => d.type === 'debt' && d.status === 'active').length;
+			const activeCredits = debts.filter(d => d.type === 'credit' && d.status === 'active').length;
+			const paidDebts = debts.filter(d => d.status === 'paid').length;
+			const overdueDebts = debts.filter(d => d.status === 'overdue').length;
+
+			this.charts.debtStatus = new Chart(ctx, {
+				type: 'doughnut',
+				data: {
+					labels: ['Aktif Borçlar', 'Aktif Alacaklar', 'Ödenen', 'Gecikmiş'],
+					datasets: [{
+						data: [activeDebts, activeCredits, paidDebts, overdueDebts],
+						backgroundColor: [
+							'rgba(239, 68, 68, 0.6)',
+							'rgba(16, 185, 129, 0.6)',
+							'rgba(59, 130, 246, 0.6)',
+							'rgba(245, 158, 11, 0.6)'
+						]
+					}]
+				},
+				options: {
+					responsive: true,
+					maintainAspectRatio: false,
+					plugins: {
+						legend: { display: true, position: 'right' }
+					}
+				}
+			});
 		}
 	};
 

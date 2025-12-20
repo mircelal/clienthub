@@ -15,6 +15,8 @@ use OCP\Files\NotFoundException;
 use OCA\DomainControl\Db\WebsiteMapper;
 use OCA\DomainControl\Db\ClientMapper;
 use OCA\DomainControl\Db\InvoiceMapper;
+use OCA\DomainControl\Db\TransactionMapper;
+use OCA\DomainControl\Db\DebtMapper;
 
 class FileController extends Controller {
 	private $userId;
@@ -22,18 +24,24 @@ class FileController extends Controller {
 	private WebsiteMapper $websiteMapper;
 	private ClientMapper $clientMapper;
 	private InvoiceMapper $invoiceMapper;
+	private TransactionMapper $transactionMapper;
+	private DebtMapper $debtMapper;
 
 	public function __construct(IRequest $request,
 	                            IRootFolder $rootFolder,
 	                            WebsiteMapper $websiteMapper,
 	                            ClientMapper $clientMapper,
 	                            InvoiceMapper $invoiceMapper,
+	                            TransactionMapper $transactionMapper,
+	                            DebtMapper $debtMapper,
 	                            $userId) {
 		parent::__construct(Application::APP_ID, $request);
 		$this->rootFolder = $rootFolder;
 		$this->websiteMapper = $websiteMapper;
 		$this->clientMapper = $clientMapper;
 		$this->invoiceMapper = $invoiceMapper;
+		$this->transactionMapper = $transactionMapper;
+		$this->debtMapper = $debtMapper;
 		$this->userId = $userId;
 	}
 
@@ -406,6 +414,322 @@ class FileController extends Controller {
 			
 			$invoiceFolder = $this->getInvoiceFolder($client->getName(), $invoice->getInvoiceNumber());
 			$file = $invoiceFolder->get($fileName);
+			
+			if ($file instanceof File) {
+				$file->delete();
+				return new JSONResponse(['success' => true]);
+			}
+			
+			return new JSONResponse(['error' => 'File not found'], 404);
+		} catch (\Exception $e) {
+			return new JSONResponse(['error' => $e->getMessage()], 500);
+		}
+	}
+
+	/**
+	 * Get or create transaction folder
+	 */
+	private function getTransactionFolder(string $clientName, int $transactionId): Folder {
+		$clientFolder = $this->getClientFolder($clientName);
+		
+		// Create transactions folder if not exists
+		try {
+			$transactionsFolder = $clientFolder->get('transactions');
+			if (!($transactionsFolder instanceof Folder)) {
+				$transactionsFolder = $clientFolder->newFolder('transactions');
+			}
+		} catch (NotFoundException $e) {
+			$transactionsFolder = $clientFolder->newFolder('transactions');
+		}
+		
+		// Create transaction folder
+		$transactionFolderName = 'transaction_' . $transactionId;
+		try {
+			$transactionFolder = $transactionsFolder->get($transactionFolderName);
+			if ($transactionFolder instanceof Folder) {
+				return $transactionFolder;
+			}
+		} catch (NotFoundException $e) {
+			// Folder doesn't exist, create it
+		}
+		
+		return $transactionsFolder->newFolder($transactionFolderName);
+	}
+
+	/**
+	 * Get or create debt folder
+	 */
+	private function getDebtFolder(string $clientName, int $debtId): Folder {
+		$clientFolder = $this->getClientFolder($clientName);
+		
+		// Create debts folder if not exists
+		try {
+			$debtsFolder = $clientFolder->get('debts');
+			if (!($debtsFolder instanceof Folder)) {
+				$debtsFolder = $clientFolder->newFolder('debts');
+			}
+		} catch (NotFoundException $e) {
+			$debtsFolder = $clientFolder->newFolder('debts');
+		}
+		
+		// Create debt folder
+		$debtFolderName = 'debt_' . $debtId;
+		try {
+			$debtFolder = $debtsFolder->get($debtFolderName);
+			if ($debtFolder instanceof Folder) {
+				return $debtFolder;
+			}
+		} catch (NotFoundException $e) {
+			// Folder doesn't exist, create it
+		}
+		
+		return $debtsFolder->newFolder($debtFolderName);
+	}
+
+	/**
+	 * @NoAdminRequired
+	 */
+	public function uploadTransactionFile(int $transactionId): JSONResponse {
+		try {
+			$transaction = $this->transactionMapper->find($transactionId, $this->userId);
+			$clientName = 'General';
+			
+			if ($transaction->getClientId()) {
+				$client = $this->clientMapper->find($transaction->getClientId(), $this->userId);
+				$clientName = $client->getName();
+			}
+			
+			$transactionFolder = $this->getTransactionFolder($clientName, $transactionId);
+			
+			$uploadedFiles = [];
+			
+			if (!isset($_FILES['file'])) {
+				return new JSONResponse(['error' => 'No file uploaded'], 400);
+			}
+			
+			$files = $_FILES['file'];
+			$fileNames = is_array($files['name']) ? $files['name'] : [$files['name']];
+			$tmpNames = is_array($files['tmp_name']) ? $files['tmp_name'] : [$files['tmp_name']];
+			$errors = is_array($files['error']) ? $files['error'] : [$files['error']];
+			
+			foreach ($fileNames as $index => $originalName) {
+				if ($errors[$index] !== UPLOAD_ERR_OK) {
+					continue;
+				}
+				
+				$fileName = $this->sanitizeFileName($originalName);
+				
+				$counter = 1;
+				$finalFileName = $fileName;
+				$pathInfo = pathinfo($fileName);
+				while ($transactionFolder->nodeExists($finalFileName)) {
+					$extension = isset($pathInfo['extension']) ? '.' . $pathInfo['extension'] : '';
+					$finalFileName = $pathInfo['filename'] . '_' . $counter . $extension;
+					$counter++;
+				}
+				
+				$file = $transactionFolder->newFile($finalFileName, file_get_contents($tmpNames[$index]));
+				$userFolder = $this->rootFolder->getUserFolder($this->userId);
+				$relativePath = $userFolder->getRelativePath($file->getPath());
+				
+				$uploadedFiles[] = [
+					'name' => $finalFileName,
+					'size' => $file->getSize(),
+					'mimeType' => $file->getMimeType(),
+					'path' => $relativePath,
+					'fileId' => $file->getId()
+				];
+			}
+			
+			return new JSONResponse(['files' => $uploadedFiles]);
+		} catch (\Exception $e) {
+			return new JSONResponse(['error' => $e->getMessage()], 500);
+		}
+	}
+
+	/**
+	 * @NoAdminRequired
+	 */
+	public function listTransactionFiles(int $transactionId): JSONResponse {
+		try {
+			$transaction = $this->transactionMapper->find($transactionId, $this->userId);
+			$clientName = 'General';
+			
+			if ($transaction->getClientId()) {
+				$client = $this->clientMapper->find($transaction->getClientId(), $this->userId);
+				$clientName = $client->getName();
+			}
+			
+			$transactionFolder = $this->getTransactionFolder($clientName, $transactionId);
+			
+			$files = [];
+			$userFolder = $this->rootFolder->getUserFolder($this->userId);
+			foreach ($transactionFolder->getDirectoryListing() as $node) {
+				if ($node instanceof File) {
+					$relativePath = $userFolder->getRelativePath($node->getPath());
+					$files[] = [
+						'name' => $node->getName(),
+						'size' => $node->getSize(),
+						'mimeType' => $node->getMimeType(),
+						'mtime' => $node->getMTime(),
+						'path' => $relativePath,
+						'fileId' => $node->getId()
+					];
+				}
+			}
+			
+			return new JSONResponse($files);
+		} catch (\Exception $e) {
+			return new JSONResponse(['error' => $e->getMessage()], 500);
+		}
+	}
+
+	/**
+	 * @NoAdminRequired
+	 */
+	public function deleteTransactionFile(int $transactionId, string $fileName): JSONResponse {
+		try {
+			$transaction = $this->transactionMapper->find($transactionId, $this->userId);
+			$clientName = 'General';
+			
+			if ($transaction->getClientId()) {
+				$client = $this->clientMapper->find($transaction->getClientId(), $this->userId);
+				$clientName = $client->getName();
+			}
+			
+			$transactionFolder = $this->getTransactionFolder($clientName, $transactionId);
+			$file = $transactionFolder->get($fileName);
+			
+			if ($file instanceof File) {
+				$file->delete();
+				return new JSONResponse(['success' => true]);
+			}
+			
+			return new JSONResponse(['error' => 'File not found'], 404);
+		} catch (\Exception $e) {
+			return new JSONResponse(['error' => $e->getMessage()], 500);
+		}
+	}
+
+	/**
+	 * @NoAdminRequired
+	 */
+	public function uploadDebtFile(int $debtId): JSONResponse {
+		try {
+			$debt = $this->debtMapper->find($debtId, $this->userId);
+			$clientName = 'General';
+			
+			if ($debt->getClientId()) {
+				$client = $this->clientMapper->find($debt->getClientId(), $this->userId);
+				$clientName = $client->getName();
+			} else {
+				$clientName = $this->sanitizeFolderName($debt->getCreditorDebtorName() ?: 'General');
+			}
+			
+			$debtFolder = $this->getDebtFolder($clientName, $debtId);
+			
+			$uploadedFiles = [];
+			
+			if (!isset($_FILES['file'])) {
+				return new JSONResponse(['error' => 'No file uploaded'], 400);
+			}
+			
+			$files = $_FILES['file'];
+			$fileNames = is_array($files['name']) ? $files['name'] : [$files['name']];
+			$tmpNames = is_array($files['tmp_name']) ? $files['tmp_name'] : [$files['tmp_name']];
+			$errors = is_array($files['error']) ? $files['error'] : [$files['error']];
+			
+			foreach ($fileNames as $index => $originalName) {
+				if ($errors[$index] !== UPLOAD_ERR_OK) {
+					continue;
+				}
+				
+				$fileName = $this->sanitizeFileName($originalName);
+				
+				$counter = 1;
+				$finalFileName = $fileName;
+				$pathInfo = pathinfo($fileName);
+				while ($debtFolder->nodeExists($finalFileName)) {
+					$extension = isset($pathInfo['extension']) ? '.' . $pathInfo['extension'] : '';
+					$finalFileName = $pathInfo['filename'] . '_' . $counter . $extension;
+					$counter++;
+				}
+				
+				$file = $debtFolder->newFile($finalFileName, file_get_contents($tmpNames[$index]));
+				$userFolder = $this->rootFolder->getUserFolder($this->userId);
+				$relativePath = $userFolder->getRelativePath($file->getPath());
+				
+				$uploadedFiles[] = [
+					'name' => $finalFileName,
+					'size' => $file->getSize(),
+					'mimeType' => $file->getMimeType(),
+					'path' => $relativePath,
+					'fileId' => $file->getId()
+				];
+			}
+			
+			return new JSONResponse(['files' => $uploadedFiles]);
+		} catch (\Exception $e) {
+			return new JSONResponse(['error' => $e->getMessage()], 500);
+		}
+	}
+
+	/**
+	 * @NoAdminRequired
+	 */
+	public function listDebtFiles(int $debtId): JSONResponse {
+		try {
+			$debt = $this->debtMapper->find($debtId, $this->userId);
+			$clientName = 'General';
+			
+			if ($debt->getClientId()) {
+				$client = $this->clientMapper->find($debt->getClientId(), $this->userId);
+				$clientName = $client->getName();
+			} else {
+				$clientName = $this->sanitizeFolderName($debt->getCreditorDebtorName() ?: 'General');
+			}
+			
+			$debtFolder = $this->getDebtFolder($clientName, $debtId);
+			
+			$files = [];
+			$userFolder = $this->rootFolder->getUserFolder($this->userId);
+			foreach ($debtFolder->getDirectoryListing() as $node) {
+				if ($node instanceof File) {
+					$relativePath = $userFolder->getRelativePath($node->getPath());
+					$files[] = [
+						'name' => $node->getName(),
+						'size' => $node->getSize(),
+						'mimeType' => $node->getMimeType(),
+						'mtime' => $node->getMTime(),
+						'path' => $relativePath,
+						'fileId' => $node->getId()
+					];
+				}
+			}
+			
+			return new JSONResponse($files);
+		} catch (\Exception $e) {
+			return new JSONResponse(['error' => $e->getMessage()], 500);
+		}
+	}
+
+	/**
+	 * @NoAdminRequired
+	 */
+	public function deleteDebtFile(int $debtId, string $fileName): JSONResponse {
+		try {
+			$debt = $this->debtMapper->find($debtId, $this->userId);
+			$clientName = 'General';
+			
+			if ($debt->getClientId()) {
+				$client = $this->clientMapper->find($debt->getClientId(), $this->userId);
+				$clientName = $client->getName();
+			} else {
+				$clientName = $this->sanitizeFolderName($debt->getCreditorDebtorName() ?: 'General');
+			}
+			
+			$debtFolder = $this->getDebtFolder($clientName, $debtId);
+			$file = $debtFolder->get($fileName);
 			
 			if ($file instanceof File) {
 				$file->delete();

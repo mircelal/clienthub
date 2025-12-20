@@ -35,19 +35,30 @@ style('domaincontrol', 'domaincontrol');
 			<li data-id="tasks">
 				<a href="#" class="icon-checkmark tab-button" data-tab="tasks">Görevler</a>
 			</li>
+			<li data-id="transactions">
+				<a href="#" class="icon-category-office tab-button" data-tab="transactions">Gelir/Gider</a>
+			</li>
+			<li data-id="debts">
+				<a href="#" class="icon-credit-card tab-button" data-tab="debts">Borç/Alacak</a>
+			</li>
 			<li data-id="reports">
-				<a href="#" class="icon-stats tab-button" data-tab="reports">Raporlar</a>
+				<a href="#" class="icon-category-monitoring tab-button" data-tab="reports">Raporlar</a>
 			</li>
 		</ul>
 
-		<div id="app-settings">
+		<div id="app-settings" class="app-navigation-entry">
 			<div id="app-settings-header">
 				<button class="settings-button" data-apps-slide-toggle="#app-settings-content">
-					Ayarlar
+					<span class="icon-settings"></span>
+					<span>Ayarlar</span>
 				</button>
 			</div>
-			<div id="app-settings-content">
-				<!-- Settings content -->
+			<div id="app-settings-content" class="hidden">
+				<ul>
+					<li>
+						<a href="#" class="icon-settings tab-button" data-tab="settings">Genel Ayarlar</a>
+					</li>
+				</ul>
 			</div>
 		</div>
 	</div>
@@ -63,7 +74,10 @@ style('domaincontrol', 'domaincontrol');
 			<?php include __DIR__ . '/partials/tabs/invoices.php'; ?>
 			<?php include __DIR__ . '/partials/tabs/projects.php'; ?>
 			<?php include __DIR__ . '/partials/tabs/tasks.php'; ?>
+			<?php include __DIR__ . '/partials/tabs/transactions.php'; ?>
+			<?php include __DIR__ . '/partials/tabs/debts.php'; ?>
 			<?php include __DIR__ . '/partials/tabs/reports.php'; ?>
+			<?php include __DIR__ . '/partials/tabs/settings.php'; ?>
 		</div>
 	</div>
 
@@ -76,4 +90,8 @@ style('domaincontrol', 'domaincontrol');
 	<?php include __DIR__ . '/partials/modals/project-modal.php'; ?>
 	<?php include __DIR__ . '/partials/modals/task-modal.php'; ?>
 	<?php include __DIR__ . '/partials/modals/project-share-modal.php'; ?>
+	<?php include __DIR__ . '/partials/modals/transaction-modal.php'; ?>
+	<?php include __DIR__ . '/partials/modals/transaction-category-modal.php'; ?>
+	<?php include __DIR__ . '/partials/modals/debt-modal.php'; ?>
+	<?php include __DIR__ . '/partials/modals/debt-payment-modal.php'; ?>
 </div>

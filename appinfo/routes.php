@@ -51,6 +51,16 @@ return [
 		['name' => 'file#listInvoiceFiles', 'url' => '/api/invoices/{invoiceId}/files', 'verb' => 'GET'],
 		['name' => 'file#deleteInvoiceFile', 'url' => '/api/invoices/{invoiceId}/files/{fileName}', 'verb' => 'DELETE'],
 
+		// Transaction File routes
+		['name' => 'file#uploadTransactionFile', 'url' => '/api/transactions/{transactionId}/files', 'verb' => 'POST'],
+		['name' => 'file#listTransactionFiles', 'url' => '/api/transactions/{transactionId}/files', 'verb' => 'GET'],
+		['name' => 'file#deleteTransactionFile', 'url' => '/api/transactions/{transactionId}/files/{fileName}', 'verb' => 'DELETE'],
+
+		// Debt File routes
+		['name' => 'file#uploadDebtFile', 'url' => '/api/debts/{debtId}/files', 'verb' => 'POST'],
+		['name' => 'file#listDebtFiles', 'url' => '/api/debts/{debtId}/files', 'verb' => 'GET'],
+		['name' => 'file#deleteDebtFile', 'url' => '/api/debts/{debtId}/files/{fileName}', 'verb' => 'DELETE'],
+
 		// Service Type routes
 		['name' => 'service_type#index', 'url' => '/api/service-types', 'verb' => 'GET'],
 		['name' => 'service_type#show', 'url' => '/api/service-types/{id}', 'verb' => 'GET'],
@@ -139,5 +149,39 @@ return [
 		['name' => 'time_entry#stop', 'url' => '/api/projects/{projectId}/time-entries/stop', 'verb' => 'POST'],
 		['name' => 'time_entry#update', 'url' => '/api/time-entries/{id}', 'verb' => 'PUT'],
 		['name' => 'time_entry#delete', 'url' => '/api/time-entries/{id}', 'verb' => 'DELETE'],
+
+		// Transaction Category routes
+		['name' => 'transaction_category#index', 'url' => '/api/transaction-categories', 'verb' => 'GET'],
+		['name' => 'transaction_category#byType', 'url' => '/api/transaction-categories/type/{type}', 'verb' => 'GET'],
+		['name' => 'transaction_category#create', 'url' => '/api/transaction-categories', 'verb' => 'POST'],
+		['name' => 'transaction_category#update', 'url' => '/api/transaction-categories/{id}', 'verb' => 'PUT'],
+		['name' => 'transaction_category#delete', 'url' => '/api/transaction-categories/{id}', 'verb' => 'DELETE'],
+
+		// Transaction routes - specific routes BEFORE {id} routes
+		['name' => 'transaction#index', 'url' => '/api/transactions', 'verb' => 'GET'],
+		['name' => 'transaction#byType', 'url' => '/api/transactions/type/{type}', 'verb' => 'GET'],
+		['name' => 'transaction#byCategory', 'url' => '/api/transactions/category/{categoryId}', 'verb' => 'GET'],
+		['name' => 'transaction#byProject', 'url' => '/api/projects/{projectId}/transactions', 'verb' => 'GET'],
+		['name' => 'transaction#byClient', 'url' => '/api/clients/{clientId}/transactions', 'verb' => 'GET'],
+		['name' => 'transaction#monthlySummary', 'url' => '/api/transactions/monthly-summary', 'verb' => 'GET'],
+		['name' => 'transaction#summaryByCategory', 'url' => '/api/transactions/summary-by-category', 'verb' => 'GET'],
+		['name' => 'transaction#show', 'url' => '/api/transactions/{id}', 'verb' => 'GET'],
+		['name' => 'transaction#create', 'url' => '/api/transactions', 'verb' => 'POST'],
+		['name' => 'transaction#update', 'url' => '/api/transactions/{id}', 'verb' => 'PUT'],
+		['name' => 'transaction#delete', 'url' => '/api/transactions/{id}', 'verb' => 'DELETE'],
+
+		// Debt routes - specific routes BEFORE {id} routes
+		['name' => 'debt#index', 'url' => '/api/debts', 'verb' => 'GET'],
+		['name' => 'debt#byType', 'url' => '/api/debts/type/{type}', 'verb' => 'GET'],
+		['name' => 'debt#upcomingPayments', 'url' => '/api/debts/upcoming-payments', 'verb' => 'GET'],
+		['name' => 'debt#overdue', 'url' => '/api/debts/overdue', 'verb' => 'GET'],
+		['name' => 'debt#show', 'url' => '/api/debts/{id}', 'verb' => 'GET'],
+		['name' => 'debt#create', 'url' => '/api/debts', 'verb' => 'POST'],
+		['name' => 'debt#update', 'url' => '/api/debts/{id}', 'verb' => 'PUT'],
+		['name' => 'debt#delete', 'url' => '/api/debts/{id}', 'verb' => 'DELETE'],
+		['name' => 'debt#addPayment', 'url' => '/api/debts/{id}/payments', 'verb' => 'POST'],
+
+		// Debt Payment routes
+		['name' => 'debt_payment#delete', 'url' => '/api/debt-payments/{id}', 'verb' => 'DELETE'],
 	],
 ];
