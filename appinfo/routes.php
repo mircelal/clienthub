@@ -111,6 +111,14 @@ return [
 		['name' => 'project#removeItem', 'url' => '/api/projects/{id}/items/{itemId}', 'verb' => 'DELETE'],
 		['name' => 'project#byClient', 'url' => '/api/clients/{clientId}/projects', 'verb' => 'GET'],
 
+		// Project Share routes
+		['name' => 'project_share#index', 'url' => '/api/projects/{projectId}/shares', 'verb' => 'GET'],
+		['name' => 'project_share#share', 'url' => '/api/projects/{projectId}/shares', 'verb' => 'POST'],
+		['name' => 'project_share#unshare', 'url' => '/api/projects/{projectId}/shares/{sharedWithUserId}', 'verb' => 'DELETE'],
+
+		// User routes
+		['name' => 'user#index', 'url' => '/api/users', 'verb' => 'GET'],
+
 		// Task routes - specific routes BEFORE {id} routes
 		['name' => 'task#index', 'url' => '/api/tasks', 'verb' => 'GET'],
 		['name' => 'task#pending', 'url' => '/api/tasks/pending', 'verb' => 'GET'],

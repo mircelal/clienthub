@@ -172,6 +172,20 @@
 			document.getElementById('project-add-item-btn')?.addEventListener('click', () => {
 				if (this.currentProjectId) this.showProjectItemModal(this.currentProjectId);
 			});
+			document.getElementById('project-share-add-btn')?.addEventListener('click', () => {
+				if (this.currentProjectId) this.showProjectShareModal(this.currentProjectId);
+			});
+			document.getElementById('project-share-form')?.addEventListener('submit', (e) => {
+				e.preventDefault();
+				if (!this.currentProjectId) return;
+				const userId = document.getElementById('share-user-select').value;
+				const permissionLevel = document.getElementById('share-permission-level').value;
+				if (!userId) {
+					this.showError('Lütfen bir kullanıcı seçin');
+					return;
+				}
+				this.shareProject(this.currentProjectId, userId, permissionLevel);
+			});
 			document.getElementById('project-detail-edit-btn')?.addEventListener('click', () => {
 				if (this.currentProjectId) this.showProjectModal(this.currentProjectId);
 			});
@@ -4342,71 +4356,142 @@
 		},
 
 		showProjectDetail: function (id) {
-			const proj = this.projects.find(p => p.id == id);
-			if (!proj) return;
+			// Fetch project details from API to get full information including shares
+			fetch(`${this.apiBase}/projects/${id}`, {
+				headers: { 'requesttoken': OC.requestToken }
+			})
+				.then(r => r.json())
+				.then(proj => {
+					if (!proj || proj.error) {
+						this.showError('Proje bulunamadı');
+						return;
+					}
 
-			this.currentProjectId = id;
-			document.getElementById('projects-list-view').style.display = 'none';
-			document.getElementById('project-detail-view').style.display = 'block';
+					this.currentProjectId = id;
+					document.getElementById('projects-list-view').style.display = 'none';
+					document.getElementById('project-detail-view').style.display = 'block';
 
-			const client = this.clients.find(c => c.id == proj.clientId);
-			const statusTexts = { active: 'Aktif', on_hold: 'Beklemede', completed: 'Tamamlandı', cancelled: 'İptal' };
-			const daysLeft = proj.deadline ? this.calculateDaysLeft(proj.deadline) : null;
+					const client = this.clients.find(c => c.id == proj.clientId);
+					const currentUserId = this.getCurrentUserId();
+					const isOwner = (proj.userId === currentUserId);
+					const hasWriteAccess = isOwner || (proj.shares && proj.shares.some(s => s.sharedWithUserId === currentUserId && s.permissionLevel === 'write'));
 
-			const projectTypeLabels = {
-				website: '🌐 Web Sitesi',
-				ecommerce: '🛒 E-Ticaret',
-				webapp: '📱 Web Uygulaması',
-				theme: '🎨 Tema/Modül',
-				design: '🖼️ Grafik Tasarım',
-				server: '🖥️ Sunucu',
-				email: '📧 Mail',
-				hosting: '☁️ Hosting',
-				device: '📟 Cihaz',
-				support: '🛠️ Destek',
-				seo: '📈 SEO',
-				other: '📦 Diğer'
-			};
+					const statusTexts = { active: 'Aktif', on_hold: 'Beklemede', completed: 'Tamamlandı', cancelled: 'İptal' };
+					const daysLeft = proj.deadline ? this.calculateDaysLeft(proj.deadline) : null;
 
-			document.getElementById('project-detail-name').textContent = proj.name;
-			document.getElementById('project-detail-client').textContent = client ? client.name : '-';
-			document.getElementById('project-detail-type').textContent = proj.projectType ? (projectTypeLabels[proj.projectType] || proj.projectType) : '-';
+					const projectTypeLabels = {
+						website: '🌐 Web Sitesi',
+						ecommerce: '🛒 E-Ticaret',
+						webapp: '📱 Web Uygulaması',
+						theme: '🎨 Tema/Modül',
+						design: '🖼️ Grafik Tasarım',
+						server: '🖥️ Sunucu',
+						email: '📧 Mail',
+						hosting: '☁️ Hosting',
+						device: '📟 Cihaz',
+						support: '🛠️ Destek',
+						seo: '📈 SEO',
+						other: '📦 Diğer'
+					};
 
-			// Status with badge
-			const statusEl = document.getElementById('project-detail-status');
-			statusEl.innerHTML = `<span class="status-badge project-status--${proj.status}">${statusTexts[proj.status] || proj.status}</span>`;
+					document.getElementById('project-detail-name').textContent = proj.name;
+					document.getElementById('project-detail-client').textContent = client ? client.name : '-';
+					document.getElementById('project-detail-owner').textContent = proj.userId || proj.user_id || '-';
+					document.getElementById('project-detail-type').textContent = proj.projectType ? (projectTypeLabels[proj.projectType] || proj.projectType) : '-';
 
-			// Deadline with days left
-			const deadlineEl = document.getElementById('project-detail-deadline');
-			if (proj.deadline) {
-				const deadlineClass = daysLeft <= 0 ? 'status-badge--overdue' : (daysLeft <= 7 ? 'status-badge--draft' : '');
-				deadlineEl.innerHTML = `${proj.deadline} ${daysLeft !== null ? `<span class="status-badge ${deadlineClass}">${daysLeft <= 0 ? 'Geçti!' : daysLeft + ' gün'}</span>` : ''}`;
-			} else {
-				deadlineEl.textContent = '-';
-			}
+					// Status with badge
+					const statusEl = document.getElementById('project-detail-status');
+					statusEl.innerHTML = `<span class="status-badge project-status--${proj.status}">${statusTexts[proj.status] || proj.status}</span>`;
 
-			// Start date
-			const startEl = document.getElementById('project-detail-start');
-			if (startEl) startEl.textContent = proj.startDate || '-';
+					// Deadline with days left
+					const deadlineEl = document.getElementById('project-detail-deadline');
+					if (proj.deadline) {
+						const deadlineClass = daysLeft <= 0 ? 'status-badge--overdue' : (daysLeft <= 7 ? 'status-badge--draft' : '');
+						deadlineEl.innerHTML = `${proj.deadline} ${daysLeft !== null ? `<span class="status-badge ${deadlineClass}">${daysLeft <= 0 ? 'Geçti!' : daysLeft + ' gün'}</span>` : ''}`;
+					} else {
+						deadlineEl.textContent = '-';
+					}
 
-			document.getElementById('project-detail-budget').textContent = proj.budget ? `${proj.budget} ${proj.currency}` : '-';
-			document.getElementById('project-detail-description').textContent = proj.description || '-';
+					// Start date
+					const startEl = document.getElementById('project-detail-start');
+					if (startEl) startEl.textContent = proj.startDate || '-';
 
-			// Notes
-			const notesEl = document.getElementById('project-detail-notes');
-			if (notesEl) notesEl.textContent = proj.notes || '-';
+					document.getElementById('project-detail-budget').textContent = proj.budget ? `${proj.budget} ${proj.currency}` : '-';
+					document.getElementById('project-detail-description').textContent = proj.description || '-';
 
-			// Load project tasks with progress
-			this.loadProjectTasks(id);
+					// Notes
+					const notesEl = document.getElementById('project-detail-notes');
+					if (notesEl) notesEl.textContent = proj.notes || '-';
 
-			// Load linked items
-			this.loadProjectItems(id);
+					// Show/hide edit and delete buttons based on access
+					const editBtn = document.getElementById('project-detail-edit-btn');
+					const deleteBtn = document.getElementById('project-detail-delete-btn');
+					const addTaskBtn = document.getElementById('project-add-task-btn');
+					const addItemBtn = document.getElementById('project-add-item-btn');
 
-			// Load project invoices and calculate financials
-			this.loadProjectFinancials(id);
+					if (editBtn) {
+						if (hasWriteAccess) {
+							editBtn.style.display = 'inline-block';
+							editBtn.disabled = false;
+						} else {
+							editBtn.style.display = 'none';
+						}
+					}
 
-			// Load time tracking
-			this.loadTimeTracking(id);
+					if (deleteBtn) {
+						if (isOwner) {
+							deleteBtn.style.display = 'inline-block';
+							deleteBtn.disabled = false;
+						} else {
+							deleteBtn.style.display = 'none';
+						}
+					}
+
+					if (addTaskBtn) {
+						if (hasWriteAccess) {
+							addTaskBtn.style.display = 'inline-block';
+							addTaskBtn.disabled = false;
+						} else {
+							addTaskBtn.style.display = 'none';
+						}
+					}
+
+					if (addItemBtn) {
+						if (hasWriteAccess) {
+							addItemBtn.style.display = 'inline-block';
+							addItemBtn.disabled = false;
+						} else {
+							addItemBtn.style.display = 'none';
+						}
+					}
+
+					// Update local project data
+					const existingIndex = this.projects.findIndex(p => p.id == id);
+					if (existingIndex >= 0) {
+						this.projects[existingIndex] = proj;
+					} else {
+						this.projects.push(proj);
+					}
+
+					// Load project tasks with progress
+					this.loadProjectTasks(id);
+
+					// Load linked items
+					this.loadProjectItems(id);
+
+					// Load project invoices and calculate financials
+					this.loadProjectFinancials(id);
+
+					// Load time tracking
+					this.loadTimeTracking(id);
+
+					// Load project shares
+					this.loadProjectShares(id);
+				})
+				.catch(e => {
+					console.error('Error loading project details:', e);
+					this.showError('Proje yüklenemedi: ' + e.message);
+				});
 		},
 
 		loadProjectFinancials: function (projectId) {
@@ -4626,6 +4711,14 @@
 
 					tasks.forEach(task => {
 						const overdue = task.dueDate && this.calculateDaysLeft(task.dueDate) < 0 && task.status !== 'done' && task.status !== 'cancelled';
+						let assignedInfo = '';
+						if (task.assignedToUserId) {
+							assignedInfo = `<span style="margin-left: 8px; color: var(--color-text-maxcontrast);">👤 ${this.escapeHtml(task.assignedToUserId)}</span>`;
+						}
+						let completedInfo = '';
+						if (task.status === 'done' && task.completedByUserId) {
+							completedInfo = `<span style="margin-left: 8px; color: var(--color-success);">✓ ${this.escapeHtml(task.completedByUserId)} tarafından tamamlandı</span>`;
+						}
 						html += `
 					<div class="task-list-item ${overdue ? 'status-critical' : ''} ${task.status === 'cancelled' ? 'task--cancelled' : ''}" data-task-id="${task.id}">
 						<input type="checkbox" class="project-task-cb" data-id="${task.id}" ${task.status === 'done' ? 'checked' : ''} ${task.status === 'cancelled' ? 'disabled' : ''} style="margin-right: 12px; width: 20px; height: 20px;">
@@ -4634,6 +4727,8 @@
 							<div class="list-item__meta" style="font-size: 12px; margin-top: 4px;">
 								<span class="priority-badge priority-badge--${task.priority}">${priorityTexts[task.priority] || task.priority}</span>
 								<span style="margin-left: 8px;">${task.dueDate || 'Tarih yok'}</span>
+								${assignedInfo}
+								${completedInfo}
 							</div>
 						</div>
 						<span class="status-badge task-status--${task.status}">${statusTexts[task.status] || task.status}</span>
@@ -4729,6 +4824,9 @@
 			document.getElementById('project-start-date').value = new Date().toISOString().split('T')[0];
 			this.updateClientSelect('project-client-id');
 
+			const clientSelect = document.getElementById('project-client-id');
+			const currentUserId = this.getCurrentUserId();
+
 			if (id) {
 				const proj = this.projects.find(p => p.id == id);
 				if (proj) {
@@ -4743,6 +4841,26 @@
 					document.getElementById('project-budget').value = proj.budget || '';
 					document.getElementById('project-currency').value = proj.currency || 'USD';
 					document.getElementById('project-notes').value = proj.notes || '';
+
+					// If user is not the project owner, disable client selection
+					// Client belongs to project owner, shared users shouldn't change it
+					if (proj.userId !== currentUserId && proj.userId) {
+						if (clientSelect) {
+							clientSelect.disabled = true;
+							clientSelect.title = 'Bu proje başka bir kullanıcıya ait. Müşteri bilgisi değiştirilemez.';
+						}
+					} else {
+						if (clientSelect) {
+							clientSelect.disabled = false;
+							clientSelect.title = '';
+						}
+					}
+				}
+			} else {
+				// New project - enable client selection
+				if (clientSelect) {
+					clientSelect.disabled = false;
+					clientSelect.title = '';
 				}
 			}
 			modal.style.display = 'block';
@@ -5246,13 +5364,35 @@
 					document.getElementById('task-status').value = task.status || 'todo';
 					document.getElementById('task-priority').value = task.priority || 'medium';
 					document.getElementById('task-due-date').value = task.dueDate || '';
+					
+					// Load assigned user dropdown if project is set
+					if (task.projectId) {
+						this.updateTaskAssignmentDropdown(task.projectId, task.assignedToUserId);
+					}
 
 					if (task.parentId) {
 						if (projectSelect) projectSelect.disabled = true;
 						if (clientSelect) clientSelect.disabled = true;
 					}
 				}
+			} else if (projectId) {
+				// Load assigned user dropdown for new task
+				this.updateTaskAssignmentDropdown(projectId);
 			}
+			
+			// Update assignment dropdown when project changes
+			if (projectSelect) {
+				projectSelect.addEventListener('change', (e) => {
+					const selectedProjectId = e.target.value;
+					if (selectedProjectId) {
+						this.updateTaskAssignmentDropdown(parseInt(selectedProjectId));
+					} else {
+						const assignedGroup = document.getElementById('task-assigned-group');
+						if (assignedGroup) assignedGroup.style.display = 'none';
+					}
+				});
+			}
+			
 			modal.style.display = 'block';
 		},
 
@@ -5261,6 +5401,7 @@
 
 			// Re-enable disabled fields for form submission if they are not picked up by URLSearchParams
 			// Or just pull the values directly
+			const assignedToUserId = document.getElementById('task-assigned-to')?.value || '';
 			const data = new URLSearchParams({
 				projectId: document.getElementById('task-project-id').value,
 				clientId: document.getElementById('task-client-id').value,
@@ -5270,7 +5411,8 @@
 				notes: document.getElementById('task-notes').value,
 				status: document.getElementById('task-status').value,
 				priority: document.getElementById('task-priority').value,
-				dueDate: document.getElementById('task-due-date').value
+				dueDate: document.getElementById('task-due-date').value,
+				assignedToUserId: assignedToUserId
 			});
 
 			const url = id ? `${this.apiBase}/tasks/${id}` : `${this.apiBase}/tasks`;
@@ -5334,21 +5476,26 @@
 				this.timerButtonsSetup = true;
 			}
 
-			// Load time entries
-			fetch(`${this.apiBase}/projects/${projectId}/time-entries`, {
-				headers: { 'requesttoken': OC.requestToken }
-			})
-				.then(r => r.json())
-				.then(data => {
-					if (data.error) throw new Error(data.error);
-					this.renderTimeEntries(data.entries || []);
-					this.updateTotalTime(data.totalDuration || 0);
+			// Load users first, then time entries
+			this.loadAvailableUsers().then(() => {
+				// Load time entries
+				fetch(`${this.apiBase}/projects/${projectId}/time-entries`, {
+					headers: { 'requesttoken': OC.requestToken }
 				})
-				.catch(e => {
-					console.error('Time entries load error:', e);
-					this.renderTimeEntries([]);
-					this.updateTotalTime(0);
-				});
+					.then(r => r.json())
+					.then(data => {
+						if (data.error) throw new Error(data.error);
+						this.renderTimeEntries(data.entries || []);
+						this.updateTotalTime(data.totalDuration || 0);
+						this.renderUserTimeSummary(data.entries || []);
+					})
+					.catch(e => {
+						console.error('Time entries load error:', e);
+						this.renderTimeEntries([]);
+						this.updateTotalTime(0);
+						this.renderUserTimeSummary([]);
+					});
+			});
 
 			// Check for running timer
 			fetch(`${this.apiBase}/projects/${projectId}/time-entries/running`, {
@@ -5565,8 +5712,22 @@
 				return;
 			}
 
+			// Get user display names
+			const getUserDisplayName = (userId) => {
+				if (!this.availableUsers || !Array.isArray(this.availableUsers)) {
+					return userId;
+				}
+				const user = this.availableUsers.find(u => u.userId === userId);
+				return user ? (user.displayName || user.userId) : userId;
+			};
+
+			// Sort entries by start time (newest first)
+			const sortedEntries = [...entries].sort((a, b) => {
+				return new Date(b.startTime) - new Date(a.startTime);
+			});
+
 			let html = '';
-			entries.forEach(entry => {
+			sortedEntries.forEach(entry => {
 				const startTime = new Date(entry.startTime);
 				const endTime = entry.endTime ? new Date(entry.endTime) : null;
 				const duration = entry.duration || 0;
@@ -5589,22 +5750,39 @@
 					minute: '2-digit' 
 				}) : '';
 
+				const userName = getUserDisplayName(entry.userId);
+				const isRunning = entry.isRunning || false;
+				const currentUserId = this.getCurrentUserId();
+				const canDelete = entry.userId === currentUserId; // Only owner can delete their own entries
+
 				html += `
-					<div class="time-entry-item">
+					<div class="time-entry-item ${isRunning ? 'time-entry-running' : ''}">
 						<div class="time-entry-item-content">
+							<div class="time-entry-header">
+								<div class="time-entry-user-info">
+									<span class="time-entry-user-icon">👤</span>
+									<span class="time-entry-user-name">${this.escapeHtml(userName)}</span>
+									${isRunning ? '<span class="time-entry-running-badge">Çalışıyor</span>' : ''}
+								</div>
+							</div>
 							<div class="time-entry-description">
 								${this.escapeHtml(entry.description || 'Açıklama yok')}
 							</div>
 							<div class="time-entry-date">
+								<span class="time-entry-date-icon">📅</span>
 								${dateStr} ${timeStr}${endTimeStr ? ' - ' + endTimeStr : ''}
 							</div>
 						</div>
-						<div class="time-entry-duration">
-							${durationStr}
+						<div class="time-entry-right">
+							<div class="time-entry-duration">
+								${durationStr}
+							</div>
+							${canDelete ? `
+								<button class="btn btn-sm btn-danger time-entry-delete delete-time-entry-btn" data-id="${entry.id}" title="Sil">
+									🗑️
+								</button>
+							` : ''}
 						</div>
-						<button class="btn btn-sm btn-danger time-entry-delete delete-time-entry-btn" data-id="${entry.id}" title="Sil">
-							🗑️
-						</button>
 					</div>
 				`;
 			});
@@ -5620,6 +5798,68 @@
 					}
 				});
 			});
+		},
+
+		renderUserTimeSummary: function (entries) {
+			const summarySection = document.getElementById('time-tracking-user-summary');
+			const summaryList = document.getElementById('user-time-summary-list');
+			
+			if (!summarySection || !summaryList) return;
+
+			if (!entries || entries.length === 0) {
+				summarySection.style.display = 'none';
+				return;
+			}
+
+			// Calculate total duration per user (only completed entries, not running)
+			const userTotals = {};
+			entries.forEach(entry => {
+				if (!entry.isRunning && entry.duration) {
+					const userId = entry.userId;
+					if (!userTotals[userId]) {
+						userTotals[userId] = 0;
+					}
+					userTotals[userId] += entry.duration;
+				}
+			});
+
+			// Get user display names
+			const getUserDisplayName = (userId) => {
+				if (!this.availableUsers || !Array.isArray(this.availableUsers)) {
+					return userId;
+				}
+				const user = this.availableUsers.find(u => u.userId === userId);
+				return user ? (user.displayName || user.userId) : userId;
+			};
+
+			// Sort users by total duration (descending)
+			const sortedUsers = Object.keys(userTotals).sort((a, b) => userTotals[b] - userTotals[a]);
+
+			if (sortedUsers.length === 0) {
+				summarySection.style.display = 'none';
+				return;
+			}
+
+			summarySection.style.display = 'block';
+
+			let html = '';
+			sortedUsers.forEach(userId => {
+				const totalSeconds = userTotals[userId];
+				const hours = Math.floor(totalSeconds / 3600);
+				const minutes = Math.floor((totalSeconds % 3600) / 60);
+				const secs = totalSeconds % 60;
+				const durationStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+				const userName = getUserDisplayName(userId);
+
+				html += `
+					<div class="time-user-summary-item">
+						<span class="time-user-summary-name">👤 ${this.escapeHtml(userName)}</span>
+						<span class="time-user-summary-duration">${durationStr}</span>
+					</div>
+				`;
+			});
+
+			summaryList.innerHTML = html;
 		},
 
 		deleteTimeEntry: function (entryId) {
@@ -5650,6 +5890,255 @@
 				String(hours).padStart(2, '0') + ':' +
 				String(minutes).padStart(2, '0') + ':' +
 				String(secs).padStart(2, '0');
+		},
+
+		// Project Share Functions
+		loadProjectShares: function (projectId) {
+			fetch(`${this.apiBase}/projects/${projectId}/shares`, {
+				headers: { 'requesttoken': OC.requestToken }
+			})
+				.then(r => r.json())
+				.then(shares => {
+					const section = document.getElementById('project-share-section');
+					const addBtn = document.getElementById('project-share-add-btn');
+					
+					if (!section) return;
+					
+					// Check if user is project owner (show share section only for owner)
+					const proj = this.projects.find(p => p.id == projectId);
+					if (!proj) return;
+					
+					// Ensure shares is an array
+					if (!Array.isArray(shares)) {
+						shares = [];
+					}
+					
+					// Show section if user is owner or has shares
+					if (proj.userId === this.getCurrentUserId() || (shares && shares.length > 0)) {
+						section.style.display = 'block';
+						if (proj.userId === this.getCurrentUserId()) {
+							if (addBtn) addBtn.style.display = 'block';
+						} else {
+							if (addBtn) addBtn.style.display = 'none';
+						}
+					} else {
+						section.style.display = 'none';
+					}
+					
+					this.renderProjectShares(shares);
+				})
+				.catch(e => {
+					console.error('Error loading project shares:', e);
+					// On error, hide section
+					const section = document.getElementById('project-share-section');
+					if (section) section.style.display = 'none';
+				});
+		},
+
+		renderProjectShares: function (shares) {
+			const container = document.getElementById('project-shares-list');
+			if (!container) return;
+
+			if (!shares || shares.length === 0) {
+				container.innerHTML = '<p class="text-muted" style="font-size: 12px;">Henüz paylaşım yok</p>';
+				return;
+			}
+
+			const permissionTexts = {
+				read: 'Sadece Görüntüleme',
+				write: 'Düzenleme'
+			};
+
+			const permissionColors = {
+				read: '#3b82f6',
+				write: '#10b981'
+			};
+
+			container.innerHTML = shares.map(share => {
+				const permColor = permissionColors[share.permissionLevel] || '#6b7280';
+				const permText = permissionTexts[share.permissionLevel] || share.permissionLevel;
+				
+				return `
+					<div class="project-share-item" style="padding: 12px; border: 1px solid var(--color-border); border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+						<div>
+							<div style="font-weight: 600; font-size: 13px; color: var(--color-main-text); margin-bottom: 4px;">
+								${this.escapeHtml(share.sharedWithUserId)}
+							</div>
+							<div style="font-size: 11px; color: var(--color-text-maxcontrast);">
+								<span style="padding: 2px 6px; border-radius: 4px; background: ${permColor}20; color: ${permColor}; font-weight: 600;">
+									${permText}
+								</span>
+							</div>
+						</div>
+						<button class="btn btn-sm btn-danger project-share-remove-btn" data-share-user-id="${share.sharedWithUserId}" style="display: none;">
+							Kaldır
+						</button>
+					</div>
+				`;
+			}).join('');
+
+			// Show remove buttons only for project owner
+			const proj = this.projects.find(p => p.id == this.currentProjectId);
+			if (proj && proj.userId === this.getCurrentUserId()) {
+				container.querySelectorAll('.project-share-remove-btn').forEach(btn => {
+					btn.style.display = 'block';
+					btn.addEventListener('click', () => {
+						const userId = btn.getAttribute('data-share-user-id');
+						this.unshareProject(this.currentProjectId, userId);
+					});
+				});
+			}
+		},
+
+		showProjectShareModal: function (projectId) {
+			this.currentProjectId = projectId;
+			const modal = document.getElementById('project-share-modal');
+			if (!modal) return;
+
+			// Load available users
+			this.loadAvailableUsers().then(() => {
+				modal.style.display = 'block';
+			});
+		},
+
+		loadAvailableUsers: function () {
+			return fetch(`${this.apiBase}/users`, {
+				headers: { 'requesttoken': OC.requestToken }
+			})
+				.then(r => r.json())
+				.then(users => {
+					this.availableUsers = users || [];
+					const select = document.getElementById('share-user-select');
+					if (!select) return;
+
+					// Clear existing options except first
+					select.innerHTML = '<option value="">Kullanıcı seçin...</option>';
+
+					// Add users
+					users.forEach(user => {
+						const option = document.createElement('option');
+						option.value = user.userId;
+						option.textContent = user.displayName || user.userId;
+						select.appendChild(option);
+					});
+
+					// Setup search
+					const searchInput = document.getElementById('share-user-search');
+					if (searchInput) {
+						searchInput.addEventListener('input', (e) => {
+							const query = e.target.value.toLowerCase();
+							Array.from(select.options).forEach(option => {
+								if (option.value === '') return;
+								const text = option.textContent.toLowerCase();
+								option.style.display = text.includes(query) ? 'block' : 'none';
+							});
+						});
+					}
+				})
+				.catch(e => {
+					console.error('Error loading users:', e);
+					this.showError('Kullanıcılar yüklenemedi');
+				});
+		},
+
+		shareProject: function (projectId, userId, permissionLevel) {
+			const data = new URLSearchParams({
+				sharedWithUserId: userId,
+				permissionLevel: permissionLevel
+			});
+
+			fetch(`${this.apiBase}/projects/${projectId}/shares`, {
+				method: 'POST',
+				headers: {
+					'requesttoken': OC.requestToken,
+					'Content-Type': 'application/x-www-form-urlencoded'
+				},
+				body: data.toString()
+			})
+				.then(r => r.json())
+				.then(result => {
+					if (result.error) throw new Error(result.error);
+					this.loadProjectShares(projectId);
+					this.closeModal('project-share-modal');
+					this.showSuccess('Proje başarıyla paylaşıldı');
+				})
+				.catch(e => this.showError('Paylaşım hatası: ' + e.message));
+		},
+
+		unshareProject: function (projectId, userId) {
+			if (!confirm('Paylaşımı kaldırmak istediğinize emin misiniz?')) return;
+
+			fetch(`${this.apiBase}/projects/${projectId}/shares/${encodeURIComponent(userId)}`, {
+				method: 'DELETE',
+				headers: {
+					'requesttoken': OC.requestToken
+				}
+			})
+				.then(r => r.json())
+				.then(result => {
+					if (result.error) throw new Error(result.error);
+					this.loadProjectShares(projectId);
+					this.showSuccess('Paylaşım kaldırıldı');
+				})
+				.catch(e => this.showError('Paylaşım kaldırma hatası: ' + e.message));
+		},
+
+		getCurrentUserId: function () {
+			// Get current user ID from Nextcloud
+			if (OC.currentUser) {
+				return OC.currentUser;
+			}
+			if (typeof OC.getCurrentUser === 'function') {
+				const user = OC.getCurrentUser();
+				return user ? user.uid : '';
+			}
+			return '';
+		},
+
+		updateTaskAssignmentDropdown: function (projectId, currentAssignedUserId = null) {
+			const assignedGroup = document.getElementById('task-assigned-group');
+			const assignedSelect = document.getElementById('task-assigned-to');
+			if (!assignedGroup || !assignedSelect) return;
+
+			// Show the group
+			assignedGroup.style.display = 'block';
+
+			// Get project details
+			fetch(`${this.apiBase}/projects/${projectId}`, {
+				headers: { 'requesttoken': OC.requestToken }
+			})
+				.then(r => r.json())
+				.then(project => {
+					if (!project) return;
+
+					// Clear dropdown
+					assignedSelect.innerHTML = '<option value="">Atanmamış</option>';
+
+					// Add project owner
+					const ownerOption = document.createElement('option');
+					ownerOption.value = project.userId;
+					ownerOption.textContent = `${project.userId} (Proje Sahibi)`;
+					if (currentAssignedUserId === project.userId) {
+						ownerOption.selected = true;
+					}
+					assignedSelect.appendChild(ownerOption);
+
+					// Add shared users
+					if (project.shares && project.shares.length > 0) {
+						project.shares.forEach(share => {
+							const option = document.createElement('option');
+							option.value = share.sharedWithUserId;
+							option.textContent = share.sharedWithUserId;
+							if (currentAssignedUserId === share.sharedWithUserId) {
+								option.selected = true;
+							}
+							assignedSelect.appendChild(option);
+						});
+					}
+				})
+				.catch(e => {
+					console.error('Error loading project for assignment:', e);
+				});
 		},
 
 		// ===== FILTER =====

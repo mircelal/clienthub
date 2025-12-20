@@ -33,6 +33,10 @@
 					<div class="stat-card__value" id="project-detail-client"></div>
 				</div>
 				<div class="stat-card">
+					<div class="stat-card__label">Proje Sahibi</div>
+					<div class="stat-card__value" id="project-detail-owner"></div>
+				</div>
+				<div class="stat-card">
 					<div class="stat-card__label">Proje Türü</div>
 					<div class="stat-card__value" id="project-detail-type"></div>
 				</div>
@@ -78,13 +82,31 @@
 				</div>
 			</div>
 
+			<div class="detail-info-card" id="project-share-section" style="display: none;">
+				<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+					<h3>👥 Paylaşım</h3>
+					<button class="btn btn-sm btn-primary" id="project-share-add-btn" style="display: none;">
+						<span class="icon-add"></span> Kullanıcı Ekle
+					</button>
+				</div>
+				<div id="project-shares-list">
+					<p class="text-muted" style="font-size: 12px;">Henüz paylaşım yok</p>
+				</div>
+			</div>
+
 			<div class="detail-info-card">
 				<div class="time-tracking-header-premium">
-					<div class="time-tracking-title-section">
-						<h3>⏱️ Zaman Takibi</h3>
-						<div class="time-tracking-total-premium">
-							<span class="total-label-premium">Toplam Süre</span>
-							<span class="total-time-premium" id="total-time-display">00:00:00</span>
+					<h3>⏱️ Zaman Takibi</h3>
+					<div class="time-tracking-stats-grid">
+						<div class="time-stat-card">
+							<div class="time-stat-label">Toplam Süre</div>
+							<div class="time-stat-value" id="total-time-display">00:00:00</div>
+						</div>
+						<div id="time-tracking-user-summary" class="time-user-summary-card" style="display: none;">
+							<div class="time-user-summary-header">
+								<span class="time-user-summary-title">👥 Kullanıcı Bazında</span>
+							</div>
+							<div id="user-time-summary-list" class="time-user-summary-list"></div>
 						</div>
 					</div>
 				</div>

@@ -34,6 +34,10 @@ use OCP\AppFramework\Db\Entity;
  * @method void setCreatedAt(string $createdAt)
  * @method string getUpdatedAt()
  * @method void setUpdatedAt(string $updatedAt)
+ * @method string|null getAssignedToUserId()
+ * @method void setAssignedToUserId(?string $assignedToUserId)
+ * @method string|null getCompletedByUserId()
+ * @method void setCompletedByUserId(?string $completedByUserId)
  */
 class Task extends Entity implements \JsonSerializable
 {
@@ -51,6 +55,8 @@ class Task extends Entity implements \JsonSerializable
 	protected $userId;
 	protected $createdAt;
 	protected $updatedAt;
+	protected $assignedToUserId;
+	protected $completedByUserId;
 
 	public function __construct()
 	{
@@ -68,6 +74,8 @@ class Task extends Entity implements \JsonSerializable
 		$this->addType('userId', 'string');
 		$this->addType('createdAt', 'string');
 		$this->addType('updatedAt', 'string');
+		$this->addType('assignedToUserId', 'string');
+		$this->addType('completedByUserId', 'string');
 	}
 
 	public function jsonSerialize(): array
@@ -88,6 +96,8 @@ class Task extends Entity implements \JsonSerializable
 			'userId' => $this->userId,
 			'createdAt' => $this->createdAt,
 			'updatedAt' => $this->updatedAt,
+			'assignedToUserId' => $this->assignedToUserId,
+			'completedByUserId' => $this->completedByUserId,
 		];
 	}
 }

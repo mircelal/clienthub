@@ -148,5 +148,76 @@ class TaskMapper extends QBMapper
 
 		return $this->findEntities($qb);
 	}
+
+	/**
+	 * Find tasks assigned to a user
+	 * @param string $userId
+	 * @return Task[]
+	 */
+	public function findByAssignedUser(string $userId): array
+	{
+		$qb = $this->db->getQueryBuilder();
+		$qb->select('*')
+			->from($this->getTableName())
+			->where($qb->expr()->eq('assigned_to_user_id', $qb->createNamedParameter($userId)))
+			->orderBy('due_date', 'ASC');
+
+		return $this->findEntities($qb);
+	}
+
+	/**
+	 * Find tasks by project including shared projects
+	 * @param int $projectId
+	 * @param string $userId
+	 * @return Task[]
+	 */
+	public function findByProjectIncludingShared(int $projectId, string $userId): array
+	{
+		// First check if user has access to the project
+		// Get project owner
+		$qbCheck = $this->db->getQueryBuilder();
+		$qbCheck->select('user_id')
+			->from('dc_projects')
+			->where($qbCheck->expr()->eq('id', $qbCheck->createNamedParameter($projectId)))
+			->setMaxResults(1);
+		
+		$result = $qbCheck->executeQuery();
+		$project = $result->fetch();
+		$result->closeCursor();
+		
+		if (!$project) {
+			return [];
+		}
+		
+		// If user is owner, get all tasks
+		if ($project['user_id'] === $userId) {
+			return $this->findByProject($projectId, $userId);
+		}
+		
+		// Check if project is shared with user
+		$qbShare = $this->db->getQueryBuilder();
+		$qbShare->select('permission_level')
+			->from('dc_project_shares')
+			->where($qbShare->expr()->eq('project_id', $qbShare->createNamedParameter($projectId)))
+			->andWhere($qbShare->expr()->eq('shared_with_user_id', $qbShare->createNamedParameter($userId)))
+			->setMaxResults(1);
+		
+		$resultShare = $qbShare->executeQuery();
+		$share = $resultShare->fetch();
+		$resultShare->closeCursor();
+		
+		if (!$share) {
+			return []; // No access
+		}
+		
+		// User has access, get tasks (without user_id filter since tasks belong to project owner)
+		$qb = $this->db->getQueryBuilder();
+		$qb->select('*')
+			->from($this->getTableName())
+			->where($qb->expr()->eq('project_id', $qb->createNamedParameter($projectId)))
+			->orderBy('due_date', 'ASC');
+
+		return $this->findEntities($qb);
+	}
 }
 

@@ -13,7 +13,7 @@ class TimeEntryMapper extends QBMapper {
 
 	/**
 	 * @param int $projectId
-	 * @param string|null $userId
+	 * @param string|null $userId (not used for filtering, but kept for compatibility)
 	 * @return TimeEntry[]
 	 */
 	public function findByProject(int $projectId, ?string $userId): array {
@@ -21,7 +21,6 @@ class TimeEntryMapper extends QBMapper {
 		$qb->select('*')
 			->from($this->getTableName())
 			->where($qb->expr()->eq('project_id', $qb->createNamedParameter($projectId)))
-			->andWhere($qb->expr()->eq('user_id', $qb->createNamedParameter($userId)))
 			->orderBy('start_time', 'DESC');
 		
 		return $this->findEntities($qb);
@@ -65,15 +64,14 @@ class TimeEntryMapper extends QBMapper {
 
 	/**
 	 * @param int $projectId
-	 * @param string|null $userId
-	 * @return int Total duration in seconds
+	 * @param string|null $userId (not used for filtering, but kept for compatibility)
+	 * @return int Total duration in seconds (all users combined)
 	 */
 	public function getTotalDuration(int $projectId, ?string $userId): int {
 		$qb = $this->db->getQueryBuilder();
 		$qb->selectAlias($qb->createFunction('COALESCE(SUM(duration), 0)'), 'total')
 			->from($this->getTableName())
 			->where($qb->expr()->eq('project_id', $qb->createNamedParameter($projectId)))
-			->andWhere($qb->expr()->eq('user_id', $qb->createNamedParameter($userId)))
 			->andWhere($qb->expr()->eq('is_running', $qb->createNamedParameter(false, \PDO::PARAM_BOOL)));
 		
 		$result = $qb->executeQuery();

@@ -38,8 +38,8 @@ class TimeEntryController extends Controller {
 	 */
 	public function byProject(int $projectId): JSONResponse {
 		try {
-			// Verify project exists and belongs to user
-			$this->projectMapper->find($projectId, $this->userId);
+			// Verify project exists and user has access (owner or shared)
+			$this->projectMapper->findIncludingShared($projectId, $this->userId);
 			
 			$entries = $this->mapper->findByProject($projectId, $this->userId);
 			$totalDuration = $this->mapper->getTotalDuration($projectId, $this->userId);
@@ -59,7 +59,8 @@ class TimeEntryController extends Controller {
 	 */
 	public function getRunning(int $projectId): JSONResponse {
 		try {
-			$this->projectMapper->find($projectId, $this->userId);
+			// Verify project exists and user has access (owner or shared)
+			$this->projectMapper->findIncludingShared($projectId, $this->userId);
 			$running = $this->mapper->findRunning($projectId, $this->userId);
 			
 			return new JSONResponse($running ? $running : null);
@@ -73,8 +74,8 @@ class TimeEntryController extends Controller {
 	 */
 	public function start(int $projectId): JSONResponse {
 		try {
-			// Verify project exists
-			$this->projectMapper->find($projectId, $this->userId);
+			// Verify project exists and user has access (owner or shared)
+			$this->projectMapper->findIncludingShared($projectId, $this->userId);
 			
 			// Check if there's already a running entry
 			$running = $this->mapper->findRunning($projectId, $this->userId);
@@ -109,7 +110,8 @@ class TimeEntryController extends Controller {
 	 */
 	public function stop(int $projectId): JSONResponse {
 		try {
-			$this->projectMapper->find($projectId, $this->userId);
+			// Verify project exists and user has access (owner or shared)
+			$this->projectMapper->findIncludingShared($projectId, $this->userId);
 			
 			$running = $this->mapper->findRunning($projectId, $this->userId);
 			if (!$running) {

@@ -10,6 +10,7 @@ use OCP\IRequest;
 use OCA\DomainControl\Db\ProjectMapper;
 use OCA\DomainControl\Db\ProjectItemMapper;
 use OCA\DomainControl\Db\TaskMapper;
+use OCA\DomainControl\Db\ProjectShareMapper;
 use OCA\DomainControl\Db\Project;
 use OCA\DomainControl\Db\ProjectItem;
 
@@ -18,16 +19,19 @@ class ProjectController extends Controller {
 	private ProjectMapper $mapper;
 	private ProjectItemMapper $itemMapper;
 	private TaskMapper $taskMapper;
+	private ProjectShareMapper $shareMapper;
 
 	public function __construct(IRequest $request,
 	                            ProjectMapper $mapper,
 	                            ProjectItemMapper $itemMapper,
 	                            TaskMapper $taskMapper,
+	                            ProjectShareMapper $shareMapper,
 	                            $userId) {
 		parent::__construct(Application::APP_ID, $request);
 		$this->mapper = $mapper;
 		$this->itemMapper = $itemMapper;
 		$this->taskMapper = $taskMapper;
+		$this->shareMapper = $shareMapper;
 		$this->userId = $userId;
 	}
 
@@ -43,7 +47,7 @@ class ProjectController extends Controller {
 	 */
 	public function index(): JSONResponse {
 		try {
-			$projects = $this->mapper->findAll($this->userId);
+			$projects = $this->mapper->findAllIncludingShared($this->userId);
 			return new JSONResponse($projects);
 		} catch (\Exception $e) {
 			return new JSONResponse(['error' => $e->getMessage()], 500);
@@ -56,13 +60,16 @@ class ProjectController extends Controller {
 	 */
 	public function show(int $id): JSONResponse {
 		try {
-			$project = $this->mapper->find($id, $this->userId);
+			$project = $this->mapper->findIncludingShared($id, $this->userId);
 			$items = $this->itemMapper->findByProject($id);
-			$tasks = $this->taskMapper->findByProject($id, $this->userId);
+			$tasks = $this->taskMapper->findByProjectIncludingShared($id, $this->userId);
+			$shares = $this->shareMapper->findByProject($id);
 			
 			$result = $project->jsonSerialize();
 			$result['items'] = $items;
 			$result['tasks'] = $tasks;
+			$result['shares'] = $shares;
+			$result['isOwner'] = ($project->getUserId() === $this->userId);
 			
 			return new JSONResponse($result);
 		} catch (\Exception $e) {
@@ -149,7 +156,12 @@ class ProjectController extends Controller {
 	 */
 	public function update(int $id): JSONResponse {
 		try {
-			$project = $this->mapper->find($id, $this->userId);
+			// Check access - must be owner or have write permission
+			$project = $this->mapper->findIncludingShared($id, $this->userId);
+			if (!$this->mapper->hasAccess($id, $this->userId, 'write')) {
+				return new JSONResponse(['error' => 'Access denied'], 403);
+			}
+			
 			$data = $this->getRequestData();
 			
 			if (isset($data['clientId'])) $project->setClientId((int)$data['clientId']);
@@ -178,7 +190,11 @@ class ProjectController extends Controller {
 	 */
 	public function items(int $id): JSONResponse {
 		try {
-			$project = $this->mapper->find($id, $this->userId);
+			// Check access
+			if (!$this->mapper->hasAccess($id, $this->userId, 'read')) {
+				return new JSONResponse(['error' => 'Access denied'], 403);
+			}
+			
 			$items = $this->itemMapper->findByProject($id);
 			return new JSONResponse($items);
 		} catch (\Exception $e) {
@@ -191,9 +207,19 @@ class ProjectController extends Controller {
 	 */
 	public function delete(int $id): JSONResponse {
 		try {
+			// Only owner can delete
 			$project = $this->mapper->find($id, $this->userId);
+			if ($project->getUserId() !== $this->userId) {
+				return new JSONResponse(['error' => 'Only project owner can delete'], 403);
+			}
+			
 			// Delete items first
 			$this->itemMapper->deleteByProject($id);
+			// Delete shares
+			$shares = $this->shareMapper->findByProject($id);
+			foreach ($shares as $share) {
+				$this->shareMapper->delete($share);
+			}
 			$this->mapper->delete($project);
 			return new JSONResponse(['success' => true]);
 		} catch (\Exception $e) {
@@ -206,7 +232,12 @@ class ProjectController extends Controller {
 	 */
 	public function addItem(int $id): JSONResponse {
 		try {
-			$project = $this->mapper->find($id, $this->userId);
+			// Check access - must be owner or have write permission
+			if (!$this->mapper->hasAccess($id, $this->userId, 'write')) {
+				return new JSONResponse(['error' => 'Access denied'], 403);
+			}
+			
+			$project = $this->mapper->findIncludingShared($id, $this->userId);
 			$data = $this->getRequestData();
 			
 			$itemType = $data['itemType'] ?? '';
@@ -239,7 +270,12 @@ class ProjectController extends Controller {
 	 */
 	public function removeItem(int $id, int $itemId): JSONResponse {
 		try {
-			$project = $this->mapper->find($id, $this->userId);
+			// Check access - must be owner or have write permission
+			if (!$this->mapper->hasAccess($id, $this->userId, 'write')) {
+				return new JSONResponse(['error' => 'Access denied'], 403);
+			}
+			
+			$project = $this->mapper->findIncludingShared($id, $this->userId);
 			$item = $this->itemMapper->find($itemId);
 			
 			if ($item->getProjectId() !== $id) {

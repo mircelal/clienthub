@@ -8,20 +8,24 @@ use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use OCA\DomainControl\Db\TaskMapper;
+use OCA\DomainControl\Db\ProjectMapper;
 use OCA\DomainControl\Db\Task;
 
 class TaskController extends Controller
 {
 	private $userId;
 	private TaskMapper $mapper;
+	private ProjectMapper $projectMapper;
 
 	public function __construct(
 		IRequest $request,
 		TaskMapper $mapper,
+		ProjectMapper $projectMapper,
 		$userId
 	) {
 		parent::__construct(Application::APP_ID, $request);
 		$this->mapper = $mapper;
+		$this->projectMapper = $projectMapper;
 		$this->userId = $userId;
 	}
 
@@ -67,7 +71,12 @@ class TaskController extends Controller
 	public function byProject(int $projectId): JSONResponse
 	{
 		try {
-			$tasks = $this->mapper->findByProject($projectId, $this->userId);
+			// Check if user has access to project
+			if (!$this->projectMapper->hasAccess($projectId, $this->userId, 'read')) {
+				return new JSONResponse(['error' => 'Access denied'], 403);
+			}
+			
+			$tasks = $this->mapper->findByProjectIncludingShared($projectId, $this->userId);
 			return new JSONResponse($tasks);
 		} catch (\Exception $e) {
 			return new JSONResponse(['error' => $e->getMessage()], 500);
@@ -143,6 +152,14 @@ class TaskController extends Controller
 				return new JSONResponse(['error' => 'Title is required'], 400);
 			}
 
+			// Check project access if projectId is provided
+			if (isset($data['projectId']) && $data['projectId']) {
+				$projectId = (int)$data['projectId'];
+				if (!$this->projectMapper->hasAccess($projectId, $this->userId, 'write')) {
+					return new JSONResponse(['error' => 'Access denied'], 403);
+				}
+			}
+
 			$task = new Task();
 			$task->setProjectId((int) ($data['projectId'] ?? 0) ?: null);
 			$task->setClientId((int) ($data['clientId'] ?? 0) ?: null);
@@ -153,7 +170,9 @@ class TaskController extends Controller
 			$task->setStatus($data['status'] ?? 'todo');
 			$task->setPriority($data['priority'] ?? 'medium');
 			$task->setDueDate($data['dueDate'] ?? '');
+			$task->setAssignedToUserId($data['assignedToUserId'] ?? null);
 			$task->setCompletedAt(null);
+			$task->setCompletedByUserId(null);
 			$task->setCancelledAt(null);
 			$task->setUserId($this->userId);
 			$now = date('Y-m-d H:i:s');
@@ -174,6 +193,14 @@ class TaskController extends Controller
 	{
 		try {
 			$task = $this->mapper->find($id, $this->userId);
+			
+			// Check project access if task has project
+			if ($task->getProjectId()) {
+				if (!$this->projectMapper->hasAccess($task->getProjectId(), $this->userId, 'write')) {
+					return new JSONResponse(['error' => 'Access denied'], 403);
+				}
+			}
+			
 			$data = $this->getRequestData();
 
 			if (isset($data['parentId']))
@@ -184,13 +211,17 @@ class TaskController extends Controller
 				$task->setDescription($data['description']);
 			if (isset($data['notes']))
 				$task->setNotes($data['notes']);
+			if (isset($data['assignedToUserId']))
+				$task->setAssignedToUserId($data['assignedToUserId'] ?: null);
 			if (isset($data['status'])) {
 				$task->setStatus($data['status']);
 				// Set completed date when status changes to done
 				if ($data['status'] === 'done' && !$task->getCompletedAt()) {
 					$task->setCompletedAt(date('Y-m-d H:i:s'));
+					$task->setCompletedByUserId($this->userId);
 				} elseif ($data['status'] !== 'done') {
 					$task->setCompletedAt(null);
+					$task->setCompletedByUserId(null);
 				}
 
 				// Set cancelled date
@@ -235,14 +266,23 @@ class TaskController extends Controller
 	{
 		try {
 			$task = $this->mapper->find($id, $this->userId);
+			
+			// Check project access if task has project
+			if ($task->getProjectId()) {
+				if (!$this->projectMapper->hasAccess($task->getProjectId(), $this->userId, 'read')) {
+					return new JSONResponse(['error' => 'Access denied'], 403);
+				}
+			}
 
 			$currentStatus = $task->getStatus();
 			if ($currentStatus === 'done') {
 				$task->setStatus('todo');
 				$task->setCompletedAt(null);
+				$task->setCompletedByUserId(null);
 			} else {
 				$task->setStatus('done');
 				$task->setCompletedAt(date('Y-m-d H:i:s'));
+				$task->setCompletedByUserId($this->userId);
 				$task->setCancelledAt(null); // Clear cancellation if marked done
 			}
 

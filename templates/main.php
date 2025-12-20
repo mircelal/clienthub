@@ -75,4 +75,5 @@ style('domaincontrol', 'domaincontrol');
 	<?php include __DIR__ . '/partials/modals/invoice-modal.php'; ?>
 	<?php include __DIR__ . '/partials/modals/project-modal.php'; ?>
 	<?php include __DIR__ . '/partials/modals/task-modal.php'; ?>
+	<?php include __DIR__ . '/partials/modals/project-share-modal.php'; ?>
 </div>

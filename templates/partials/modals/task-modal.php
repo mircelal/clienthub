@@ -61,6 +61,15 @@
 						<input type="date" id="task-due-date" name="dueDate" class="form-control">
 					</div>
 				</div>
+				<div class="form-group" id="task-assigned-group" style="display: none;">
+					<label for="task-assigned-to">Atanan Kişi</label>
+					<select id="task-assigned-to" name="assignedToUserId" class="form-control">
+						<option value="">Atanmamış</option>
+					</select>
+					<small class="text-muted" style="font-size: 11px; margin-top: 4px; display: block;">
+						Görevi bir kullanıcıya atayın (proje seçildiğinde aktif)
+					</small>
+				</div>
 				<div class="form-group">
 					<label for="task-notes">Notlar (Dahili kullanım için)</label>
 					<textarea id="task-notes" name="notes" class="form-control" rows="3"
