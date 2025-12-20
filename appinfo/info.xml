@@ -5,7 +5,7 @@
 	<name>ClientHub</name>
 	<summary>Comprehensive client, project, and business management system</summary>
 	<description><![CDATA[ClientHub - Complete business management solution. Manage clients, projects, invoices, payments, tasks, domains, hosting, websites, and services. Track everything in one place with integrated file management and Nextcloud Contacts integration.]]></description>
-	<version>3.3.992</version>
+	<version>3.4.492</version>
 	<licence>agpl</licence>
 	<author>Calal Mir</author>
 	<namespace>DomainControl</namespace>

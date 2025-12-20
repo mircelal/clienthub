@@ -17,6 +17,7 @@ return [
 		
 		// Domain routes
 		['name' => 'domain#index', 'url' => '/api/domains', 'verb' => 'GET'],
+		['name' => 'domain#sendExpirationReminders', 'url' => '/api/domains/send-reminders', 'verb' => 'POST'],
 		['name' => 'domain#show', 'url' => '/api/domains/{id}', 'verb' => 'GET'],
 		['name' => 'domain#create', 'url' => '/api/domains', 'verb' => 'POST'],
 		['name' => 'domain#update', 'url' => '/api/domains/{id}', 'verb' => 'PUT'],
