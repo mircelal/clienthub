@@ -33,19 +33,20 @@
 						<input type="text" id="hosting-plan" name="plan" class="form-control" placeholder="VPS 4GB, Shared Pro...">
 					</div>
 				</div>
+				<div class="form-row">
 					<div class="form-group">
 						<label for="hosting-server-type">Sunucu Tipi</label>
 						<select id="hosting-server-type" name="serverType" class="form-control">
-							<option value="own">🏠 Kendi Sunucum</option>
-							<option value="external" selected>🌐 Harici Sunucu</option>
+							<option value="own">Kendi Sunucum</option>
+							<option value="external" selected>Harici Sunucu</option>
 						</select>
 					</div>
-				</div>
-				<div class="form-row">
 					<div class="form-group">
 						<label for="hosting-server-ip">Sunucu IP</label>
 						<input type="text" id="hosting-server-ip" name="serverIp" class="form-control" placeholder="192.168.1.1">
 					</div>
+				</div>
+				<div class="form-row">
 					<div class="form-group">
 						<label for="hosting-renewal-interval">Ödeme Periyodu</label>
 						<select id="hosting-renewal-interval" name="renewalInterval" class="form-control">
@@ -108,7 +109,7 @@
 <div id="hosting-payment-modal" class="modal">
 	<div class="modal-content">
 		<div class="modal-header">
-			<h3>💳 Hosting Ödeme Ekle</h3>
+			<h3>Hosting Ödeme Ekle</h3>
 			<span class="modal-close" data-modal="hosting-payment-modal">&times;</span>
 		</div>
 		<div class="modal-body">

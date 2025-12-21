@@ -84,6 +84,14 @@
 			document.getElementById('manage-hosting-packages-btn')?.addEventListener('click', () => this.showHostingPackagesView());
 			document.getElementById('back-to-hostings-list-btn')?.addEventListener('click', () => this.showHostingsListView());
 			document.getElementById('add-hosting-package-btn')?.addEventListener('click', () => this.showHostingPackageModal());
+			
+			// Hosting search
+			const hostingSearchInput = document.getElementById('hosting-search-input');
+			if (hostingSearchInput) {
+				hostingSearchInput.addEventListener('input', (e) => {
+					this.filterHostings(e.target.value);
+				});
+			}
 			document.getElementById('add-website-btn')?.addEventListener('click', () => this.showWebsiteModal());
 			document.getElementById('add-service-btn')?.addEventListener('click', () => this.showServiceModal());
 			document.getElementById('add-invoice-btn')?.addEventListener('click', () => this.showInvoiceModal());
@@ -1511,34 +1519,37 @@
 			}
 		},
 
-		renderHostings: function () {
+		renderHostings: function (filteredHostings = null) {
 			const container = document.getElementById('hostings-list');
 			if (!container) return;
 
-			if (!this.hostings || this.hostings.length === 0) {
+			const hostingsToRender = filteredHostings || this.hostings || [];
+
+			if (hostingsToRender.length === 0) {
 				container.innerHTML = '<p class="empty-state">Henüz hosting eklenmemiş. İlk hostinginizi ekleyin.</p>';
 				return;
 			}
 
 			let html = '';
-			this.hostings.forEach(hosting => {
+			hostingsToRender.forEach(hosting => {
 				const client = (this.clients || []).find(c => c.id == hosting.clientId);
 				const daysLeft = this.getDaysUntilExpiry(hosting.expirationDate);
 				const statusClass = daysLeft <= 7 ? 'status-critical' : (daysLeft <= 30 ? 'status-warning' : 'status-ok');
-				const statusText = daysLeft <= 0 ? 'ÖDENMEDİ' : (daysLeft <= 7 ? 'ACİL' : (daysLeft <= 30 ? 'YAKLAŞAN' : 'AKTİF'));
 				const currencySymbol = this.getCurrencySymbol(hosting.currency);
-				const serverIcon = hosting.serverType === 'own' ? '🏠' : '🌐';
+				const serverTypeText = hosting.serverType === 'own' ? 'Kendi Sunucum' : 'Harici Sunucu';
 				const intervalText = this.getIntervalText(hosting.renewalInterval);
 
 				html += `
 				<div class="list-item ${statusClass}" data-hosting-id="${hosting.id}" style="cursor: pointer;">
-					<div class="list-item__avatar">${serverIcon}</div>
+					<div class="list-item__avatar">
+						<div class="avatar-placeholder">${(hosting.provider || 'H').charAt(0).toUpperCase()}</div>
+					</div>
 					<div class="list-item__content">
 						<div class="list-item__title">${this.escapeHtml(hosting.provider)} ${hosting.plan ? '- ' + this.escapeHtml(hosting.plan) : ''}</div>
 						<div class="list-item__meta">
-							<span>👤 ${client ? this.escapeHtml(client.name) : 'Atanmamış'}</span>
-							${hosting.serverIp ? `<span>🖥️ ${this.escapeHtml(hosting.serverIp)}</span>` : ''}
-							<span>📅 Ödeme: ${hosting.expirationDate || 'Belirtilmemiş'}</span>
+							<span>${client ? this.escapeHtml(client.name) : 'Atanmamış'}</span>
+							${hosting.serverIp ? `<span>${this.escapeHtml(hosting.serverIp)}</span>` : ''}
+							<span>Ödeme: ${hosting.expirationDate || 'Belirtilmemiş'}</span>
 						</div>
 					</div>
 					<div class="list-item__stats">
@@ -1552,7 +1563,6 @@
 						</div>
 					</div>
 					<div class="list-item__actions">
-						<button class="btn-extend pay-hosting-btn" data-id="${hosting.id}" title="Ödeme Ekle">💳</button>
 						<button class="icon-edit edit-hosting-btn" data-id="${hosting.id}" title="Düzenle"></button>
 						<button class="icon-delete delete-hosting-btn" data-id="${hosting.id}" title="Sil"></button>
 					</div>
@@ -1598,6 +1608,29 @@
 		getIntervalText: function (interval) {
 			const texts = { monthly: 'ay', quarterly: '3ay', yearly: 'yıl', biennial: '2yıl' };
 			return texts[interval] || 'ay';
+		},
+
+		filterHostings: function (searchTerm) {
+			if (!searchTerm || searchTerm.trim() === '') {
+				this.renderHostings();
+				return;
+			}
+
+			const term = searchTerm.toLowerCase().trim();
+			const filtered = this.hostings.filter(hosting => {
+				const client = (this.clients || []).find(c => c.id == hosting.clientId);
+				const clientName = client ? client.name.toLowerCase() : '';
+				const provider = (hosting.provider || '').toLowerCase();
+				const plan = (hosting.plan || '').toLowerCase();
+				const serverIp = (hosting.serverIp || '').toLowerCase();
+				
+				return provider.includes(term) || 
+					   plan.includes(term) || 
+					   clientName.includes(term) || 
+					   serverIp.includes(term);
+			});
+
+			this.renderHostings(filtered);
 		},
 
 		renderWebsites: function () {
@@ -2668,7 +2701,7 @@
 
 		loadHostingPackages: function () {
 			console.log('DomainControl: Loading hosting packages...');
-			fetch(this.apiBase + '/hosting-packages/active', {
+			fetch(this.apiBase + '/hosting-packages', {
 				headers: {
 					'requesttoken': OC.requestToken
 				}
@@ -2709,36 +2742,82 @@
 				return;
 			}
 
-			container.innerHTML = this.hostingPackages.map(pkg => {
-				const price = pkg.priceYearly || pkg.priceMonthly || 0;
-				const priceText = pkg.priceYearly ? `${price} ${pkg.currency}/Yıl` : `${price} ${pkg.currency}/Ay`;
-				return `
-					<div class="domaincontrol-item" data-id="${pkg.id}">
-						<div class="item-header">
-							<div class="item-title">
-								<h4>${pkg.name}</h4>
-								<span class="item-subtitle">${pkg.provider}</span>
+			const specsList = (pkg) => {
+				const specs = [];
+				if (pkg.diskSpaceGb) specs.push(`Disk: ${pkg.diskSpaceGb} GB`);
+				if (pkg.bandwidthUnlimited) specs.push('Trafik: Sınırsız');
+				else if (pkg.trafficGb) specs.push(`Trafik: ${pkg.trafficGb} GB`);
+				if (pkg.domainsAllowed) specs.push(`Domain: ${pkg.domainsAllowed}`);
+				if (pkg.databasesAllowed) specs.push(`Veritabanı: ${pkg.databasesAllowed}`);
+				if (pkg.sslIncluded) specs.push('SSL: Dahil');
+				if (pkg.backupIncluded) specs.push('Yedekleme: Dahil');
+				return specs.join(', ');
+			};
+
+			const price = (pkg) => {
+				const priceValue = pkg.priceYearly || pkg.priceMonthly || 0;
+				const pricePeriod = pkg.priceYearly ? 'Yıl' : 'Ay';
+				const currencySymbol = this.getCurrencySymbol(pkg.currency);
+				return `${currencySymbol}${parseFloat(priceValue).toFixed(2)}/${pricePeriod}`;
+			};
+
+			let html = '<table class="hosting-packages-table">';
+			html += '<thead><tr>';
+			html += '<th>Paket Adı</th>';
+			html += '<th>Fiyat</th>';
+			html += '<th>Özellikler</th>';
+			html += '<th>Durum</th>';
+			html += '<th style="text-align: right;">İşlemler</th>';
+			html += '</tr></thead>';
+			html += '<tbody>';
+
+			this.hostingPackages.forEach(pkg => {
+				html += `
+					<tr data-id="${pkg.id}">
+						<td>
+							<div class="hosting-packages-table__name">${this.escapeHtml(pkg.name)}</div>
+							<div class="hosting-packages-table__provider">${this.escapeHtml(pkg.provider)}</div>
+						</td>
+						<td>
+							<div class="hosting-packages-table__price">${price(pkg)}</div>
+						</td>
+						<td>
+							<div class="hosting-packages-table__specs">${this.escapeHtml(specsList(pkg))}</div>
+						</td>
+						<td>
+							<span class="hosting-packages-table__status ${pkg.isActive ? 'active' : 'inactive'}">
+								${pkg.isActive ? 'Aktif' : 'Pasif'}
+							</span>
+						</td>
+						<td>
+							<div class="hosting-packages-table__actions">
+								<button class="btn-edit-package" data-package-id="${pkg.id}" title="Düzenle">Düzenle</button>
+								<button class="btn-danger btn-delete-package" data-package-id="${pkg.id}" title="Sil">Sil</button>
 							</div>
-							<div class="item-actions">
-								<button class="btn-icon" onclick="DomainControl.showHostingPackageModal(${pkg.id})" title="Düzenle">✏️</button>
-								<button class="btn-icon" onclick="DomainControl.deleteHostingPackage(${pkg.id})" title="Sil">🗑️</button>
-							</div>
-						</div>
-						<div class="item-content">
-							<div class="item-info">
-								<span>💰 ${priceText}</span>
-								${pkg.diskSpaceGb ? `<span>💾 ${pkg.diskSpaceGb} GB</span>` : ''}
-								${pkg.bandwidthUnlimited ? '<span>🌐 Sınırsız Trafik</span>' : (pkg.trafficGb ? `<span>📊 ${pkg.trafficGb} GB Trafik</span>` : '')}
-								${pkg.domainsAllowed ? `<span>🌍 ${pkg.domainsAllowed} Domain</span>` : ''}
-								${pkg.sslIncluded ? '<span>🔒 SSL Dahil</span>' : ''}
-								${pkg.backupIncluded ? '<span>💾 Yedekleme Dahil</span>' : ''}
-							</div>
-							${pkg.description ? `<p class="item-description">${pkg.description}</p>` : ''}
-							<span class="item-status ${pkg.isActive ? 'active' : 'inactive'}">${pkg.isActive ? 'Aktif' : 'Pasif'}</span>
-						</div>
-					</div>
+						</td>
+					</tr>
 				`;
-			}).join('');
+			});
+
+			html += '</tbody></table>';
+			container.innerHTML = html;
+
+			// Attach event listeners for edit and delete buttons
+			container.querySelectorAll('.btn-edit-package').forEach(btn => {
+				btn.addEventListener('click', (e) => {
+					e.stopPropagation();
+					const id = parseInt(btn.getAttribute('data-package-id'));
+					this.showHostingPackageModal(id);
+				});
+			});
+
+			container.querySelectorAll('.btn-delete-package').forEach(btn => {
+				btn.addEventListener('click', (e) => {
+					e.stopPropagation();
+					const id = parseInt(btn.getAttribute('data-package-id'));
+					this.deleteHostingPackage(id);
+				});
+			});
 		},
 
 		showHostingPackageModal: function (id = null) {
