@@ -16,15 +16,23 @@
 						</select>
 					</div>
 					<div class="form-group">
-						<label for="hosting-provider">Sağlayıcı *</label>
-						<input type="text" id="hosting-provider" name="provider" required class="form-control" placeholder="Vultr, Hetzner, DigitalOcean...">
+						<label for="hosting-package-id">Hosting Paketi</label>
+						<select id="hosting-package-id" name="packageId" class="form-control">
+							<option value="">Paket Seçin (Opsiyonel)</option>
+						</select>
+						<small class="form-text">Paket seçerseniz bilgiler otomatik doldurulur</small>
 					</div>
 				</div>
 				<div class="form-row">
 					<div class="form-group">
+						<label for="hosting-provider">Sağlayıcı *</label>
+						<input type="text" id="hosting-provider" name="provider" required class="form-control" placeholder="Vultr, Hetzner, DigitalOcean...">
+					</div>
+					<div class="form-group">
 						<label for="hosting-plan">Paket</label>
 						<input type="text" id="hosting-plan" name="plan" class="form-control" placeholder="VPS 4GB, Shared Pro...">
 					</div>
+				</div>
 					<div class="form-group">
 						<label for="hosting-server-type">Sunucu Tipi</label>
 						<select id="hosting-server-type" name="serverType" class="form-control">

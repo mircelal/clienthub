@@ -24,7 +24,15 @@ return [
 		['name' => 'domain#delete', 'url' => '/api/domains/{id}', 'verb' => 'DELETE'],
 		['name' => 'domain#byClient', 'url' => '/api/clients/{clientId}/domains', 'verb' => 'GET'],
 
-		// Hosting routes
+		// Hosting Package routes (Templates)
+		['name' => 'hosting_package#index', 'url' => '/api/hosting-packages', 'verb' => 'GET'],
+		['name' => 'hosting_package#active', 'url' => '/api/hosting-packages/active', 'verb' => 'GET'],
+		['name' => 'hosting_package#show', 'url' => '/api/hosting-packages/{id}', 'verb' => 'GET'],
+		['name' => 'hosting_package#create', 'url' => '/api/hosting-packages', 'verb' => 'POST'],
+		['name' => 'hosting_package#update', 'url' => '/api/hosting-packages/{id}', 'verb' => 'PUT'],
+		['name' => 'hosting_package#delete', 'url' => '/api/hosting-packages/{id}', 'verb' => 'DELETE'],
+
+		// Hosting routes (Client Instances)
 		['name' => 'hosting#index', 'url' => '/api/hostings', 'verb' => 'GET'],
 		['name' => 'hosting#show', 'url' => '/api/hostings/{id}', 'verb' => 'GET'],
 		['name' => 'hosting#create', 'url' => '/api/hostings', 'verb' => 'POST'],

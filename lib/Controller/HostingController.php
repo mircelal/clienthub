@@ -76,6 +76,7 @@ class HostingController extends Controller {
 			
 			$hosting = new Hosting();
 			$hosting->setClientId((int)($data['clientId'] ?? 0));
+			$hosting->setPackageId(isset($data['packageId']) && $data['packageId'] !== '' ? (int)$data['packageId'] : null);
 			$hosting->setProvider($provider);
 			$hosting->setPlan($data['plan'] ?? '');
 			$hosting->setServerType($data['serverType'] ?? 'external');
@@ -113,6 +114,7 @@ class HostingController extends Controller {
 			parse_str($body, $data);
 			
 			if (isset($data['clientId'])) $hosting->setClientId((int)$data['clientId']);
+			if (isset($data['packageId'])) $hosting->setPackageId($data['packageId'] !== '' ? (int)$data['packageId'] : null);
 			if (isset($data['provider']) && $data['provider'] !== '') $hosting->setProvider($data['provider']);
 			if (isset($data['plan'])) $hosting->setPlan($data['plan']);
 			if (isset($data['serverType'])) $hosting->setServerType($data['serverType']);

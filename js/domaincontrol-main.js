@@ -17,6 +17,7 @@
 		clients: [],
 		domains: [],
 		hostings: [],
+		hostingPackages: [],
 		websites: [],
 		serviceTypes: [],
 		services: [],
@@ -80,6 +81,9 @@
 			document.getElementById('add-domain-btn')?.addEventListener('click', () => this.showDomainModal());
 			document.getElementById('test-email-btn')?.addEventListener('click', () => this.testEmailReminders());
 			document.getElementById('add-hosting-btn')?.addEventListener('click', () => this.showHostingModal());
+			document.getElementById('manage-hosting-packages-btn')?.addEventListener('click', () => this.showHostingPackagesView());
+			document.getElementById('back-to-hostings-list-btn')?.addEventListener('click', () => this.showHostingsListView());
+			document.getElementById('add-hosting-package-btn')?.addEventListener('click', () => this.showHostingPackageModal());
 			document.getElementById('add-website-btn')?.addEventListener('click', () => this.showWebsiteModal());
 			document.getElementById('add-service-btn')?.addEventListener('click', () => this.showServiceModal());
 			document.getElementById('add-invoice-btn')?.addEventListener('click', () => this.showInvoiceModal());
@@ -438,6 +442,7 @@
 			this.loadClients();
 			this.loadDomains();
 			this.loadHostings();
+			this.loadHostingPackages();
 			this.loadWebsites();
 			this.loadServiceTypes();
 			this.loadServices();
@@ -461,6 +466,7 @@
 					break;
 				case 'hostings':
 					this.loadHostings();
+					this.loadHostingPackages();
 					break;
 				case 'websites':
 					this.loadWebsites();
@@ -2050,6 +2056,12 @@
 				this.saveHosting();
 			});
 
+			// Hosting Package form
+			document.getElementById('hosting-package-form')?.addEventListener('submit', (e) => {
+				e.preventDefault();
+				this.saveHostingPackage();
+			});
+
 			// Website form
 			document.getElementById('website-form').addEventListener('submit', (e) => {
 				e.preventDefault();
@@ -2530,6 +2542,7 @@
 			form.reset();
 			document.getElementById('hosting-id').value = '';
 			this.updateClientSelects();
+			this.updateHostingPackageSelect();
 
 			if (id) {
 				title.textContent = 'Hosting Düzenle';
@@ -2537,6 +2550,7 @@
 				if (hosting) {
 					document.getElementById('hosting-id').value = hosting.id;
 					document.getElementById('hosting-client-id').value = hosting.clientId || '';
+					document.getElementById('hosting-package-id').value = hosting.packageId || '';
 					document.getElementById('hosting-provider').value = hosting.provider || '';
 					document.getElementById('hosting-plan').value = hosting.plan || '';
 					document.getElementById('hosting-server-type').value = hosting.serverType || 'external';
@@ -2624,6 +2638,219 @@
 				option.textContent = hosting.provider + (hosting.plan ? ' - ' + hosting.plan : '');
 				select.appendChild(option);
 			});
+		},
+
+		updateHostingPackageSelect: function () {
+			const select = document.getElementById('hosting-package-id');
+			if (!select) return;
+			select.innerHTML = '<option value="">Paket Seçin (Opsiyonel)</option>';
+			this.hostingPackages.filter(pkg => pkg.isActive).forEach(pkg => {
+				const option = document.createElement('option');
+				option.value = pkg.id;
+				option.textContent = pkg.name + ' - ' + pkg.provider;
+				select.appendChild(option);
+			});
+			
+			// Paket seçildiğinde bilgileri otomatik doldur
+			select.addEventListener('change', (e) => {
+				const packageId = e.target.value;
+				if (packageId) {
+					const pkg = this.hostingPackages.find(p => p.id == packageId);
+					if (pkg) {
+						document.getElementById('hosting-provider').value = pkg.provider || '';
+						document.getElementById('hosting-plan').value = pkg.name || '';
+						document.getElementById('hosting-price').value = pkg.priceYearly || pkg.priceMonthly || '';
+						document.getElementById('hosting-currency').value = pkg.currency || 'USD';
+					}
+				}
+			});
+		},
+
+		loadHostingPackages: function () {
+			console.log('DomainControl: Loading hosting packages...');
+			fetch(this.apiBase + '/hosting-packages/active', {
+				headers: {
+					'requesttoken': OC.requestToken
+				}
+			})
+				.then(response => response.json())
+				.then(data => {
+					if (data.error) {
+						throw new Error(data.error);
+					}
+					this.hostingPackages = Array.isArray(data) ? data : [];
+					if (this.currentTab === 'hostings') {
+						this.updateHostingPackageSelect();
+					}
+				})
+				.catch(error => {
+					console.error('Error loading hosting packages:', error);
+					this.hostingPackages = [];
+				});
+		},
+
+		showHostingPackagesView: function () {
+			document.getElementById('hostings-list-view').style.display = 'none';
+			document.getElementById('hosting-packages-view').style.display = 'block';
+			this.renderHostingPackages();
+		},
+
+		showHostingsListView: function () {
+			document.getElementById('hosting-packages-view').style.display = 'none';
+			document.getElementById('hostings-list-view').style.display = 'block';
+		},
+
+		renderHostingPackages: function () {
+			const container = document.getElementById('hosting-packages-list');
+			if (!container) return;
+
+			if (this.hostingPackages.length === 0) {
+				container.innerHTML = '<div class="empty-state"><p>Henüz hosting paketi eklenmemiş.</p></div>';
+				return;
+			}
+
+			container.innerHTML = this.hostingPackages.map(pkg => {
+				const price = pkg.priceYearly || pkg.priceMonthly || 0;
+				const priceText = pkg.priceYearly ? `${price} ${pkg.currency}/Yıl` : `${price} ${pkg.currency}/Ay`;
+				return `
+					<div class="domaincontrol-item" data-id="${pkg.id}">
+						<div class="item-header">
+							<div class="item-title">
+								<h4>${pkg.name}</h4>
+								<span class="item-subtitle">${pkg.provider}</span>
+							</div>
+							<div class="item-actions">
+								<button class="btn-icon" onclick="DomainControl.showHostingPackageModal(${pkg.id})" title="Düzenle">✏️</button>
+								<button class="btn-icon" onclick="DomainControl.deleteHostingPackage(${pkg.id})" title="Sil">🗑️</button>
+							</div>
+						</div>
+						<div class="item-content">
+							<div class="item-info">
+								<span>💰 ${priceText}</span>
+								${pkg.diskSpaceGb ? `<span>💾 ${pkg.diskSpaceGb} GB</span>` : ''}
+								${pkg.bandwidthUnlimited ? '<span>🌐 Sınırsız Trafik</span>' : (pkg.trafficGb ? `<span>📊 ${pkg.trafficGb} GB Trafik</span>` : '')}
+								${pkg.domainsAllowed ? `<span>🌍 ${pkg.domainsAllowed} Domain</span>` : ''}
+								${pkg.sslIncluded ? '<span>🔒 SSL Dahil</span>' : ''}
+								${pkg.backupIncluded ? '<span>💾 Yedekleme Dahil</span>' : ''}
+							</div>
+							${pkg.description ? `<p class="item-description">${pkg.description}</p>` : ''}
+							<span class="item-status ${pkg.isActive ? 'active' : 'inactive'}">${pkg.isActive ? 'Aktif' : 'Pasif'}</span>
+						</div>
+					</div>
+				`;
+			}).join('');
+		},
+
+		showHostingPackageModal: function (id = null) {
+			const modal = document.getElementById('hosting-package-modal');
+			const form = document.getElementById('hosting-package-form');
+			const title = document.getElementById('hosting-package-modal-title');
+
+			form.reset();
+			document.getElementById('hosting-package-id').value = '';
+
+			if (id) {
+				title.textContent = 'Hosting Paketi Düzenle';
+				const pkg = this.hostingPackages.find(p => p.id == id);
+				if (pkg) {
+					document.getElementById('hosting-package-id').value = pkg.id;
+					document.getElementById('hpkg-name').value = pkg.name || '';
+					document.getElementById('hpkg-provider').value = pkg.provider || '';
+					document.getElementById('hpkg-price-monthly').value = pkg.priceMonthly || '';
+					document.getElementById('hpkg-price-yearly').value = pkg.priceYearly || '';
+					document.getElementById('hpkg-currency').value = pkg.currency || 'USD';
+					document.getElementById('hpkg-disk-space').value = pkg.diskSpaceGb || '';
+					document.getElementById('hpkg-traffic').value = pkg.trafficGb || '';
+					document.getElementById('hpkg-bandwidth-unlimited').value = pkg.bandwidthUnlimited ? '1' : '0';
+					document.getElementById('hpkg-domains-allowed').value = pkg.domainsAllowed || 1;
+					document.getElementById('hpkg-databases-allowed').value = pkg.databasesAllowed || 0;
+					document.getElementById('hpkg-email-accounts').value = pkg.emailAccounts || 0;
+					document.getElementById('hpkg-ftp-accounts').value = pkg.ftpAccounts || 0;
+					document.getElementById('hpkg-ssl-included').value = pkg.sslIncluded ? '1' : '0';
+					document.getElementById('hpkg-backup-included').value = pkg.backupIncluded ? '1' : '0';
+					document.getElementById('hpkg-description').value = pkg.description || '';
+					document.getElementById('hpkg-is-active').value = pkg.isActive ? '1' : '0';
+				}
+			} else {
+				title.textContent = 'Hosting Paketi Ekle';
+			}
+
+			modal.style.display = 'block';
+		},
+
+		saveHostingPackage: function () {
+			const form = document.getElementById('hosting-package-form');
+			const formData = new FormData(form);
+			const id = formData.get('id');
+			
+			const data = {
+				name: formData.get('name'),
+				provider: formData.get('provider'),
+				priceMonthly: parseFloat(formData.get('priceMonthly') || 0),
+				priceYearly: parseFloat(formData.get('priceYearly') || 0),
+				currency: formData.get('currency') || 'USD',
+				diskSpaceGb: parseInt(formData.get('diskSpaceGb') || 0),
+				trafficGb: parseInt(formData.get('trafficGb') || 0),
+				bandwidthUnlimited: formData.get('bandwidthUnlimited') === '1',
+				domainsAllowed: parseInt(formData.get('domainsAllowed') || 1),
+				databasesAllowed: parseInt(formData.get('databasesAllowed') || 0),
+				emailAccounts: parseInt(formData.get('emailAccounts') || 0),
+				ftpAccounts: parseInt(formData.get('ftpAccounts') || 0),
+				sslIncluded: formData.get('sslIncluded') === '1',
+				backupIncluded: formData.get('backupIncluded') === '1',
+				description: formData.get('description') || '',
+				isActive: formData.get('isActive') === '1'
+			};
+
+			const url = id ? `${this.apiBase}/hosting-packages/${id}` : `${this.apiBase}/hosting-packages`;
+			const method = id ? 'PUT' : 'POST';
+
+			fetch(url, {
+				method: method,
+				headers: {
+					'requesttoken': OC.requestToken,
+					'Content-Type': 'application/x-www-form-urlencoded'
+				},
+				body: new URLSearchParams(data).toString()
+			})
+				.then(response => response.json())
+				.then(result => {
+					if (result.error) {
+						throw new Error(result.error);
+					}
+					this.showSuccess(id ? 'Paket güncellendi' : 'Paket eklendi');
+					this.closeModal('hosting-package-modal');
+					this.loadHostingPackages();
+					this.renderHostingPackages();
+				})
+				.catch(error => {
+					this.showError('Paket kaydedilemedi: ' + error.message);
+				});
+		},
+
+		deleteHostingPackage: function (id) {
+			if (!confirm('Bu paketi silmek istediğinizden emin misiniz?')) {
+				return;
+			}
+
+			fetch(`${this.apiBase}/hosting-packages/${id}`, {
+				method: 'DELETE',
+				headers: {
+					'requesttoken': OC.requestToken
+				}
+			})
+				.then(response => response.json())
+				.then(result => {
+					if (result.error) {
+						throw new Error(result.error);
+					}
+					this.showSuccess('Paket silindi');
+					this.loadHostingPackages();
+					this.renderHostingPackages();
+				})
+				.catch(error => {
+					this.showError('Paket silinemedi: ' + error.message);
+				});
 		},
 
 		closeModal: function (modalId) {
@@ -2745,6 +2972,7 @@
 		saveHosting: function () {
 			const id = document.getElementById('hosting-id').value;
 			const clientId = document.getElementById('hosting-client-id').value;
+			const packageId = document.getElementById('hosting-package-id').value;
 			const provider = document.getElementById('hosting-provider').value;
 			const plan = document.getElementById('hosting-plan').value;
 			const serverType = document.getElementById('hosting-server-type').value;
@@ -2758,13 +2986,14 @@
 			const panelNotes = document.getElementById('hosting-panel-notes').value;
 			const notes = document.getElementById('hosting-notes').value;
 
-			console.log('saveHosting:', { id, clientId, provider, serverType });
+			console.log('saveHosting:', { id, clientId, packageId, provider, serverType });
 
 			const url = id ? `${this.apiBase}/hostings/${id}` : `${this.apiBase}/hostings`;
 			const method = id ? 'PUT' : 'POST';
 
 			const params = new URLSearchParams();
 			params.append('clientId', clientId);
+			if (packageId) params.append('packageId', packageId);
 			params.append('provider', provider);
 			params.append('plan', plan);
 			params.append('serverType', serverType);

@@ -3,11 +3,25 @@
 	<!-- Hosting List View -->
 	<div id="hostings-list-view">
 		<div class="domaincontrol-actions">
+			<button class="btn btn-secondary" id="manage-hosting-packages-btn">
+				<span class="icon-settings"></span> Paketleri Yönet
+			</button>
 			<button class="btn btn-primary" id="add-hosting-btn">
 				<span class="icon-add"></span> Hosting Ekle
 			</button>
 		</div>
 		<div id="hostings-list" class="domaincontrol-list"></div>
+	</div>
+	
+	<!-- Hosting Packages View -->
+	<div id="hosting-packages-view" style="display: none;">
+		<div class="domaincontrol-actions">
+			<button class="btn btn-back" id="back-to-hostings-list-btn">← Geri</button>
+			<button class="btn btn-primary" id="add-hosting-package-btn">
+				<span class="icon-add"></span> Paket Ekle
+			</button>
+		</div>
+		<div id="hosting-packages-list" class="domaincontrol-list"></div>
 	</div>
 	
 	<!-- Hosting Detail View -->

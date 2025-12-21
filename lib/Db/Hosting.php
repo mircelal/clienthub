@@ -48,9 +48,12 @@ use OCP\AppFramework\Db\Entity;
  * @method void setCreatedAt(string $createdAt)
  * @method string getUpdatedAt()
  * @method void setUpdatedAt(string $updatedAt)
+ * @method int|null getPackageId()
+ * @method void setPackageId(?int $packageId)
  */
 class Hosting extends Entity implements \JsonSerializable {
 	protected $clientId;
+	protected $packageId;
 	protected $provider;
 	protected $plan;
 	protected $serverType;
@@ -94,6 +97,7 @@ class Hosting extends Entity implements \JsonSerializable {
 		$this->addType('userId', 'string');
 		$this->addType('createdAt', 'string');
 		$this->addType('updatedAt', 'string');
+		$this->addType('packageId', 'integer');
 	}
 
 	public function jsonSerialize(): array {
@@ -118,6 +122,7 @@ class Hosting extends Entity implements \JsonSerializable {
 			'panelNotes' => $this->panelNotes,
 			'paymentHistory' => $this->paymentHistory,
 			'userId' => $this->userId,
+			'packageId' => $this->packageId,
 			'createdAt' => $this->createdAt,
 			'updatedAt' => $this->updatedAt,
 		];
