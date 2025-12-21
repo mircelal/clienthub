@@ -1359,7 +1359,10 @@
 			} else {
 				let websitesHtml = '';
 				hostingWebsites.forEach(w => {
-					websitesHtml += `<div class="mini-item"><span>${this.escapeHtml(w.name || w.software || 'N/A')}</span></div>`;
+					websitesHtml += `<div class="mini-item" style="display: flex; justify-content: space-between; align-items: center;">
+						<span>${this.escapeHtml(w.name || w.software || 'N/A')}</span>
+						<button class="icon-delete" onclick="DomainControl.unlinkWebsiteFromHosting(${w.id})" title="Bağlantıyı Kaldır" style="padding: 4px 8px; font-size: 12px; border: none; background: transparent; cursor: pointer;"></button>
+					</div>`;
 				});
 				websitesListEl.innerHTML = websitesHtml;
 			}
@@ -1369,7 +1372,7 @@
 
 			this.currentHostingId = hosting.id;
 
-			// Attach event listener for domain link button (after detail view is shown)
+			// Attach event listeners for link buttons (after detail view is shown)
 			const addDomainBtn = document.getElementById('add-domain-to-hosting-btn');
 			if (addDomainBtn) {
 				// Remove existing listeners by cloning
@@ -1379,6 +1382,18 @@
 				newBtn.addEventListener('click', (e) => {
 					e.preventDefault();
 					this.showHostingDomainLinkModal();
+				});
+			}
+
+			const addWebsiteBtn = document.getElementById('add-website-to-hosting-btn');
+			if (addWebsiteBtn) {
+				// Remove existing listeners by cloning
+				const newBtn = addWebsiteBtn.cloneNode(true);
+				addWebsiteBtn.parentNode.replaceChild(newBtn, addWebsiteBtn);
+				// Add new listener
+				newBtn.addEventListener('click', (e) => {
+					e.preventDefault();
+					this.showHostingWebsiteLinkModal();
 				});
 			}
 		},
@@ -2114,6 +2129,12 @@
 			document.getElementById('hosting-domain-link-form')?.addEventListener('submit', (e) => {
 				e.preventDefault();
 				this.linkDomainToHosting();
+			});
+
+			// Hosting Website Link form
+			document.getElementById('hosting-website-link-form')?.addEventListener('submit', (e) => {
+				e.preventDefault();
+				this.linkWebsiteToHosting();
 			});
 
 			// Website form
@@ -2956,6 +2977,124 @@
 				.catch(error => {
 					console.error('Error unlinking domain from hosting:', error);
 					this.showError('Domain ayrılırken hata oluştu: ' + error.message);
+				});
+		},
+
+		showHostingWebsiteLinkModal: function () {
+			console.log('showHostingWebsiteLinkModal called, currentHostingId:', this.currentHostingId);
+			if (!this.currentHostingId) {
+				console.error('No currentHostingId set');
+				this.showError('Hosting hesabı seçilmedi');
+				return;
+			}
+
+			const modal = document.getElementById('hosting-website-link-modal');
+			if (!modal) {
+				console.error('Modal element not found');
+				return;
+			}
+			const form = document.getElementById('hosting-website-link-form');
+			if (!form) {
+				console.error('Form element not found');
+				return;
+			}
+			const websiteSelect = document.getElementById('hwl-website-id');
+			if (!websiteSelect) {
+				console.error('Website select element not found');
+				return;
+			}
+			
+			form.reset();
+			document.getElementById('hwl-hosting-id').value = this.currentHostingId;
+
+			// Populate website select with websites not already linked to this hosting
+			const availableWebsites = (this.websites || []).filter(w => !w.hostingId || w.hostingId != this.currentHostingId);
+			websiteSelect.innerHTML = '<option value="">Site Seçin</option>';
+			availableWebsites.forEach(website => {
+				const option = document.createElement('option');
+				option.value = website.id;
+				option.textContent = website.name || website.software || 'N/A';
+				websiteSelect.appendChild(option);
+			});
+
+			modal.style.display = 'block';
+		},
+
+		linkWebsiteToHosting: function () {
+			const hostingId = parseInt(document.getElementById('hwl-hosting-id').value);
+			const websiteId = parseInt(document.getElementById('hwl-website-id').value);
+
+			if (!hostingId || !websiteId) {
+				this.showError('Lütfen bir site seçin');
+				return;
+			}
+
+			const website = this.websites.find(w => w.id == websiteId);
+			if (!website) {
+				this.showError('Site bulunamadı');
+				return;
+			}
+
+			// Update website with hostingId
+			const formData = new URLSearchParams();
+			formData.append('hostingId', hostingId);
+
+			fetch(this.apiBase + '/websites/' + websiteId, {
+				method: 'PUT',
+				headers: {
+					'requesttoken': OC.requestToken,
+					'Content-Type': 'application/x-www-form-urlencoded'
+				},
+				body: formData.toString()
+			})
+				.then(response => response.json())
+				.then(data => {
+					if (data.error) {
+						throw new Error(data.error);
+					}
+					this.showSuccess('Site hosting hesabına bağlandı');
+					this.loadData();
+					document.getElementById('hosting-website-link-modal').style.display = 'none';
+					if (this.currentHostingId) {
+						this.showHostingDetail(this.currentHostingId);
+					}
+				})
+				.catch(error => {
+					console.error('Error linking website to hosting:', error);
+					this.showError('Site bağlanırken hata oluştu: ' + error.message);
+				});
+		},
+
+		unlinkWebsiteFromHosting: function (websiteId) {
+			if (!confirm('Bu siteyi hosting hesabından ayırmak istediğinize emin misiniz?')) {
+				return;
+			}
+
+			const formData = new URLSearchParams();
+			formData.append('hostingId', '');
+
+			fetch(this.apiBase + '/websites/' + websiteId, {
+				method: 'PUT',
+				headers: {
+					'requesttoken': OC.requestToken,
+					'Content-Type': 'application/x-www-form-urlencoded'
+				},
+				body: formData.toString()
+			})
+				.then(response => response.json())
+				.then(data => {
+					if (data.error) {
+						throw new Error(data.error);
+					}
+					this.showSuccess('Site hosting hesabından ayrıldı');
+					this.loadData();
+					if (this.currentHostingId) {
+						this.showHostingDetail(this.currentHostingId);
+					}
+				})
+				.catch(error => {
+					console.error('Error unlinking website from hosting:', error);
+					this.showError('Site ayrılırken hata oluştu: ' + error.message);
 				});
 		},
 

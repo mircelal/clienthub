@@ -124,7 +124,9 @@ class WebsiteController extends Controller {
 			
 			if (isset($data['clientId'])) $website->setClientId((int)$data['clientId']);
 			if (isset($data['domainId'])) $website->setDomainId((int)$data['domainId']);
-			if (isset($data['hostingId'])) $website->setHostingId((int)$data['hostingId']);
+			if (isset($data['hostingId'])) {
+				$website->setHostingId($data['hostingId'] === '' || $data['hostingId'] === null ? 0 : (int)$data['hostingId']);
+			}
 			if (isset($data['name']) && $data['name'] !== '') $website->setName($data['name']);
 			if (isset($data['software'])) $website->setSoftware($data['software']);
 			if (isset($data['version'])) $website->setVersion($data['version']);

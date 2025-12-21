@@ -95,7 +95,10 @@
 					<div id="hosting-domains-list" class="mini-list"></div>
 				</div>
 				<div class="detail-info-card">
-					<h3>Bağlı Websiteler</h3>
+					<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+						<h3 style="margin: 0;">Bağlı Websiteler</h3>
+						<button id="add-website-to-hosting-btn" class="btn btn-primary" style="padding: 6px 12px; font-size: 13px;">Site Bağla</button>
+					</div>
 					<div id="hosting-websites-list" class="mini-list"></div>
 				</div>
 			</div>
