@@ -88,6 +88,20 @@
 			document.getElementById('add-transaction-btn')?.addEventListener('click', () => this.showTransactionModal());
 			document.getElementById('add-debt-btn')?.addEventListener('click', () => this.showDebtModal());
 			document.getElementById('save-settings-btn')?.addEventListener('click', () => this.saveSettings());
+			
+			// Client search input
+			const clientSearchInput = document.getElementById('client-search-input');
+			if (clientSearchInput) {
+				clientSearchInput.addEventListener('input', (e) => {
+					this.filterClients(e.target.value);
+				});
+				clientSearchInput.addEventListener('keydown', (e) => {
+					if (e.key === 'Escape') {
+						e.target.value = '';
+						this.filterClients('');
+					}
+				});
+			}
 
 			// Quick add buttons with tab switching
 			document.getElementById('quick-add-client')?.addEventListener('click', () => {
@@ -675,16 +689,17 @@
 			});
 		},
 
-		renderClients: function () {
+		renderClients: function (filteredClients = null) {
 			const container = document.getElementById('clients-list');
+			const clientsToRender = filteredClients !== null ? filteredClients : this.clients;
 
-			if (!this.clients || this.clients.length === 0) {
-				container.innerHTML = '<p class="empty-state">No clients found. Add your first client to get started.</p>';
+			if (!clientsToRender || clientsToRender.length === 0) {
+				container.innerHTML = '<p class="empty-state">Müşteri bulunamadı. İlk müşterinizi ekleyin.</p>';
 				return;
 			}
 
 			let html = '';
-			this.clients.forEach(client => {
+			clientsToRender.forEach(client => {
 				// Get client initials for avatar
 				const initials = client.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
 
@@ -752,6 +767,28 @@
 					this.deleteClient(id);
 				});
 			});
+		},
+
+		filterClients: function (searchTerm) {
+			if (!searchTerm || searchTerm.trim() === '') {
+				this.renderClients();
+				return;
+			}
+
+			const term = searchTerm.toLowerCase().trim();
+			const filtered = this.clients.filter(client => {
+				const name = (client.name || '').toLowerCase();
+				const email = (client.email || '').toLowerCase();
+				const phone = (client.phone || '').toLowerCase();
+				const notes = (client.notes || '').toLowerCase();
+				
+				return name.includes(term) || 
+				       email.includes(term) || 
+				       phone.includes(term) || 
+				       notes.includes(term);
+			});
+
+			this.renderClients(filtered);
 		},
 
 		renderDomains: function () {

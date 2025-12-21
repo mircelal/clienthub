@@ -6,6 +6,10 @@
 			<button class="btn btn-primary" id="add-client-btn">
 				<span class="icon-add"></span> Müşteri Ekle
 			</button>
+			<div class="client-search-wrapper">
+				<input type="text" id="client-search-input" class="client-search-input" placeholder="Müşteri ara..." />
+				<span class="client-search-icon">🔍</span>
+			</div>
 		</div>
 		<div id="clients-list" class="domaincontrol-list"></div>
 	</div>
