@@ -1042,6 +1042,30 @@
 			document.getElementById('domain-detail-registrar').textContent = domain.registrar || '-';
 			document.getElementById('domain-detail-registration').textContent = domain.registrationDate || '-';
 			document.getElementById('domain-detail-interval').textContent = (domain.renewalInterval || '1') + ' Yıl';
+			
+			// Bağlı hosting
+			const hosting = (this.hostings || []).find(h => h.id == domain.hostingId);
+			const hostingEl = document.getElementById('domain-detail-hosting');
+			if (hosting) {
+				hostingEl.innerHTML = `<a href="#" onclick="DomainControl.switchTab('hostings'); setTimeout(() => DomainControl.showHostingDetail(${hosting.id}), 100); return false;" style="color: var(--color-primary-element); text-decoration: none;">${this.escapeHtml(hosting.provider)}${hosting.plan ? ' - ' + this.escapeHtml(hosting.plan) : ''}</a>`;
+			} else {
+				hostingEl.textContent = '-';
+			}
+
+			// Bağlı siteler (domainId'ye göre)
+			const domainWebsites = (this.websites || []).filter(w => w.domainId == domain.id);
+			const websitesListEl = document.getElementById('domain-websites-list');
+			if (domainWebsites.length === 0) {
+				websitesListEl.innerHTML = '<p class="empty-mini">Bu domain\'e bağlı site yok</p>';
+			} else {
+				let websitesHtml = '';
+				domainWebsites.forEach(w => {
+					websitesHtml += `<div class="mini-item">
+						<a href="#" onclick="DomainControl.switchTab('websites'); setTimeout(() => DomainControl.showWebsiteDetail(${w.id}), 100); return false;" style="color: var(--color-main-text); text-decoration: none;">${this.escapeHtml(w.name || w.software || 'N/A')}</a>
+					</div>`;
+				});
+				websitesListEl.innerHTML = websitesHtml;
+			}
 
 			// Display panel notes and renewal history separately
 			this.renderDomainNotesAndHistory(domain);
@@ -1769,6 +1793,34 @@
 			document.getElementById('website-detail-client').textContent = client ? client.name : 'Atanmamış';
 			document.getElementById('website-detail-domain').textContent = domain ? domain.domainName : '-';
 			document.getElementById('website-detail-hosting').textContent = hosting ? hosting.provider : '-';
+			
+			// Bağlı domain detayı
+			const domainInfoEl = document.getElementById('website-domain-info');
+			if (domain) {
+				domainInfoEl.innerHTML = `<div class="mini-item">
+					<a href="#" onclick="DomainControl.switchTab('domains'); setTimeout(() => DomainControl.showDomainDetail(${domain.id}), 100); return false;" style="color: var(--color-primary-element); text-decoration: none; font-weight: 500;">${this.escapeHtml(domain.domainName)}</a>
+					<div style="font-size: 12px; color: var(--color-text-maxcontrast); margin-top: 4px;">
+						${domain.registrar ? 'Registrar: ' + this.escapeHtml(domain.registrar) : ''}
+						${domain.expirationDate ? ' | Bitiş: ' + domain.expirationDate : ''}
+					</div>
+				</div>`;
+			} else {
+				domainInfoEl.innerHTML = '<p class="empty-mini">Bağlı domain yok</p>';
+			}
+			
+			// Bağlı hosting detayı
+			const hostingInfoEl = document.getElementById('website-hosting-info');
+			if (hosting) {
+				hostingInfoEl.innerHTML = `<div class="mini-item">
+					<a href="#" onclick="DomainControl.switchTab('hostings'); setTimeout(() => DomainControl.showHostingDetail(${hosting.id}), 100); return false;" style="color: var(--color-primary-element); text-decoration: none; font-weight: 500;">${this.escapeHtml(hosting.provider)}${hosting.plan ? ' - ' + this.escapeHtml(hosting.plan) : ''}</a>
+					<div style="font-size: 12px; color: var(--color-text-maxcontrast); margin-top: 4px;">
+						${hosting.serverIp ? 'IP: ' + this.escapeHtml(hosting.serverIp) : ''}
+						${hosting.expirationDate ? ' | Bitiş: ' + hosting.expirationDate : ''}
+					</div>
+				</div>`;
+			} else {
+				hostingInfoEl.innerHTML = '<p class="empty-mini">Bağlı hosting yok</p>';
+			}
 
 			const urlEl = document.getElementById('website-detail-url');
 			if (website.url) {

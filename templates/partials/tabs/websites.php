@@ -71,6 +71,17 @@
 				</div>
 			</div>
 			
+			<div class="detail-info-grid">
+				<div class="detail-info-card">
+					<h3>Bağlı Domain</h3>
+					<div id="website-domain-info" class="mini-list"></div>
+				</div>
+				<div class="detail-info-card">
+					<h3>Bağlı Hosting</h3>
+					<div id="website-hosting-info" class="mini-list"></div>
+				</div>
+			</div>
+			
 			<div class="detail-info-card">
 				<h3>Notlar</h3>
 				<div id="website-detail-notes" class="rich-text-content"></div>

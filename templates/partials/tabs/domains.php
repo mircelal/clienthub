@@ -65,6 +65,7 @@
 						<tr><td>Registrar</td><td id="domain-detail-registrar"></td></tr>
 						<tr><td>Kayıt Tarihi</td><td id="domain-detail-registration"></td></tr>
 						<tr><td>Süre</td><td id="domain-detail-interval"></td></tr>
+						<tr><td>Hosting</td><td id="domain-detail-hosting"></td></tr>
 					</table>
 				</div>
 				
@@ -72,6 +73,11 @@
 					<h3>Panel Giriş Bilgileri</h3>
 					<pre id="domain-detail-notes" class="detail-notes"></pre>
 				</div>
+			</div>
+			
+			<div class="detail-info-card">
+				<h3>Bağlı Siteler</h3>
+				<div id="domain-websites-list" class="mini-list"></div>
 			</div>
 			
 			<div class="detail-history-card">
