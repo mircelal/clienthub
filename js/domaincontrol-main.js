@@ -87,6 +87,7 @@
 			document.getElementById('add-task-btn')?.addEventListener('click', () => this.showTaskModal());
 			document.getElementById('add-transaction-btn')?.addEventListener('click', () => this.showTransactionModal());
 			document.getElementById('add-debt-btn')?.addEventListener('click', () => this.showDebtModal());
+			document.getElementById('save-settings-btn')?.addEventListener('click', () => this.saveSettings());
 
 			// Quick add buttons with tab switching
 			document.getElementById('quick-add-client')?.addEventListener('click', () => {
@@ -368,6 +369,24 @@
 			// Remove change event - only upload when button is clicked
 		},
 
+		formatMoney: function (amount, currency = 'USD') {
+			try {
+				return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: currency }).format(amount);
+			} catch (e) {
+				return amount + ' ' + currency;
+			}
+		},
+
+		formatDate: function (dateString) {
+			if (!dateString) return '-';
+			try {
+				const date = new Date(dateString);
+				return new Intl.DateTimeFormat('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' }).format(date);
+			} catch (e) {
+				return dateString;
+			}
+		},
+
 		switchTab: function (tabName) {
 			if (!tabName) {
 				console.warn('DomainControl: Tab name is required');
@@ -454,6 +473,9 @@
 					if (window.Reports && window.Reports.loadReports) {
 						window.Reports.loadReports();
 					}
+					break;
+				case 'settings':
+					this.loadSettings();
 					break;
 			}
 		},
@@ -1037,15 +1059,61 @@
 
 			// Fill detail info
 			document.getElementById('client-detail-name').textContent = client.name;
-			document.getElementById('client-detail-email').textContent = client.email || '-';
-			document.getElementById('client-detail-phone').textContent = client.phone || '-';
-			document.getElementById('client-detail-created').textContent = client.createdAt ? client.createdAt.split(' ')[0] : '-';
-			document.getElementById('client-detail-notes').textContent = client.notes || 'Not bulunmuyor';
+			const emailEl = document.getElementById('client-detail-email');
+			if (emailEl) {
+				if (client.email) {
+					emailEl.innerHTML = `<a href="mailto:${this.escapeHtml(client.email)}" style="color: var(--color-primary-element); text-decoration: none;">${this.escapeHtml(client.email)}</a>`;
+				} else {
+					emailEl.textContent = '-';
+				}
+			}
+
+			const phoneEl = document.getElementById('client-detail-phone');
+			if (phoneEl) {
+				if (client.phone) {
+					phoneEl.innerHTML = `<a href="tel:${this.escapeHtml(client.phone)}" style="color: var(--color-primary-element); text-decoration: none;">${this.escapeHtml(client.phone)}</a>`;
+				} else {
+					phoneEl.textContent = '-';
+				}
+			}
+
+			const createdEl = document.getElementById('client-detail-created');
+			if (createdEl && client.createdAt) {
+				try {
+					const createdDate = new Date(client.createdAt);
+					createdEl.textContent = createdDate.toLocaleDateString('tr-TR', { year: 'numeric', month: 'long', day: 'numeric' });
+				} catch (e) {
+					createdEl.textContent = client.createdAt.split(' ')[0];
+				}
+			} else if (createdEl) {
+				createdEl.textContent = '-';
+			}
+
+			const notesEl = document.getElementById('client-detail-notes');
+			if (notesEl) {
+				notesEl.textContent = client.notes || 'Not bulunmuyor';
+				if (!client.notes) {
+					notesEl.style.color = 'var(--color-text-maxcontrast)';
+					notesEl.style.fontStyle = 'italic';
+				}
+			}
 
 			// Update counts
 			document.getElementById('client-detail-domains-count').textContent = clientDomains.length;
 			document.getElementById('client-detail-hostings-count').textContent = clientHostings.length;
 			document.getElementById('client-detail-websites-count').textContent = clientWebsites.length;
+
+			// Update badge counts
+			const clientServices = (this.services || []).filter(s => s.clientId == id);
+			const clientInvoices = (this.invoices || []).filter(i => i.clientId == id);
+			const clientPayments = (this.payments || []).filter(p => p.clientId == id);
+
+			document.getElementById('client-domains-count-badge').textContent = clientDomains.length;
+			document.getElementById('client-hostings-count-badge').textContent = clientHostings.length;
+			document.getElementById('client-websites-count-badge').textContent = clientWebsites.length;
+			document.getElementById('client-services-count-badge').textContent = clientServices.length;
+			document.getElementById('client-invoices-count-badge').textContent = clientInvoices.length;
+			document.getElementById('client-payments-count-badge').textContent = clientPayments.length;
 
 			// Render client's domains
 			const domainsListEl = document.getElementById('client-domains-list');
@@ -1100,8 +1168,7 @@
 				websitesListEl.innerHTML = websitesHtml;
 			}
 
-			// Render client's services
-			const clientServices = (this.services || []).filter(s => s.clientId == id);
+			// Render client's services (clientServices already defined above)
 			const servicesListEl = document.getElementById('client-services-list');
 			if (servicesListEl) {
 				if (clientServices.length === 0) {
@@ -1128,8 +1195,7 @@
 				}
 			}
 
-			// Render client's invoices
-			const clientInvoices = (this.invoices || []).filter(i => i.clientId == id);
+			// Render client's invoices (clientInvoices already defined above)
 			const invoicesListEl = document.getElementById('client-invoices-list');
 			if (invoicesListEl) {
 				if (clientInvoices.length === 0) {
@@ -1155,8 +1221,7 @@
 				}
 			}
 
-			// Render client's payments
-			const clientPayments = (this.payments || []).filter(p => p.clientId == id);
+			// Render client's payments (clientPayments already defined above)
 			const paymentsListEl = document.getElementById('client-payments-list');
 			if (paymentsListEl) {
 				if (clientPayments.length === 0) {
@@ -2926,7 +2991,7 @@
 					const incomeEl = document.getElementById('stat-monthly-income');
 					const expenseEl = document.getElementById('stat-monthly-expense');
 					const netEl = document.getElementById('stat-net-profit');
-					
+
 					if (incomeEl) {
 						const currentIncome = parseFloat(incomeEl.textContent || 0);
 						incomeEl.textContent = (currentIncome + (data.totalIncome || 0)).toFixed(2);
@@ -3266,47 +3331,67 @@
 				const expiryBadge = daysLeft !== null && daysLeft <= 30 ?
 					`<span class="status-badge ${daysLeft <= 7 ? 'status-badge--overdue' : 'status-badge--draft'}">${daysLeft} gün</span>` : '';
 
+				const serviceType = svc.serviceTypeId ? this.serviceTypes.find(t => t.id == svc.serviceTypeId) : null;
+				const isOneTime = svc.renewalInterval === 'one-time';
+				const expiryText = isOneTime ? '🔄 Tek Seferlik' : (svc.expirationDate ? new Date(svc.expirationDate).toLocaleDateString('tr-TR') : '-');
+
+				const statusBgColor = svc.status === 'active' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(107, 114, 128, 0.1)';
+				const statusTextColor = svc.status === 'active' ? '#10b981' : '#6b7280';
+				const statusBadgeBg = svc.status === 'active' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(107, 114, 128, 0.15)';
+
 				html += `
-				<div class="list-item service-item" data-id="${svc.id}">
-					<div class="list-item__content">
-						<div class="list-item__title">${this.escapeHtml(svc.name)}</div>
-						<div class="list-item__meta">${client ? client.name : 'Bilinmeyen'} • ${svc.expirationDate || '-'}</div>
+					<div class="list-item service-item" data-id="${svc.id}">
+						<div class="service-item__icon" style="background: ${statusBgColor};">
+							${serviceType?.icon || '📦'}
+						</div>
+						<div class="service-item__content">
+							<div class="service-item__title">${this.escapeHtml(svc.name)}</div>
+							<div class="service-item__meta">
+								${client ? `<span class="service-meta-item">👤 ${this.escapeHtml(client.name)}</span>` : ''}
+								${serviceType ? `<span class="service-meta-item">📁 ${this.escapeHtml(serviceType.name)}</span>` : ''}
+								<span class="service-meta-item">📅 ${expiryText}</span>
+								${!isOneTime && daysLeft !== null ? `<span class="service-meta-item service-days-left ${daysLeft <= 7 ? 'text-danger' : daysLeft <= 30 ? 'text-warning' : 'text-success'}">⏰ ${daysLeft} gün</span>` : ''}
+							</div>
+						</div>
+						<div class="service-item__right">
+							<span class="service-item__price">${parseFloat(svc.price || 0).toFixed(2)} ${svc.currency || 'USD'}</span>
+							<span class="service-item__status" style="background: ${statusBadgeBg}; color: ${statusTextColor};">
+								${this.getStatusText(svc.status)}
+							</span>
+							<div class="service-item__buttons">
+								<button class="btn btn-sm btn-secondary btn-view-service" data-id="${svc.id}" title="Detay">Görüntüle</button>
+								<button class="btn btn-sm btn-success btn-invoice-service" data-id="${svc.id}" title="Fatura Oluştur">📄 Fatura</button>
+							</div>
+						</div>
 					</div>
-					<div class="list-item__stats">
-						<span>${svc.price || 0} ${svc.currency}</span>
-						${expiryBadge}
-						<span class="status-badge ${statusClass}">${this.getStatusText(svc.status)}</span>
-					</div>
-					<div class="list-item__actions">
-						<button class="btn btn-sm btn-secondary btn-view-service" data-id="${svc.id}" title="Detay">👁️</button>
-						<button class="btn btn-sm btn-success btn-invoice-service" data-id="${svc.id}" title="Fatura Oluştur">📄</button>
-					</div>
-				</div>
-			`;
+				`;
 			});
 			list.innerHTML = html;
 
 			// Event delegation for service buttons
-			list.querySelectorAll('.btn-view-service').forEach(btn => {
-				btn.addEventListener('click', (e) => {
+			list.addEventListener('click', (e) => {
+				const btn = e.target.closest('.btn-view-service');
+				if (btn) {
 					e.stopPropagation();
 					const id = btn.getAttribute('data-id');
 					this.showServiceDetail(parseInt(id));
-				});
-			});
-			list.querySelectorAll('.btn-invoice-service').forEach(btn => {
-				btn.addEventListener('click', (e) => {
+					return;
+				}
+
+				const invoiceBtn = e.target.closest('.btn-invoice-service');
+				if (invoiceBtn) {
 					e.stopPropagation();
-					const id = btn.getAttribute('data-id');
+					const id = invoiceBtn.getAttribute('data-id');
 					this.createInvoiceFromService(parseInt(id));
-				});
-			});
-			// Click on row also shows detail
-			list.querySelectorAll('.service-item').forEach(item => {
-				item.addEventListener('click', () => {
+					return;
+				}
+
+				// Click on row also shows detail (but not on buttons)
+				const item = e.target.closest('.service-item');
+				if (item && !e.target.closest('button')) {
 					const id = item.getAttribute('data-id');
 					this.showServiceDetail(parseInt(id));
-				});
+				}
 			});
 		},
 
@@ -3347,12 +3432,35 @@
 
 			// Expiration date - tek seferlik hizmetler için özel gösterim
 			const isOneTime = svc.renewalInterval === 'one-time';
-			document.getElementById('service-detail-expiry').textContent = isOneTime ? '🔄 Tek Seferlik' : (svc.expirationDate || '-');
+			const expiryEl = document.getElementById('service-detail-expiry');
+			if (expiryEl) {
+				if (isOneTime) {
+					expiryEl.textContent = '🔄 Tek Seferlik';
+				} else if (svc.expirationDate) {
+					try {
+						const expiryDate = new Date(svc.expirationDate + 'T00:00:00');
+						expiryEl.textContent = expiryDate.toLocaleDateString('tr-TR', { year: 'numeric', month: 'long', day: 'numeric' });
+					} catch (e) {
+						expiryEl.textContent = svc.expirationDate;
+					}
+				} else {
+					expiryEl.textContent = '-';
+				}
+			}
 
-			// Additional info
-			document.getElementById('service-detail-start')?.textContent && (document.getElementById('service-detail-start').textContent = svc.startDate || '-');
-			document.getElementById('service-detail-interval')?.textContent && (document.getElementById('service-detail-interval').textContent = this.getIntervalText(svc.renewalInterval));
-			document.getElementById('service-detail-type')?.textContent && (document.getElementById('service-detail-type').textContent = serviceType ? serviceType.name : '-');
+			// Additional info - Hizmet Bilgileri
+			const startEl = document.getElementById('service-detail-start');
+			if (startEl) {
+				startEl.textContent = svc.startDate ? new Date(svc.startDate + 'T00:00:00').toLocaleDateString('tr-TR', { year: 'numeric', month: 'long', day: 'numeric' }) : '-';
+			}
+			const intervalEl = document.getElementById('service-detail-interval');
+			if (intervalEl) {
+				intervalEl.textContent = this.getIntervalText(svc.renewalInterval);
+			}
+			const typeEl = document.getElementById('service-detail-type');
+			if (typeEl) {
+				typeEl.textContent = serviceType ? serviceType.name : '-';
+			}
 
 			// Status with badge
 			const statusEl = document.getElementById('service-detail-status');
@@ -3636,7 +3744,12 @@
 			else if (filter === 'paid') filtered = filtered.filter(i => i.status === 'paid');
 
 			if (filtered.length === 0) {
-				list.innerHTML = '<p class="empty-state">Fatura yok</p>';
+				list.innerHTML = `
+					<div class="empty-state-premium">
+						<div class="empty-state-icon">📄</div>
+						<div class="empty-state-text">Henüz fatura bulunmuyor</div>
+						<div class="empty-state-subtext">Yeni bir fatura oluşturarak ödemelerinizi takip etmeye başlayın.</div>
+					</div>`;
 				return;
 			}
 
@@ -3645,21 +3758,22 @@
 				const client = this.clients.find(c => c.id == inv.clientId);
 				const remaining = (inv.totalAmount || 0) - (inv.paidAmount || 0);
 				const statusText = this.getInvoiceStatusText(inv.status);
+				const clientName = client ? this.escapeHtml(client.name) : 'Bilinmeyen';
+				const initials = clientName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+
 				html += `
-				<div class="list-item invoice-item" data-id="${inv.id}">
-					<div class="list-item__content">
-						<div class="list-item__title">${inv.invoiceNumber}</div>
-						<div class="list-item__meta">${client ? client.name : 'Bilinmeyen'} • Vade: ${inv.dueDate || '-'}</div>
+				<div class="invoice-card invoice-item" data-id="${inv.id}">
+					<div class="invoice-card__number">${inv.invoiceNumber}</div>
+					<div class="invoice-card__client">
+						<div class="invoice-card__client-avatar">${initials}</div>
+						<span>${clientName}</span>
 					</div>
-					<div class="list-item__stats">
-						<div class="list-item__stat">
-							<div class="list-item__stat-label">Toplam</div>
-							<div class="list-item__stat-value">${inv.totalAmount || 0} ${inv.currency}</div>
-						</div>
-						<div class="list-item__stat">
-							<div class="list-item__stat-label">Kalan</div>
-							<div class="list-item__stat-value">${remaining.toFixed(2)} ${inv.currency}</div>
-						</div>
+					<div class="invoice-card__date">${this.formatDate(inv.issueDate)}</div>
+					<div class="invoice-card__amount">${this.formatMoney(inv.totalAmount, inv.currency)}</div>
+					<div class="invoice-card__remaining ${remaining > 0 ? 'has-balance' : ''}">
+						${remaining > 0 ? this.formatMoney(remaining, inv.currency) : 'Tamamlandı'}
+					</div>
+					<div class="invoice-card__status" style="text-align: center;">
 						<span class="status-badge status-badge--${inv.status}">${statusText}</span>
 					</div>
 				</div>
@@ -3710,14 +3824,14 @@
 
 			document.getElementById('invoice-detail-number').textContent = inv.invoiceNumber;
 			document.getElementById('invoice-detail-client').textContent = client ? client.name : '-';
-			document.getElementById('invoice-detail-total').textContent = `${total.toFixed(2)} ${inv.currency}`;
-			document.getElementById('invoice-detail-paid').textContent = `${paid.toFixed(2)} ${inv.currency}`;
-			document.getElementById('invoice-detail-remaining').textContent = `${remaining.toFixed(2)} ${inv.currency}`;
-			document.getElementById('invoice-detail-issue-date').textContent = inv.issueDate || '-';
+			document.getElementById('invoice-detail-total').textContent = this.formatMoney(total, inv.currency);
+			document.getElementById('invoice-detail-paid').textContent = this.formatMoney(paid, inv.currency);
+			document.getElementById('invoice-detail-remaining').textContent = this.formatMoney(remaining, inv.currency);
+			document.getElementById('invoice-detail-issue-date').textContent = this.formatDate(inv.issueDate);
 
 			// Due date with remaining days
 			const dueDateEl = document.getElementById('invoice-detail-due-date');
-			dueDateEl.innerHTML = `${inv.dueDate || '-'} ${dueDaysText}`;
+			dueDateEl.innerHTML = `${this.formatDate(inv.dueDate)} ${dueDaysText}`;
 
 			// Status badge with color
 			const statusEl = document.getElementById('invoice-detail-status');
@@ -3832,8 +3946,8 @@
 					<td>${this.escapeHtml(item.description)}${relatedName}</td>
 					<td><span class="status-badge status-badge--${item.itemType}">${itemTypeLabels[item.itemType] || item.itemType}</span></td>
 					<td>${item.quantity || 1}</td>
-					<td>${item.unitPrice || 0} ${item.currency || ''}</td>
-					<td><strong>${total.toFixed(2)} ${item.currency || ''}</strong></td>
+					<td>${this.formatMoney(item.unitPrice, item.currency)}</td>
+					<td><strong>${this.formatMoney(total, item.currency)}</strong></td>
 					<td style="white-space: nowrap;">
 						<button class="btn btn-sm btn-secondary edit-item-btn" data-id="${item.id}">✏️</button>
 						<button class="btn btn-sm btn-danger delete-item-btn" data-id="${item.id}">🗑️</button>
@@ -3884,9 +3998,9 @@
 						const methodTexts = { cash: 'Nakit', bank: 'Havale', card: 'Kart', other: 'Diğer' };
 						html += `
 					<div class="history-item">
-						<div class="history-date">${p.paymentDate || '-'}</div>
+						<div class="history-date">${this.formatDate(p.paymentDate)}</div>
 						<div class="history-content">
-							<strong>${parseFloat(p.amount).toFixed(2)} ${p.currency}</strong>
+							<strong>${this.formatMoney(p.amount, p.currency)}</strong>
 							<span class="status-badge">${methodTexts[p.paymentMethod] || p.paymentMethod}</span>
 							${p.reference ? `<span class="history-detail">Ref: ${this.escapeHtml(p.reference)}</span>` : ''}
 							${p.notes ? `<div class="history-note">${this.escapeHtml(p.notes)}</div>` : ''}
@@ -4682,9 +4796,9 @@
 						</div>
 						<div style="max-height: 300px; overflow-y: auto;">
 							${projectInvoices.map(inv => {
-								const statusColor = statusColors[inv.status] || '#6b7280';
-								const statusText = statusTexts[inv.status] || inv.status;
-								return `
+					const statusColor = statusColors[inv.status] || '#6b7280';
+					const statusText = statusTexts[inv.status] || inv.status;
+					return `
 									<div class="project-invoice-item" data-invoice-id="${inv.id}" style="padding: 12px; border: 1px solid var(--color-border); border-radius: 8px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s;">
 										<div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 6px;">
 											<div>
@@ -4709,7 +4823,7 @@
 										</div>
 									</div>
 								`;
-							}).join('')}
+				}).join('')}
 						</div>
 					</div>
 				`;
@@ -4936,7 +5050,7 @@
 				clearInterval(this.timerInterval);
 				this.timerInterval = null;
 			}
-			
+
 			document.getElementById('projects-list-view').style.display = 'block';
 			document.getElementById('project-detail-view').style.display = 'none';
 			this.currentProjectId = null;
@@ -5494,7 +5608,7 @@
 					document.getElementById('task-status').value = task.status || 'todo';
 					document.getElementById('task-priority').value = task.priority || 'medium';
 					document.getElementById('task-due-date').value = task.dueDate || '';
-					
+
 					// Load assigned user dropdown if project is set
 					if (task.projectId) {
 						this.updateTaskAssignmentDropdown(task.projectId, task.assignedToUserId);
@@ -5509,7 +5623,7 @@
 				// Load assigned user dropdown for new task
 				this.updateTaskAssignmentDropdown(projectId);
 			}
-			
+
 			// Update assignment dropdown when project changes
 			if (projectSelect) {
 				projectSelect.addEventListener('change', (e) => {
@@ -5522,7 +5636,7 @@
 					}
 				});
 			}
-			
+
 			modal.style.display = 'block';
 		},
 
@@ -5767,10 +5881,10 @@
 			// PHP returns 'Y-m-d H:i:s' in UTC, so we need to treat it as UTC
 			const startTimeStr = entry.startTime;
 			// If it doesn't have timezone info, assume UTC
-			const startTime = startTimeStr.includes('+') || startTimeStr.includes('Z') 
+			const startTime = startTimeStr.includes('+') || startTimeStr.includes('Z')
 				? new Date(startTimeStr).getTime()
 				: new Date(startTimeStr + ' UTC').getTime();
-			
+
 			this.timerInterval = setInterval(() => {
 				const now = Date.now();
 				const elapsed = Math.floor((now - startTime) / 1000);
@@ -5812,7 +5926,7 @@
 			const minutes = Math.floor((seconds % 3600) / 60);
 			const secs = seconds % 60;
 
-			display.textContent = 
+			display.textContent =
 				String(hours).padStart(2, '0') + ':' +
 				String(minutes).padStart(2, '0') + ':' +
 				String(secs).padStart(2, '0');
@@ -5828,7 +5942,7 @@
 		renderTimeEntries: function (entries) {
 			const container = document.getElementById('time-entries-container');
 			const countEl = document.getElementById('entries-count');
-			
+
 			if (!container) return;
 
 			// Update count
@@ -5866,18 +5980,18 @@
 				const secs = duration % 60;
 				const durationStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 
-				const dateStr = startTime.toLocaleDateString('tr-TR', { 
-					day: '2-digit', 
-					month: '2-digit', 
-					year: 'numeric' 
+				const dateStr = startTime.toLocaleDateString('tr-TR', {
+					day: '2-digit',
+					month: '2-digit',
+					year: 'numeric'
 				});
-				const timeStr = startTime.toLocaleTimeString('tr-TR', { 
-					hour: '2-digit', 
-					minute: '2-digit' 
+				const timeStr = startTime.toLocaleTimeString('tr-TR', {
+					hour: '2-digit',
+					minute: '2-digit'
 				});
-				const endTimeStr = endTime ? endTime.toLocaleTimeString('tr-TR', { 
-					hour: '2-digit', 
-					minute: '2-digit' 
+				const endTimeStr = endTime ? endTime.toLocaleTimeString('tr-TR', {
+					hour: '2-digit',
+					minute: '2-digit'
 				}) : '';
 
 				const userName = getUserDisplayName(entry.userId);
@@ -5933,7 +6047,7 @@
 		renderUserTimeSummary: function (entries) {
 			const summarySection = document.getElementById('time-tracking-user-summary');
 			const summaryList = document.getElementById('user-time-summary-list');
-			
+
 			if (!summarySection || !summaryList) return;
 
 			if (!entries || entries.length === 0) {
@@ -6016,7 +6130,7 @@
 			const minutes = Math.floor((totalSeconds % 3600) / 60);
 			const secs = totalSeconds % 60;
 
-			display.textContent = 
+			display.textContent =
 				String(hours).padStart(2, '0') + ':' +
 				String(minutes).padStart(2, '0') + ':' +
 				String(secs).padStart(2, '0');
@@ -6031,18 +6145,18 @@
 				.then(shares => {
 					const section = document.getElementById('project-share-section');
 					const addBtn = document.getElementById('project-share-add-btn');
-					
+
 					if (!section) return;
-					
+
 					// Check if user is project owner (show share section only for owner)
 					const proj = this.projects.find(p => p.id == projectId);
 					if (!proj) return;
-					
+
 					// Ensure shares is an array
 					if (!Array.isArray(shares)) {
 						shares = [];
 					}
-					
+
 					// Show section if user is owner or has shares
 					if (proj.userId === this.getCurrentUserId() || (shares && shares.length > 0)) {
 						section.style.display = 'block';
@@ -6054,7 +6168,7 @@
 					} else {
 						section.style.display = 'none';
 					}
-					
+
 					this.renderProjectShares(shares);
 				})
 				.catch(e => {
@@ -6087,7 +6201,7 @@
 			container.innerHTML = shares.map(share => {
 				const permColor = permissionColors[share.permissionLevel] || '#6b7280';
 				const permText = permissionTexts[share.permissionLevel] || share.permissionLevel;
-				
+
 				return `
 					<div class="project-share-item" style="padding: 12px; border: 1px solid var(--color-border); border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
 						<div>
@@ -7005,7 +7119,7 @@
 
 					document.getElementById('debt-detail-title').textContent = debt.creditorDebtorName || debt.description || 'Borç/Alacak Detayı';
 					document.getElementById('debt-detail-type').textContent = debt.type === 'debt' ? '💸 Borç' : '💰 Alacak';
-					
+
 					const debtTypeLabels = {
 						credit_card: '💳 Kredi Kartı',
 						loan: '🏦 Kredi',
@@ -7016,7 +7130,7 @@
 					document.getElementById('debt-detail-total').textContent = `${parseFloat(debt.totalAmount || 0).toFixed(2)} ${debt.currency || 'USD'}`;
 					document.getElementById('debt-detail-paid').textContent = `${parseFloat(debt.paidAmount || 0).toFixed(2)} ${debt.currency || 'USD'}`;
 					document.getElementById('debt-detail-remaining').textContent = `${remaining.toFixed(2)} ${debt.currency || 'USD'}`;
-					
+
 					const statusLabels = {
 						active: 'Aktif',
 						paid: 'Ödendi',
@@ -7048,7 +7162,7 @@
 
 					document.getElementById('debt-detail-creditor-debtor').textContent = debt.creditorDebtorName || '-';
 					document.getElementById('debt-detail-client').textContent = client ? client.name : '-';
-					
+
 					// Format dates properly
 					if (debt.startDate) {
 						try {
@@ -7060,7 +7174,7 @@
 					} else {
 						document.getElementById('debt-detail-start-date').textContent = '-';
 					}
-					
+
 					if (debt.dueDate) {
 						try {
 							const dueDate = new Date(debt.dueDate + 'T00:00:00');
@@ -7071,7 +7185,7 @@
 					} else {
 						document.getElementById('debt-detail-due-date').textContent = '-';
 					}
-					
+
 					if (debt.nextPaymentDate) {
 						try {
 							const nextDate = new Date(debt.nextPaymentDate + 'T00:00:00');
@@ -7082,7 +7196,7 @@
 					} else {
 						document.getElementById('debt-detail-next-payment').textContent = '-';
 					}
-					
+
 					const frequencyLabels = {
 						daily: 'Günlük',
 						weekly: 'Haftalık',
@@ -7216,6 +7330,57 @@
 				})
 				.catch(e => {
 					this.showError('Silme hatası: ' + e.message);
+				});
+		},
+
+		// ===== SETTINGS =====
+		loadSettings: function () {
+			fetch(this.apiBase + '/settings', {
+				headers: { 'requesttoken': OC.requestToken }
+			})
+				.then(r => r.json())
+				.then(settings => {
+					if (settings.error) {
+						console.error('Settings load error:', settings.error);
+						return;
+					}
+
+					// Set default currency
+					const currencySelect = document.getElementById('default-currency');
+					if (currencySelect && settings.defaultCurrency) {
+						currencySelect.value = settings.defaultCurrency;
+					}
+				})
+				.catch(e => {
+					console.error('Error loading settings:', e);
+				});
+		},
+
+		saveSettings: function () {
+			const currencySelect = document.getElementById('default-currency');
+			if (!currencySelect) return;
+
+			const data = {
+				defaultCurrency: currencySelect.value
+			};
+
+			fetch(this.apiBase + '/settings', {
+				method: 'PUT',
+				headers: {
+					'requesttoken': OC.requestToken,
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(data)
+			})
+				.then(r => r.json())
+				.then(result => {
+					if (result.error) {
+						throw new Error(result.error);
+					}
+					this.showSuccess('Ayarlar kaydedildi');
+				})
+				.catch(e => {
+					this.showError('Ayarlar kaydedilemedi: ' + e.message);
 				});
 		}
 	};

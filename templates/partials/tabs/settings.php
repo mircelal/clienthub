@@ -11,7 +11,7 @@
 			<div class="settings-item">
 				<label for="default-currency" class="settings-label">
 					<span class="settings-label__title">Varsayılan Para Birimi</span>
-					<span class="settings-label__description">Yeni kayıtlarda kullanılacak varsayılan para birimi</span>
+					<span class="settings-label__description">Yeni kayıtlarda (fatura, ödeme, işlem, borç/alacak) kullanılacak varsayılan para birimi</span>
 				</label>
 				<div class="settings-input">
 					<select id="default-currency" class="form-control">
@@ -26,7 +26,9 @@
 			</div>
 		</div>
 		<div class="settings-actions">
-			<button class="btn btn-primary" id="save-settings-btn">Kaydet</button>
+			<button class="btn btn-primary" id="save-settings-btn">
+				<span class="icon-checkmark"></span> Kaydet
+			</button>
 		</div>
 	</div>
 </div>

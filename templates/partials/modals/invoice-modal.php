@@ -17,7 +17,8 @@
 					</div>
 					<div class="form-group">
 						<label for="invoice-number">Fatura No</label>
-						<input type="text" id="invoice-number" name="invoiceNumber" class="form-control" placeholder="Otomatik oluşturulur">
+						<input type="text" id="invoice-number" name="invoiceNumber" class="form-control"
+							placeholder="Otomatik oluşturulur" autocomplete="off">
 					</div>
 				</div>
 				<div class="form-row">
@@ -60,7 +61,8 @@
 					<textarea id="invoice-notes" name="notes" class="form-control" rows="2"></textarea>
 				</div>
 				<div class="form-actions">
-					<button type="button" class="btn btn-secondary modal-cancel" data-modal="invoice-modal">İptal</button>
+					<button type="button" class="btn btn-secondary modal-cancel"
+						data-modal="invoice-modal">İptal</button>
 					<button type="submit" class="btn btn-primary">Kaydet</button>
 				</div>
 			</form>
@@ -88,7 +90,8 @@
 				<div class="form-row">
 					<div class="form-group">
 						<label for="payment-amount">Tutar *</label>
-						<input type="number" id="payment-amount" name="amount" step="0.01" required class="form-control">
+						<input type="number" id="payment-amount" name="amount" step="0.01" required
+							class="form-control">
 					</div>
 					<div class="form-group">
 						<label for="payment-currency">Para Birimi</label>
@@ -117,14 +120,16 @@
 				</div>
 				<div class="form-group">
 					<label for="payment-reference">Referans No</label>
-					<input type="text" id="payment-reference" name="reference" class="form-control" placeholder="Dekont/Fiş no">
+					<input type="text" id="payment-reference" name="reference" class="form-control"
+						placeholder="Dekont/Fiş no">
 				</div>
 				<div class="form-group">
 					<label for="payment-notes">Notlar</label>
 					<textarea id="payment-notes" name="notes" class="form-control" rows="2"></textarea>
 				</div>
 				<div class="form-actions">
-					<button type="button" class="btn btn-secondary modal-cancel" data-modal="payment-modal">İptal</button>
+					<button type="button" class="btn btn-secondary modal-cancel"
+						data-modal="payment-modal">İptal</button>
 					<button type="submit" class="btn btn-primary">Kaydet</button>
 				</div>
 			</form>
@@ -143,7 +148,7 @@
 			<form id="invoice-item-form">
 				<input type="hidden" id="invoice-item-id" name="id">
 				<input type="hidden" id="invoice-item-invoice-id" name="invoiceId">
-				
+
 				<div class="form-group">
 					<label for="invoice-item-type">Kalem Türü</label>
 					<select id="invoice-item-type" name="itemType" class="form-control">
@@ -155,27 +160,30 @@
 						<option value="project">Proje</option>
 					</select>
 				</div>
-				
+
 				<div class="form-group" id="invoice-item-ref-group" style="display: none;">
 					<label for="invoice-item-ref-id">İlişkili Öğe</label>
 					<select id="invoice-item-ref-id" name="itemId" class="form-control">
 						<option value="">Seçin</option>
 					</select>
 				</div>
-				
+
 				<div class="form-group">
 					<label for="invoice-item-description">Açıklama *</label>
-					<input type="text" id="invoice-item-description" name="description" required class="form-control" placeholder="Örn: Yıllık domain yenileme">
+					<input type="text" id="invoice-item-description" name="description" required class="form-control"
+						placeholder="Örn: Yıllık domain yenileme">
 				</div>
-				
+
 				<div class="form-row">
 					<div class="form-group">
 						<label for="invoice-item-quantity">Miktar</label>
-						<input type="number" id="invoice-item-quantity" name="quantity" value="1" min="1" class="form-control">
+						<input type="number" id="invoice-item-quantity" name="quantity" value="1" min="1"
+							class="form-control">
 					</div>
 					<div class="form-group">
 						<label for="invoice-item-unit-price">Birim Fiyat</label>
-						<input type="number" id="invoice-item-unit-price" name="unitPrice" step="0.01" class="form-control">
+						<input type="number" id="invoice-item-unit-price" name="unitPrice" step="0.01"
+							class="form-control">
 					</div>
 					<div class="form-group">
 						<label for="invoice-item-currency">Para Birimi</label>
@@ -187,7 +195,7 @@
 						</select>
 					</div>
 				</div>
-				
+
 				<div class="form-row">
 					<div class="form-group">
 						<label for="invoice-item-start-date">Dönem Başlangıç</label>
@@ -198,11 +206,12 @@
 						<input type="date" id="invoice-item-end-date" name="periodEnd" class="form-control">
 					</div>
 				</div>
-				
+
 				<div class="form-row">
 					<div class="form-group">
 						<label for="invoice-item-discount">İndirim</label>
-						<input type="number" id="invoice-item-discount" name="discount" step="0.01" class="form-control" placeholder="0">
+						<input type="number" id="invoice-item-discount" name="discount" step="0.01" class="form-control"
+							placeholder="0">
 					</div>
 					<div class="form-group">
 						<label for="invoice-item-discount-type">İndirim Türü</label>
@@ -212,13 +221,13 @@
 						</select>
 					</div>
 				</div>
-				
+
 				<div class="form-actions">
-					<button type="button" class="btn btn-secondary modal-cancel" data-modal="invoice-item-modal">İptal</button>
+					<button type="button" class="btn btn-secondary modal-cancel"
+						data-modal="invoice-item-modal">İptal</button>
 					<button type="submit" class="btn btn-primary">Kaydet</button>
 				</div>
 			</form>
 		</div>
 	</div>
 </div>
-

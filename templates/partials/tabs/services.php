@@ -32,16 +32,25 @@
 		</div>
 		<div class="detail-info-grid">
 			<div class="detail-info-card">
-				<h3>Hizmet Bilgileri</h3>
-				<table class="detail-table">
-					<tr><td>Başlangıç Tarihi</td><td id="service-detail-start"></td></tr>
-					<tr><td>Yenileme Periyodu</td><td id="service-detail-interval"></td></tr>
-					<tr><td>Hizmet Türü</td><td id="service-detail-type"></td></tr>
+				<h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: var(--color-main-text);">Hizmet Bilgileri</h3>
+				<table class="detail-table" style="width: 100%; border-collapse: collapse;">
+					<tr style="border-bottom: 1px solid var(--color-border);">
+						<td style="padding: 12px 0; font-size: 13px; color: var(--color-text-maxcontrast); font-weight: 500; width: 40%;">Başlangıç Tarihi</td>
+						<td style="padding: 12px 0; font-size: 14px; color: var(--color-main-text); font-weight: 500;" id="service-detail-start">-</td>
+					</tr>
+					<tr style="border-bottom: 1px solid var(--color-border);">
+						<td style="padding: 12px 0; font-size: 13px; color: var(--color-text-maxcontrast); font-weight: 500;">Yenileme Periyodu</td>
+						<td style="padding: 12px 0; font-size: 14px; color: var(--color-main-text); font-weight: 500;" id="service-detail-interval">-</td>
+					</tr>
+					<tr>
+						<td style="padding: 12px 0; font-size: 13px; color: var(--color-text-maxcontrast); font-weight: 500;">Hizmet Türü</td>
+						<td style="padding: 12px 0; font-size: 14px; color: var(--color-main-text); font-weight: 500;" id="service-detail-type">-</td>
+					</tr>
 				</table>
 			</div>
 			<div class="detail-info-card">
-				<h3>Notlar</h3>
-				<pre id="service-detail-notes" class="detail-notes"></pre>
+				<h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: var(--color-main-text);">Notlar</h3>
+				<div id="service-detail-notes" class="detail-notes" style="font-size: 14px; line-height: 1.6; color: var(--color-main-text); white-space: pre-wrap; word-wrap: break-word; padding: 12px; background: var(--color-background-dark); border-radius: 6px; min-height: 60px;">-</div>
 			</div>
 		</div>
 	</div>

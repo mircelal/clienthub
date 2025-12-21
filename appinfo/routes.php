@@ -183,5 +183,9 @@ return [
 
 		// Debt Payment routes
 		['name' => 'debt_payment#delete', 'url' => '/api/debt-payments/{id}', 'verb' => 'DELETE'],
+
+		// Settings routes
+		['name' => 'settings#get', 'url' => '/api/settings', 'verb' => 'GET'],
+		['name' => 'settings#update', 'url' => '/api/settings', 'verb' => 'PUT'],
 	],
 ];

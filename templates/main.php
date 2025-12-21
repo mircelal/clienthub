@@ -39,7 +39,7 @@ style('domaincontrol', 'domaincontrol');
 				<a href="#" class="icon-category-office tab-button" data-tab="transactions">Gelir/Gider</a>
 			</li>
 			<li data-id="debts">
-				<a href="#" class="icon-credit-card tab-button" data-tab="debts">Borç/Alacak</a>
+				<a href="#" class="icon-files tab-button" data-tab="debts">Borç/Alacak</a>
 			</li>
 			<li data-id="reports">
 				<a href="#" class="icon-category-monitoring tab-button" data-tab="reports">Raporlar</a>
