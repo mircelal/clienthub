@@ -85,6 +85,7 @@ style('domaincontrol', 'domaincontrol');
 	<?php include __DIR__ . '/partials/modals/domain-modal.php'; ?>
 	<?php include __DIR__ . '/partials/modals/hosting-modal.php'; ?>
 	<?php include __DIR__ . '/partials/modals/hosting-package-modal.php'; ?>
+	<?php include __DIR__ . '/partials/modals/hosting-domain-link-modal.php'; ?>
 	<?php include __DIR__ . '/partials/modals/website-modal.php'; ?>
 	<?php include __DIR__ . '/partials/modals/service-modal.php'; ?>
 	<?php include __DIR__ . '/partials/modals/invoice-modal.php'; ?>

@@ -1334,10 +1334,8 @@
 			}
 			document.getElementById('hosting-detail-panel-notes').textContent = hosting.panelNotes || 'Panel giriş bilgisi eklenmemiş';
 
-			// Bağlı domainler (website'ların hostingId'si bu hosting'e eşit olanlar)
-			const hostingWebsites = (this.websites || []).filter(w => w.hostingId == id);
-			const hostingDomainIds = hostingWebsites.map(w => w.domainId).filter(d => d);
-			const hostingDomains = (this.domains || []).filter(d => hostingDomainIds.includes(d.id));
+			// Bağlı domainler (direkt hostingId'ye göre)
+			const hostingDomains = (this.domains || []).filter(d => d.hostingId == id);
 
 			const domainsListEl = document.getElementById('hosting-domains-list');
 			if (hostingDomains.length === 0) {
@@ -1345,19 +1343,23 @@
 			} else {
 				let domainsHtml = '';
 				hostingDomains.forEach(d => {
-					domainsHtml += `<div class="mini-item"><span>🌐 ${this.escapeHtml(d.domainName)}</span></div>`;
+					domainsHtml += `<div class="mini-item" style="display: flex; justify-content: space-between; align-items: center;">
+						<span>${this.escapeHtml(d.domainName)}</span>
+						<button class="icon-delete" onclick="DomainControl.unlinkDomainFromHosting(${d.id})" title="Bağlantıyı Kaldır" style="padding: 4px 8px; font-size: 12px; border: none; background: transparent; cursor: pointer;"></button>
+					</div>`;
 				});
 				domainsListEl.innerHTML = domainsHtml;
 			}
 
 			// Bağlı websiteler
+			const hostingWebsites = (this.websites || []).filter(w => w.hostingId == id);
 			const websitesListEl = document.getElementById('hosting-websites-list');
 			if (hostingWebsites.length === 0) {
 				websitesListEl.innerHTML = '<p class="empty-mini">Bağlı website yok</p>';
 			} else {
 				let websitesHtml = '';
 				hostingWebsites.forEach(w => {
-					websitesHtml += `<div class="mini-item"><span>🌍 ${this.escapeHtml(w.name || w.software || 'N/A')}</span></div>`;
+					websitesHtml += `<div class="mini-item"><span>${this.escapeHtml(w.name || w.software || 'N/A')}</span></div>`;
 				});
 				websitesListEl.innerHTML = websitesHtml;
 			}
@@ -1366,6 +1368,19 @@
 			this.renderHostingPaymentHistory(hosting);
 
 			this.currentHostingId = hosting.id;
+
+			// Attach event listener for domain link button (after detail view is shown)
+			const addDomainBtn = document.getElementById('add-domain-to-hosting-btn');
+			if (addDomainBtn) {
+				// Remove existing listeners by cloning
+				const newBtn = addDomainBtn.cloneNode(true);
+				addDomainBtn.parentNode.replaceChild(newBtn, addDomainBtn);
+				// Add new listener
+				newBtn.addEventListener('click', (e) => {
+					e.preventDefault();
+					this.showHostingDomainLinkModal();
+				});
+			}
 		},
 
 		hideHostingDetail: function () {
@@ -2095,6 +2110,12 @@
 				this.saveHostingPackage();
 			});
 
+			// Hosting Domain Link form
+			document.getElementById('hosting-domain-link-form')?.addEventListener('submit', (e) => {
+				e.preventDefault();
+				this.linkDomainToHosting();
+			});
+
 			// Website form
 			document.getElementById('website-form').addEventListener('submit', (e) => {
 				e.preventDefault();
@@ -2818,6 +2839,124 @@
 					this.deleteHostingPackage(id);
 				});
 			});
+		},
+
+		showHostingDomainLinkModal: function () {
+			console.log('showHostingDomainLinkModal called, currentHostingId:', this.currentHostingId);
+			if (!this.currentHostingId) {
+				console.error('No currentHostingId set');
+				this.showError('Hosting hesabı seçilmedi');
+				return;
+			}
+
+			const modal = document.getElementById('hosting-domain-link-modal');
+			if (!modal) {
+				console.error('Modal element not found');
+				return;
+			}
+			const form = document.getElementById('hosting-domain-link-form');
+			if (!form) {
+				console.error('Form element not found');
+				return;
+			}
+			const domainSelect = document.getElementById('hdl-domain-id');
+			if (!domainSelect) {
+				console.error('Domain select element not found');
+				return;
+			}
+			
+			form.reset();
+			document.getElementById('hdl-hosting-id').value = this.currentHostingId;
+
+			// Populate domain select with domains not already linked to this hosting
+			const availableDomains = (this.domains || []).filter(d => !d.hostingId || d.hostingId != this.currentHostingId);
+			domainSelect.innerHTML = '<option value="">Domain Seçin</option>';
+			availableDomains.forEach(domain => {
+				const option = document.createElement('option');
+				option.value = domain.id;
+				option.textContent = domain.domainName;
+				domainSelect.appendChild(option);
+			});
+
+			modal.style.display = 'block';
+		},
+
+		linkDomainToHosting: function () {
+			const hostingId = parseInt(document.getElementById('hdl-hosting-id').value);
+			const domainId = parseInt(document.getElementById('hdl-domain-id').value);
+
+			if (!hostingId || !domainId) {
+				this.showError('Lütfen bir domain seçin');
+				return;
+			}
+
+			const domain = this.domains.find(d => d.id == domainId);
+			if (!domain) {
+				this.showError('Domain bulunamadı');
+				return;
+			}
+
+			// Update domain with hostingId
+			const formData = new URLSearchParams();
+			formData.append('hostingId', hostingId);
+
+			fetch(this.apiBase + '/domains/' + domainId, {
+				method: 'PUT',
+				headers: {
+					'requesttoken': OC.requestToken,
+					'Content-Type': 'application/x-www-form-urlencoded'
+				},
+				body: formData.toString()
+			})
+				.then(response => response.json())
+				.then(data => {
+					if (data.error) {
+						throw new Error(data.error);
+					}
+					this.showSuccess('Domain hosting hesabına bağlandı');
+					this.loadData();
+					document.getElementById('hosting-domain-link-modal').style.display = 'none';
+					if (this.currentHostingId) {
+						this.showHostingDetail(this.currentHostingId);
+					}
+				})
+				.catch(error => {
+					console.error('Error linking domain to hosting:', error);
+					this.showError('Domain bağlanırken hata oluştu: ' + error.message);
+				});
+		},
+
+		unlinkDomainFromHosting: function (domainId) {
+			if (!confirm('Bu domaini hosting hesabından ayırmak istediğinize emin misiniz?')) {
+				return;
+			}
+
+			const formData = new URLSearchParams();
+			formData.append('hostingId', '');
+
+			fetch(this.apiBase + '/domains/' + domainId, {
+				method: 'PUT',
+				headers: {
+					'requesttoken': OC.requestToken,
+					'Content-Type': 'application/x-www-form-urlencoded'
+				},
+				body: formData.toString()
+			})
+				.then(response => response.json())
+				.then(data => {
+					if (data.error) {
+						throw new Error(data.error);
+					}
+					this.showSuccess('Domain hosting hesabından ayrıldı');
+					this.loadData();
+					if (this.currentHostingId) {
+						this.showHostingDetail(this.currentHostingId);
+					}
+				})
+				.catch(error => {
+					console.error('Error unlinking domain from hosting:', error);
+					this.showError('Domain ayrılırken hata oluştu: ' + error.message);
+				});
 		},
 
 		showHostingPackageModal: function (id = null) {

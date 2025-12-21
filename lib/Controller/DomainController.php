@@ -87,6 +87,7 @@ class DomainController extends Controller
 
 			$domain = new Domain();
 			$domain->setClientId((int) ($data['clientId'] ?? 0));
+			$domain->setHostingId(isset($data['hostingId']) && $data['hostingId'] !== '' ? (int) $data['hostingId'] : null);
 			$domain->setDomainName($domainName);
 			$domain->setRegistrar($data['registrar'] ?? '');
 			$domain->setRegistrationDate($data['registrationDate'] ?? '');
@@ -122,6 +123,9 @@ class DomainController extends Controller
 
 			if (isset($data['clientId']))
 				$domain->setClientId((int) $data['clientId']);
+			if (isset($data['hostingId'])) {
+				$domain->setHostingId($data['hostingId'] === '' || $data['hostingId'] === null ? null : (int) $data['hostingId']);
+			}
 			if (isset($data['domainName']) && $data['domainName'] !== '')
 				$domain->setDomainName($data['domainName']);
 			if (isset($data['registrar']))

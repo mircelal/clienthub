@@ -8,6 +8,8 @@ use OCP\AppFramework\Db\Entity;
 /**
  * @method int getClientId()
  * @method void setClientId(int $clientId)
+ * @method int|null getHostingId()
+ * @method void setHostingId(int|null $hostingId)
  * @method string getDomainName()
  * @method void setDomainName(string $domainName)
  * @method string getRegistrar()
@@ -41,6 +43,7 @@ use OCP\AppFramework\Db\Entity;
  */
 class Domain extends Entity implements \JsonSerializable {
 	protected $clientId;
+	protected $hostingId;
 	protected $domainName;
 	protected $registrar;
 	protected $registrationDate;
@@ -59,6 +62,7 @@ class Domain extends Entity implements \JsonSerializable {
 
 	public function __construct() {
 		$this->addType('clientId', 'integer');
+		$this->addType('hostingId', 'integer');
 		$this->addType('domainName', 'string');
 		$this->addType('registrar', 'string');
 		$this->addType('registrationDate', 'string');
@@ -80,6 +84,7 @@ class Domain extends Entity implements \JsonSerializable {
 		return [
 			'id' => $this->id,
 			'clientId' => $this->clientId,
+			'hostingId' => $this->hostingId,
 			'domainName' => $this->domainName,
 			'registrar' => $this->registrar,
 			'registrationDate' => $this->registrationDate,

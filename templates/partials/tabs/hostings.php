@@ -88,7 +88,10 @@
 			
 			<div class="detail-info-grid">
 				<div class="detail-info-card">
-					<h3>Bağlı Domainler</h3>
+					<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+						<h3 style="margin: 0;">Bağlı Domainler</h3>
+						<button id="add-domain-to-hosting-btn" class="btn btn-primary" style="padding: 6px 12px; font-size: 13px;">Domain Bağla</button>
+					</div>
 					<div id="hosting-domains-list" class="mini-list"></div>
 				</div>
 				<div class="detail-info-card">

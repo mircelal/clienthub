@@ -57,6 +57,22 @@ class DomainMapper extends QBMapper {
 	}
 
 	/**
+	 * @param int $hostingId
+	 * @param string|null $userId
+	 * @return Domain[]
+	 */
+	public function findByHosting(int $hostingId, ?string $userId): array {
+		$qb = $this->db->getQueryBuilder();
+		$qb->select('*')
+			->from($this->getTableName())
+			->where($qb->expr()->eq('hosting_id', $qb->createNamedParameter($hostingId)))
+			->andWhere($qb->expr()->eq('user_id', $qb->createNamedParameter($userId)))
+			->orderBy('domain_name', 'ASC');
+		
+		return $this->findEntities($qb);
+	}
+
+	/**
 	 * Find domains expiring soon
 	 * @param string|null $userId
 	 * @param int $days Number of days to check ahead (default: 30)
