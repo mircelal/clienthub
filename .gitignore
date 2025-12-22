@@ -24,3 +24,9 @@ vendor/
 
 # Cache
 .cache/
+
+# Build outputs
+js/vue-components.js
+js/vue-components.js.map
+js/*.LICENSE.txt
+package-lock.json
