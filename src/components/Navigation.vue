@@ -15,7 +15,9 @@
 							:aria-current="$props.currentTab === item.id ? 'page' : undefined"
 							@click.prevent="handleTabClick(item.id)"
 						>
-							<span class="icon" :class="item.icon" aria-hidden="true"></span>
+							<div class="app-navigation-entry-icon">
+								<MaterialIcon :name="item.icon" :size="20" />
+							</div>
 							<span class="app-navigation-entry__name">
 								{{ translate('domaincontrol', item.label) }}
 							</span>
@@ -26,14 +28,16 @@
 		</div>
 		<ul class="app-navigation-entry__settings">
 			<li class="app-navigation-entry-wrapper">
-				<div class="app-navigation-entry">
+				<div class="app-navigation-entry" :class="{ active: $props.currentTab === 'settings' }">
 					<a
 						href="#"
 						class="app-navigation-entry-link"
-						:class="{ active: $props.currentTab === 'settings' }"
+						:aria-current="$props.currentTab === 'settings' ? 'page' : undefined"
 						@click.prevent="handleTabClick('settings')"
 					>
-						<span class="icon icon-settings" aria-hidden="true"></span>
+						<div class="app-navigation-entry-icon">
+							<MaterialIcon name="settings" :size="20" />
+						</div>
 						<span class="app-navigation-entry__name">
 							{{ translate('domaincontrol', 'Settings') }}
 						</span>
@@ -45,72 +49,82 @@
 </template>
 
 <script>
+import MaterialIcon from './MaterialIcon.vue'
+
 export default {
 	name: 'Navigation',
+	components: {
+		MaterialIcon,
+	},
+	props: {
+		currentTab: {
+			type: String,
+			required: true,
+		},
+	},
 	data() {
 		return {
-			currentTab: 'dashboard',
 			settingsOpen: false,
 			menuItems: [
 				{
 					id: 'dashboard',
 					label: 'Dashboard',
-					icon: 'icon-home',
+					icon: 'home',
 				},
 				{
 					id: 'clients',
 					label: 'Clients',
-					icon: 'icon-contacts',
+					icon: 'contacts',
 				},
 				{
 					id: 'domains',
 					label: 'Domains',
-					icon: 'icon-public',
+					icon: 'public',
 				},
 				{
 					id: 'hostings',
 					label: 'Hosting',
-					icon: 'icon-category-office',
+					icon: 'category-office',
 				},
 				{
 					id: 'websites',
 					label: 'Websites',
-					icon: 'icon-link',
+					icon: 'link',
 				},
 				{
 					id: 'services',
 					label: 'Services',
-					icon: 'icon-settings',
+					icon: 'settings',
 				},
 				{
 					id: 'invoices',
 					label: 'Invoices',
-					icon: 'icon-files',
+					icon: 'files',
 				},
 				{
 					id: 'projects',
 					label: 'Projects',
-					icon: 'icon-folder',
+					icon: 'folder',
 				},
 				{
 					id: 'tasks',
 					label: 'Tasks',
-					icon: 'icon-checkmark',
+					icon: 'checkmark',
 				},
 				{
 					id: 'transactions',
 					label: 'Income/Expense',
-					icon: 'icon-category-office',
+					icon: 'accounting',
 				},
 				{
 					id: 'debts',
 					label: 'Debts/Receivables',
-					icon: 'icon-files',
+					icon: 'files',
 				},
 				{
 					id: 'reports',
 					label: 'Reports',
-					icon: 'icon-category-monitoring',
+					icon: 'monitoring',
 				},
 			],
 		}
@@ -228,6 +242,7 @@ export default {
 	min-height: 44px;
 	width: 100%;
 	box-sizing: border-box;
+	gap: 12px;
 }
 
 .app-navigation-entry-link:hover,
@@ -241,27 +256,38 @@ export default {
 	color: var(--color-primary-element-text);
 }
 
-/* Icon styling - Nextcloud standard */
-.app-navigation-entry-link .icon {
+/* Icon styling - Nextcloud standard with Material Design icons */
+/* Following Nextcloud's official navigation structure */
+.app-navigation-entry-icon {
 	width: 20px;
 	height: 20px;
-	margin-right: 12px;
-	display: inline-block;
-	background-size: 20px;
-	background-position: center;
-	background-repeat: no-repeat;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
 	opacity: 0.7;
 	transition: opacity 0.2s;
-	flex-shrink: 0;
-	/* Icon color - white for all icons */
-	filter: brightness(0) invert(1);
 }
 
-.app-navigation-entry.active .app-navigation-entry-link .icon,
-.app-navigation-entry-link[aria-current='page'] .icon {
+.app-navigation-entry-icon .material-icon {
+	width: 20px;
+	height: 20px;
+	color: var(--color-main-text);
+	transition: color 0.2s;
+}
+
+.app-navigation-entry-link:hover .app-navigation-entry-icon {
 	opacity: 1;
-	/* Keep white color for active state */
-	filter: brightness(0) invert(1);
+}
+
+.app-navigation-entry.active .app-navigation-entry-icon,
+.app-navigation-entry-link[aria-current='page'] .app-navigation-entry-icon {
+	opacity: 1;
+}
+
+.app-navigation-entry.active .app-navigation-entry-icon .material-icon,
+.app-navigation-entry-link[aria-current='page'] .app-navigation-entry-icon .material-icon {
+	color: var(--color-primary-element-text);
 }
 
 .app-navigation-entry__name {
