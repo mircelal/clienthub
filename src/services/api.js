@@ -109,6 +109,38 @@ export default {
 	services: {
 		getAll: () => axios.get(`${apiBase}/services`),
 		get: (id) => axios.get(`${apiBase}/services/${id}`),
+		create: (data) => axios.post(`${apiBase}/services`, toFormData(data), {
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+		}),
+		update: (id, data) => axios.put(`${apiBase}/services/${id}`, toFormData(data), {
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+		}),
+		delete: (id) => axios.delete(`${apiBase}/services/${id}`),
+		extend: (id, data) => axios.post(`${apiBase}/services/${id}/extend`, toFormData(data), {
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+		}),
+		expiringSoon: () => axios.get(`${apiBase}/services/expiring-soon`),
+	},
+	serviceTypes: {
+		getAll: () => axios.get(`${apiBase}/service-types`),
+		get: (id) => axios.get(`${apiBase}/service-types/${id}`),
+		create: (data) => axios.post(`${apiBase}/service-types`, toFormData(data), {
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+		}),
+		update: (id, data) => axios.put(`${apiBase}/service-types/${id}`, toFormData(data), {
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+		}),
+		delete: (id) => axios.delete(`${apiBase}/service-types/${id}`),
 	},
 	projects: {
 		getAll: () => axios.get(`${apiBase}/projects`),
