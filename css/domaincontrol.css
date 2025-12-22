@@ -322,11 +322,19 @@
 	opacity: 1;
 }
 
-.list-item__actions button:hover {
-	background-color: var(--color-background-dark);
-	color: var(--color-main-text);
+/* Material Icon styling */
+.action-button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }
 
+.action-button .material-icon {
+	opacity: 1;
+	transition: opacity 0.15s ease;
+}
+
+/* Action button hover effects - specific colors for edit and delete */
 .list-item__actions .action-button--edit:hover {
 	color: var(--color-primary-element);
 	background-color: rgba(var(--color-primary-element-rgb), 0.1);
@@ -337,15 +345,10 @@
 	background-color: rgba(var(--color-error-rgb), 0.1);
 }
 
-/* Material Icon styling */
-.action-button {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-}
-
-.action-button .material-icon {
-	opacity: 1;
+/* Generic button hover - only for non-action buttons */
+.list-item__actions button:not(.action-button):hover {
+	background-color: var(--color-background-dark);
+	color: var(--color-main-text);
 }
 
 /* Domain Status Colors */
