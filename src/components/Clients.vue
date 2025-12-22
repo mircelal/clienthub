@@ -948,6 +948,113 @@ export default {
 	margin-bottom: 16px;
 }
 
+.detail-notes {
+	padding: 12px;
+	background-color: var(--color-background-hover);
+	border-radius: var(--border-radius-small);
+	color: var(--color-main-text);
+	min-height: 60px;
+	white-space: pre-wrap;
+}
+
+.link-primary {
+	color: var(--color-primary-element);
+	text-decoration: none;
+}
+
+.link-primary:hover {
+	text-decoration: underline;
+}
+
+.detail-services {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+	gap: 16px;
+	margin-top: 24px;
+}
+
+.client-service-card {
+	padding: 16px;
+	background-color: var(--color-background-dark);
+	border-radius: var(--border-radius-element);
+	border: 1px solid var(--color-border);
+}
+
+.service-card-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 12px;
+	padding-bottom: 12px;
+	border-bottom: 1px solid var(--color-border);
+}
+
+.service-card-title {
+	font-size: 16px;
+	font-weight: 600;
+	color: var(--color-main-text);
+	margin: 0;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.service-card-count {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 24px;
+	height: 24px;
+	padding: 0 8px;
+	background-color: var(--color-primary);
+	color: var(--color-primary-text);
+	border-radius: 12px;
+	font-size: 0.85em;
+	font-weight: bold;
+}
+
+.mini-list {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.mini-item {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 8px 12px;
+	background-color: var(--color-background-hover);
+	border-radius: var(--border-radius-small);
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.mini-item:hover {
+	background-color: var(--color-background-dark);
+	border-color: var(--color-primary);
+}
+
+.mini-item.status-ok {
+	border-left: 3px solid var(--color-success);
+}
+
+.mini-item.status-warning {
+	border-left: 3px solid var(--color-warning);
+}
+
+.mini-item.status-critical {
+	border-left: 3px solid var(--color-error);
+}
+
+.empty-mini {
+	padding: 12px;
+	text-align: center;
+	color: var(--color-text-maxcontrast);
+	font-size: 14px;
+	font-style: italic;
+}
+
 @media screen and (max-width: 768px) {
 	.detail-header {
 		flex-direction: column;
@@ -960,6 +1067,10 @@ export default {
 
 	.detail-actions .button-vue {
 		flex: 1;
+	}
+
+	.detail-services {
+		grid-template-columns: 1fr;
 	}
 }
 </style>

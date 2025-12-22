@@ -55,7 +55,15 @@
 		"Notes": "Notlar",
 		"No notes": "Not bulunmuyor",
 		"Are you sure you want to delete {name}?": "{name} müşterisini silmek istediğinize emin misiniz?",
-		"Error deleting client": "Müşteri silinirken hata oluştu"
+		"Error deleting client": "Müşteri silinirken hata oluştu",
+		"Services": "Hizmetler",
+		"Payments": "Ödemeler",
+		"No domains": "Domain yok",
+		"No hostings": "Hosting yok",
+		"No websites": "Website yok",
+		"No services": "Hizmet yok",
+		"No invoices": "Fatura yok",
+		"No payments": "Ödeme yok"
 	},
 	"pluralForm": "nplurals=2; plural=(n > 1);"
 }
