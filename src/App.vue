@@ -1,6 +1,6 @@
 <template>
 	<div id="app">
-		<Navigation />
+		<Navigation @switch-tab="handleTabSwitch" />
 		<div id="app-content">
 			<div id="app-content-wrapper">
 				<Dashboard v-if="currentTab === 'dashboard'" />
@@ -68,11 +68,6 @@ export default {
 			this.currentTab = tabFromUrl
 		}
 
-		// Listen for tab changes from Navigation component
-		this.$root.$on('switch-tab', (tabName) => {
-			this.currentTab = tabName
-		})
-
 		// Integrate with existing DomainControl.switchTab
 		if (typeof window.DomainControl !== 'undefined') {
 			const originalSwitchTab = window.DomainControl.switchTab
@@ -84,9 +79,10 @@ export default {
 			}
 		}
 	},
-	beforeUnmount() {
-		// Clean up event listeners
-		this.$root.$off('switch-tab')
+	methods: {
+		handleTabSwitch(tabName) {
+			this.currentTab = tabName
+		},
 	},
 }
 </script>

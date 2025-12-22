@@ -188,9 +188,7 @@ export default {
 		handleTabClick(tabId) {
 			this.currentTab = tabId
 			// Emit event to parent App component
-			if (this.$root) {
-				this.$root.$emit('switch-tab', tabId)
-			}
+			this.$emit('switch-tab', tabId)
 			// Call existing DomainControl.switchTab if available
 			if (typeof window.DomainControl !== 'undefined' && window.DomainControl.switchTab) {
 				window.DomainControl.switchTab(tabId)
