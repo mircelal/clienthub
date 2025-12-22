@@ -269,40 +269,42 @@
 					<div class="detail-info-card hosting-info-card">
 						<h3 class="hosting-info-title">{{ translate('domaincontrol', 'General Information') }}</h3>
 						<table class="detail-table hosting-detail-table">
-							<tr>
-								<td class="table-label">{{ translate('domaincontrol', 'Client') }}</td>
-								<td class="table-value">
-									<a
-										href="#"
-										@click.prevent="navigateToClient(selectedHosting.clientId)"
-										class="link-primary"
-									>
-										{{ getClientName(selectedHosting.clientId) }}
-									</a>
-								</td>
-							</tr>
-							<tr v-if="selectedHosting.plan">
-								<td class="table-label">{{ translate('domaincontrol', 'Plan') }}</td>
-								<td class="table-value">{{ selectedHosting.plan }}</td>
-							</tr>
-							<tr v-if="selectedHosting.serverIp">
-								<td class="table-label">{{ translate('domaincontrol', 'Server IP') }}</td>
-								<td class="table-value">{{ selectedHosting.serverIp }}</td>
-							</tr>
-							<tr v-if="selectedHosting.serverType">
-								<td class="table-label">{{ translate('domaincontrol', 'Server Type') }}</td>
-								<td class="table-value">
-									{{ selectedHosting.serverType === 'own' ? translate('domaincontrol', 'Own Server') : translate('domaincontrol', 'External Server') }}
-								</td>
-							</tr>
-							<tr v-if="selectedHosting.startDate">
-								<td class="table-label">{{ translate('domaincontrol', 'Start Date') }}</td>
-								<td class="table-value">{{ formatDate(selectedHosting.startDate) }}</td>
-							</tr>
-							<tr v-if="selectedHosting.renewalInterval">
-								<td class="table-label">{{ translate('domaincontrol', 'Renewal Interval') }}</td>
-								<td class="table-value">{{ formatRenewalInterval(selectedHosting.renewalInterval) }}</td>
-							</tr>
+							<tbody>
+								<tr>
+									<td class="table-label">{{ translate('domaincontrol', 'Client') }}</td>
+									<td class="table-value">
+										<a
+											href="#"
+											@click.prevent="navigateToClient(selectedHosting.clientId)"
+											class="link-primary"
+										>
+											{{ getClientName(selectedHosting.clientId) }}
+										</a>
+									</td>
+								</tr>
+								<tr v-if="selectedHosting.plan">
+									<td class="table-label">{{ translate('domaincontrol', 'Plan') }}</td>
+									<td class="table-value">{{ selectedHosting.plan }}</td>
+								</tr>
+								<tr v-if="selectedHosting.serverIp">
+									<td class="table-label">{{ translate('domaincontrol', 'Server IP') }}</td>
+									<td class="table-value">{{ selectedHosting.serverIp }}</td>
+								</tr>
+								<tr v-if="selectedHosting.serverType">
+									<td class="table-label">{{ translate('domaincontrol', 'Server Type') }}</td>
+									<td class="table-value">
+										{{ selectedHosting.serverType === 'own' ? translate('domaincontrol', 'Own Server') : translate('domaincontrol', 'External Server') }}
+									</td>
+								</tr>
+								<tr v-if="selectedHosting.startDate">
+									<td class="table-label">{{ translate('domaincontrol', 'Start Date') }}</td>
+									<td class="table-value">{{ formatDate(selectedHosting.startDate) }}</td>
+								</tr>
+								<tr v-if="selectedHosting.renewalInterval">
+									<td class="table-label">{{ translate('domaincontrol', 'Renewal Interval') }}</td>
+									<td class="table-value">{{ formatRenewalInterval(selectedHosting.renewalInterval) }}</td>
+								</tr>
+							</tbody>
 						</table>
 					</div>
 
