@@ -170,6 +170,27 @@ export default {
 			},
 		}),
 		removeItem: (id, itemId) => axios.delete(`${apiBase}/projects/${id}/items/${itemId}`),
+		getTasks: (id) => axios.get(`${apiBase}/projects/${id}/tasks`),
+	},
+	timeEntries: {
+		byProject: (projectId) => axios.get(`${apiBase}/projects/${projectId}/time-entries`),
+		getRunning: (projectId) => axios.get(`${apiBase}/projects/${projectId}/time-entries/running`),
+		start: (projectId, data) => axios.post(`${apiBase}/projects/${projectId}/time-entries/start`, toFormData(data), {
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+		}),
+		stop: (projectId) => axios.post(`${apiBase}/projects/${projectId}/time-entries/stop`, {}, {
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+		}),
+		update: (id, data) => axios.put(`${apiBase}/time-entries/${id}`, toFormData(data), {
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+		}),
+		delete: (id) => axios.delete(`${apiBase}/time-entries/${id}`),
 	},
 	tasks: {
 		getAll: () => axios.get(`${apiBase}/tasks`),
