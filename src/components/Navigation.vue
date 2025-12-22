@@ -50,6 +50,7 @@
 
 <script>
 import MaterialIcon from './MaterialIcon.vue'
+import api from '../services/api'
 
 export default {
 	name: 'Navigation',
@@ -65,7 +66,8 @@ export default {
 	data() {
 		return {
 			settingsOpen: false,
-			menuItems: [
+			activeModules: [],
+			allMenuItems: [
 				{
 					id: 'dashboard',
 					label: 'Dashboard',
@@ -129,7 +131,19 @@ export default {
 			],
 		}
 	},
+	computed: {
+		menuItems() {
+			if (this.activeModules.length === 0) {
+				// Default: show all modules
+				return this.allMenuItems
+			}
+			return this.allMenuItems.filter(item => this.activeModules.includes(item.id))
+		},
+	},
 	mounted() {
+		this.loadActiveModules()
+		// Listen for settings updates
+		window.addEventListener('settings-updated', this.handleSettingsUpdate)
 		// Listen for tab changes from external code
 		if (typeof window.DomainControl !== 'undefined') {
 			// Store original switchTab method
@@ -143,7 +157,36 @@ export default {
 			}
 		}
 	},
+	beforeUnmount() {
+		window.removeEventListener('settings-updated', this.handleSettingsUpdate)
+	},
 	methods: {
+		async loadActiveModules() {
+			try {
+				const response = await api.settings.get()
+				const settings = response.data || {}
+				
+				if (settings.active_modules) {
+					try {
+						this.activeModules = JSON.parse(settings.active_modules)
+					} catch (e) {
+						this.activeModules = settings.active_modules.split(',').filter(Boolean)
+					}
+				} else {
+					// Default: all modules active
+					this.activeModules = this.allMenuItems.map(m => m.id)
+				}
+			} catch (error) {
+				console.error('Error loading active modules:', error)
+				// Default: all modules active
+				this.activeModules = this.allMenuItems.map(m => m.id)
+			}
+		},
+		handleSettingsUpdate(event) {
+			if (event.detail && event.detail.activeModules) {
+				this.activeModules = event.detail.activeModules
+			}
+		},
 		translate(appId, text, vars) {
 			// Use Nextcloud's translation system
 			try {

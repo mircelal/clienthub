@@ -303,5 +303,13 @@ export default {
 	debtPayments: {
 		delete: (id) => axios.delete(`${apiBase}/debt-payments/${id}`),
 	},
+	settings: {
+		get: () => axios.get(`${apiBase}/settings`),
+		update: (data) => axios.put(`${apiBase}/settings`, toFormData(data), {
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+		}),
+	},
 }
 

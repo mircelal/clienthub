@@ -6,21 +6,28 @@ namespace OCA\DomainControl\Controller;
 use OCA\DomainControl\AppInfo\Application;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\JSONResponse;
-use OCP\IConfig;
 use OCP\IRequest;
+use OCA\DomainControl\Db\SettingMapper;
 
 class SettingsController extends Controller
 {
-	private IConfig $config;
 	private $userId;
+	private SettingMapper $mapper;
 
 	public function __construct(IRequest $request,
-	                            IConfig $config,
+	                            SettingMapper $mapper,
 	                            $userId)
 	{
 		parent::__construct(Application::APP_ID, $request);
-		$this->config = $config;
+		$this->mapper = $mapper;
 		$this->userId = $userId;
+	}
+
+	private function getRequestData(): array
+	{
+		$body = file_get_contents('php://input');
+		parse_str($body, $data);
+		return $data;
 	}
 
 	/**
@@ -29,11 +36,16 @@ class SettingsController extends Controller
 	 */
 	public function get(): JSONResponse
 	{
-		$defaultCurrency = $this->config->getUserValue($this->userId, Application::APP_ID, 'default_currency', 'USD');
-		
-		return new JSONResponse([
-			'defaultCurrency' => $defaultCurrency
-		]);
+		try {
+			$settings = $this->mapper->findAll($this->userId);
+			$result = [];
+			foreach ($settings as $setting) {
+				$result[$setting->getSettingKey()] = $setting->getSettingValue();
+			}
+			return new JSONResponse($result);
+		} catch (\Exception $e) {
+			return new JSONResponse(['error' => $e->getMessage()], 500);
+		}
 	}
 
 	/**
@@ -42,24 +54,42 @@ class SettingsController extends Controller
 	public function update(): JSONResponse
 	{
 		try {
-			$body = file_get_contents('php://input');
-			$data = json_decode($body, true);
+			$data = $this->getRequestData();
 
-			if (isset($data['defaultCurrency'])) {
-				$currency = $data['defaultCurrency'];
-				// Validate currency code
-				$validCurrencies = ['USD', 'EUR', 'GBP', 'TRY', 'AZN', 'RUB'];
-				if (in_array($currency, $validCurrencies)) {
-					$this->config->setUserValue($this->userId, Application::APP_ID, 'default_currency', $currency);
-				} else {
-					return new JSONResponse(['error' => 'Invalid currency code'], 400);
+			foreach ($data as $key => $value) {
+				// Only allow specific setting keys for security
+				$allowedKeys = [
+					'active_modules',
+					'currencies',
+					'default_currency',
+					'date_format',
+					'time_format',
+					'language',
+					'notifications_enabled',
+					'email_notifications',
+					'auto_backup',
+					'invoice_prefix',
+					'invoice_number_format',
+				];
+
+				if (in_array($key, $allowedKeys)) {
+					// Handle JSON values
+					if (is_array($value) || is_object($value)) {
+						$value = json_encode($value);
+					}
+					$this->mapper->setValue($this->userId, $key, $value);
 				}
 			}
 
-			return new JSONResponse(['success' => true]);
+			$settings = $this->mapper->findAll($this->userId);
+			$result = [];
+			foreach ($settings as $setting) {
+				$result[$setting->getSettingKey()] = $setting->getSettingValue();
+			}
+
+			return new JSONResponse($result);
 		} catch (\Exception $e) {
 			return new JSONResponse(['error' => $e->getMessage()], 500);
 		}
 	}
 }
-
