@@ -442,6 +442,13 @@ export default {
 			})
 		},
 	},
+	watch: {
+		showServiceTypesView(newVal) {
+			if (newVal && this.serviceTypes.length === 0 && !this.serviceTypesLoading) {
+				this.loadServiceTypes()
+			}
+		},
+	},
 	mounted() {
 		this.loadData()
 		document.addEventListener('click', this.handleClickOutside)
