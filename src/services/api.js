@@ -28,6 +28,10 @@ export default {
 		getAll: () => axios.get(`${apiBase}/websites`),
 		get: (id) => axios.get(`${apiBase}/websites/${id}`),
 	},
+	services: {
+		getAll: () => axios.get(`${apiBase}/services`),
+		get: (id) => axios.get(`${apiBase}/services/${id}`),
+	},
 	projects: {
 		getAll: () => axios.get(`${apiBase}/projects`),
 		getActive: () => axios.get(`${apiBase}/projects/active`),

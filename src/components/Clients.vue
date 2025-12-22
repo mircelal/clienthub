@@ -140,11 +140,15 @@
 						<table class="detail-table client-detail-table">
 							<tr v-if="selectedClient.email">
 								<td class="table-label">{{ translate('domaincontrol', 'Email') }}</td>
-								<td class="table-value">{{ selectedClient.email }}</td>
+								<td class="table-value">
+									<a :href="`mailto:${selectedClient.email}`" class="link-primary">{{ selectedClient.email }}</a>
+								</td>
 							</tr>
 							<tr v-if="selectedClient.phone">
 								<td class="table-label">{{ translate('domaincontrol', 'Phone') }}</td>
-								<td class="table-value">{{ selectedClient.phone }}</td>
+								<td class="table-value">
+									<a :href="`tel:${selectedClient.phone}`" class="link-primary">{{ selectedClient.phone }}</a>
+								</td>
 							</tr>
 							<tr v-if="selectedClient.createdAt">
 								<td class="table-label">{{ translate('domaincontrol', 'Created Date') }}</td>
@@ -157,6 +161,162 @@
 						<h3 class="client-info-title">{{ translate('domaincontrol', 'Notes') }}</h3>
 						<div class="detail-notes client-notes">
 							{{ selectedClient.notes || translate('domaincontrol', 'No notes') }}
+						</div>
+					</div>
+				</div>
+
+				<!-- Related Items Grid -->
+				<div class="detail-services client-services-grid">
+					<!-- Domains -->
+					<div class="detail-service-card client-service-card">
+						<div class="service-card-header">
+							<h3 class="service-card-title">
+								<span class="icon-public"></span>
+								{{ translate('domaincontrol', 'Domains') }}
+							</h3>
+							<span class="service-card-count">{{ getClientDomainCount(selectedClient.id) }}</span>
+						</div>
+						<div class="mini-list client-mini-list">
+							<div v-if="getClientDomains(selectedClient.id).length === 0" class="empty-mini">
+								{{ translate('domaincontrol', 'No domains') }}
+							</div>
+							<div
+								v-for="domain in getClientDomains(selectedClient.id)"
+								:key="domain.id"
+								class="mini-item"
+								:class="getDomainStatusClass(domain)"
+								@click="navigateToDomain(domain.id)"
+							>
+								<span>{{ domain.domainName }}</span>
+								<span>{{ formatDate(domain.expirationDate) }}</span>
+							</div>
+						</div>
+					</div>
+
+					<!-- Hostings -->
+					<div class="detail-service-card client-service-card">
+						<div class="service-card-header">
+							<h3 class="service-card-title">
+								<span class="icon-category-office"></span>
+								{{ translate('domaincontrol', 'Hosting') }}
+							</h3>
+							<span class="service-card-count">{{ getClientHostingCount(selectedClient.id) }}</span>
+						</div>
+						<div class="mini-list client-mini-list">
+							<div v-if="getClientHostings(selectedClient.id).length === 0" class="empty-mini">
+								{{ translate('domaincontrol', 'No hostings') }}
+							</div>
+							<div
+								v-for="hosting in getClientHostings(selectedClient.id)"
+								:key="hosting.id"
+								class="mini-item"
+								:class="getHostingStatusClass(hosting)"
+								@click="navigateToHosting(hosting.id)"
+							>
+								<span>{{ hosting.provider || 'N/A' }}</span>
+								<span>{{ formatDate(hosting.expirationDate) }}</span>
+							</div>
+						</div>
+					</div>
+
+					<!-- Websites -->
+					<div class="detail-service-card client-service-card">
+						<div class="service-card-header">
+							<h3 class="service-card-title">
+								<span class="icon-link"></span>
+								{{ translate('domaincontrol', 'Websites') }}
+							</h3>
+							<span class="service-card-count">{{ getClientWebsiteCount(selectedClient.id) }}</span>
+						</div>
+						<div class="mini-list client-mini-list">
+							<div v-if="getClientWebsites(selectedClient.id).length === 0" class="empty-mini">
+								{{ translate('domaincontrol', 'No websites') }}
+							</div>
+							<div
+								v-for="website in getClientWebsites(selectedClient.id)"
+								:key="website.id"
+								class="mini-item"
+								@click="navigateToWebsite(website.id)"
+							>
+								<span>{{ website.name || 'N/A' }}</span>
+								<span>{{ website.url || '-' }}</span>
+							</div>
+						</div>
+					</div>
+
+					<!-- Services -->
+					<div class="detail-service-card client-service-card">
+						<div class="service-card-header">
+							<h3 class="service-card-title">
+								<span class="icon-settings"></span>
+								{{ translate('domaincontrol', 'Services') }}
+							</h3>
+							<span class="service-card-count">{{ getClientServiceCount(selectedClient.id) }}</span>
+						</div>
+						<div class="mini-list client-mini-list">
+							<div v-if="getClientServices(selectedClient.id).length === 0" class="empty-mini">
+								{{ translate('domaincontrol', 'No services') }}
+							</div>
+							<div
+								v-for="service in getClientServices(selectedClient.id)"
+								:key="service.id"
+								class="mini-item"
+								:class="service.status === 'active' ? 'status-ok' : 'status-warning'"
+								@click="navigateToService(service.id)"
+							>
+								<span>{{ service.name }}</span>
+								<span>{{ formatCurrency(service.price) }} {{ service.currency }}</span>
+							</div>
+						</div>
+					</div>
+
+					<!-- Invoices -->
+					<div class="detail-service-card client-service-card">
+						<div class="service-card-header">
+							<h3 class="service-card-title">
+								<span class="icon-files"></span>
+								{{ translate('domaincontrol', 'Invoices') }}
+							</h3>
+							<span class="service-card-count">{{ getClientInvoiceCount(selectedClient.id) }}</span>
+						</div>
+						<div class="mini-list client-mini-list">
+							<div v-if="getClientInvoices(selectedClient.id).length === 0" class="empty-mini">
+								{{ translate('domaincontrol', 'No invoices') }}
+							</div>
+							<div
+								v-for="invoice in getClientInvoices(selectedClient.id)"
+								:key="invoice.id"
+								class="mini-item"
+								:class="getInvoiceStatusClass(invoice)"
+								@click="navigateToInvoice(invoice.id)"
+							>
+								<span>{{ invoice.invoiceNumber || `#${invoice.id}` }}</span>
+								<span>{{ formatCurrency(invoice.totalAmount) }} {{ invoice.currency }}</span>
+							</div>
+						</div>
+					</div>
+
+					<!-- Payments -->
+					<div class="detail-service-card client-service-card">
+						<div class="service-card-header">
+							<h3 class="service-card-title">
+								<span class="icon-files"></span>
+								{{ translate('domaincontrol', 'Payments') }}
+							</h3>
+							<span class="service-card-count">{{ getClientPaymentCount(selectedClient.id) }}</span>
+						</div>
+						<div class="mini-list client-mini-list">
+							<div v-if="getClientPayments(selectedClient.id).length === 0" class="empty-mini">
+								{{ translate('domaincontrol', 'No payments') }}
+							</div>
+							<div
+								v-for="payment in getClientPayments(selectedClient.id).slice(0, 5)"
+								:key="payment.id"
+								class="mini-item status-ok"
+							>
+								<span>{{ formatDate(payment.paymentDate) }}</span>
+								<span>{{ formatCurrency(payment.amount) }} {{ payment.currency }}</span>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -176,6 +336,9 @@ export default {
 			domains: [],
 			hostings: [],
 			websites: [],
+			services: [],
+			invoices: [],
+			payments: [],
 			selectedClient: null,
 			searchQuery: '',
 			loading: false,
@@ -256,14 +419,20 @@ export default {
 		},
 		async loadRelatedData() {
 			try {
-				const [domainsRes, hostingsRes, websitesRes] = await Promise.all([
+				const [domainsRes, hostingsRes, websitesRes, servicesRes, invoicesRes, paymentsRes] = await Promise.all([
 					api.domains.getAll().catch(() => ({ data: [] })),
 					api.hostings.getAll().catch(() => ({ data: [] })),
 					api.websites.getAll().catch(() => ({ data: [] })),
+					api.services.getAll().catch(() => ({ data: [] })),
+					api.invoices.getAll().catch(() => ({ data: [] })),
+					api.payments.getAll().catch(() => ({ data: [] })),
 				])
 				this.domains = domainsRes.data || []
 				this.hostings = hostingsRes.data || []
 				this.websites = websitesRes.data || []
+				this.services = servicesRes.data || []
+				this.invoices = invoicesRes.data || []
+				this.payments = paymentsRes.data || []
 			} catch (error) {
 				console.error('Error loading related data:', error)
 			}
@@ -303,17 +472,136 @@ export default {
 		getClientWebsiteCount(clientId) {
 			return (this.websites || []).filter(w => w.clientId == clientId).length
 		},
+		getClientServiceCount(clientId) {
+			return (this.services || []).filter(s => s.clientId == clientId).length
+		},
+		getClientInvoiceCount(clientId) {
+			return (this.invoices || []).filter(i => i.clientId == clientId).length
+		},
+		getClientPaymentCount(clientId) {
+			return (this.payments || []).filter(p => p.clientId == clientId).length
+		},
+		getClientDomains(clientId) {
+			return (this.domains || []).filter(d => d.clientId == clientId)
+		},
+		getClientHostings(clientId) {
+			return (this.hostings || []).filter(h => h.clientId == clientId)
+		},
+		getClientWebsites(clientId) {
+			return (this.websites || []).filter(w => w.clientId == clientId)
+		},
+		getClientServices(clientId) {
+			return (this.services || []).filter(s => s.clientId == clientId)
+		},
+		getClientInvoices(clientId) {
+			return (this.invoices || []).filter(i => i.clientId == clientId)
+		},
+		getClientPayments(clientId) {
+			return (this.payments || []).filter(p => p.clientId == clientId)
+		},
+		getDomainStatusClass(domain) {
+			if (!domain.expirationDate) return 'status-ok'
+			const daysLeft = this.getDaysUntilExpiry(domain.expirationDate)
+			if (daysLeft <= 7) return 'status-critical'
+			if (daysLeft <= 30) return 'status-warning'
+			return 'status-ok'
+		},
+		getHostingStatusClass(hosting) {
+			if (!hosting.expirationDate) return 'status-ok'
+			const daysLeft = this.getDaysUntilExpiry(hosting.expirationDate)
+			if (daysLeft <= 7) return 'status-critical'
+			if (daysLeft <= 30) return 'status-warning'
+			return 'status-ok'
+		},
+		getInvoiceStatusClass(invoice) {
+			if (invoice.status === 'paid') return 'status-ok'
+			if (invoice.status === 'overdue') return 'status-critical'
+			return 'status-warning'
+		},
+		getDaysUntilExpiry(dateString) {
+			if (!dateString) return Infinity
+			try {
+				const expiryDate = new Date(dateString)
+				const today = new Date()
+				today.setHours(0, 0, 0, 0)
+				expiryDate.setHours(0, 0, 0, 0)
+				const diffTime = expiryDate - today
+				const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+				return diffDays
+			} catch (e) {
+				return Infinity
+			}
+		},
 		formatDate(dateString) {
 			if (!dateString) return '-'
 			try {
 				const date = new Date(dateString)
 				return new Intl.DateTimeFormat('tr-TR', {
 					day: 'numeric',
-					month: 'long',
+					month: 'short',
 					year: 'numeric',
 				}).format(date)
 			} catch (e) {
 				return dateString
+			}
+		},
+		formatCurrency(amount) {
+			if (typeof amount !== 'number') return '0'
+			return new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount)
+		},
+		navigateToDomain(id) {
+			if (typeof window.DomainControl !== 'undefined' && window.DomainControl.switchTab) {
+				this.backToList()
+				window.DomainControl.switchTab('domains')
+				setTimeout(() => {
+					if (window.DomainControl.showDomainDetail) {
+						window.DomainControl.showDomainDetail(id)
+					}
+				}, 100)
+			}
+		},
+		navigateToHosting(id) {
+			if (typeof window.DomainControl !== 'undefined' && window.DomainControl.switchTab) {
+				this.backToList()
+				window.DomainControl.switchTab('hostings')
+				setTimeout(() => {
+					if (window.DomainControl.showHostingDetail) {
+						window.DomainControl.showHostingDetail(id)
+					}
+				}, 100)
+			}
+		},
+		navigateToWebsite(id) {
+			if (typeof window.DomainControl !== 'undefined' && window.DomainControl.switchTab) {
+				this.backToList()
+				window.DomainControl.switchTab('websites')
+				setTimeout(() => {
+					if (window.DomainControl.showWebsiteDetail) {
+						window.DomainControl.showWebsiteDetail(id)
+					}
+				}, 100)
+			}
+		},
+		navigateToService(id) {
+			if (typeof window.DomainControl !== 'undefined' && window.DomainControl.switchTab) {
+				this.backToList()
+				window.DomainControl.switchTab('services')
+				setTimeout(() => {
+					if (window.DomainControl.showServiceDetail) {
+						window.DomainControl.showServiceDetail(id)
+					}
+				}, 100)
+			}
+		},
+		navigateToInvoice(id) {
+			if (typeof window.DomainControl !== 'undefined' && window.DomainControl.switchTab) {
+				this.backToList()
+				window.DomainControl.switchTab('invoices')
+				setTimeout(() => {
+					if (window.DomainControl.showInvoiceDetail) {
+						window.DomainControl.showInvoiceDetail(id)
+					}
+				}, 100)
 			}
 		},
 		showAddModal() {

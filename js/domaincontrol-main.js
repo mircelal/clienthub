@@ -705,6 +705,11 @@
 
 		renderClients: function (filteredClients = null) {
 			const container = document.getElementById('clients-list');
+			// Skip rendering if Vue component is active
+			if (!container) {
+				console.log('Clients list container not found - Vue component may be active');
+				return;
+			}
 			const clientsToRender = filteredClients !== null ? filteredClients : this.clients;
 
 			if (!clientsToRender || clientsToRender.length === 0) {
