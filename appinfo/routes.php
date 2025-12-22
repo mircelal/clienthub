@@ -151,6 +151,7 @@ return [
 		['name' => 'task#toggleStatus', 'url' => '/api/tasks/{id}/toggle', 'verb' => 'POST'],
 		['name' => 'task#byProject', 'url' => '/api/projects/{projectId}/tasks', 'verb' => 'GET'],
 		['name' => 'task#byClient', 'url' => '/api/clients/{clientId}/tasks', 'verb' => 'GET'],
+		['name' => 'task#subtasks', 'url' => '/api/tasks/{id}/subtasks', 'verb' => 'GET'],
 
 		// Time Entry routes
 		['name' => 'time_entry#byProject', 'url' => '/api/projects/{projectId}/time-entries', 'verb' => 'GET'],

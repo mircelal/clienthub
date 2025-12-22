@@ -173,7 +173,25 @@ export default {
 	},
 	tasks: {
 		getAll: () => axios.get(`${apiBase}/tasks`),
+		get: (id) => axios.get(`${apiBase}/tasks/${id}`),
 		getPending: () => axios.get(`${apiBase}/tasks/pending`),
+		approachingDeadline: () => axios.get(`${apiBase}/tasks/approaching-deadline`),
+		overdue: () => axios.get(`${apiBase}/tasks/overdue`),
+		byProject: (projectId) => axios.get(`${apiBase}/projects/${projectId}/tasks`),
+		byClient: (clientId) => axios.get(`${apiBase}/clients/${clientId}/tasks`),
+		getSubtasks: (id) => axios.get(`${apiBase}/tasks/${id}/subtasks`),
+		create: (data) => axios.post(`${apiBase}/tasks`, toFormData(data), {
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+		}),
+		update: (id, data) => axios.put(`${apiBase}/tasks/${id}`, toFormData(data), {
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+		}),
+		delete: (id) => axios.delete(`${apiBase}/tasks/${id}`),
+		toggleStatus: (id) => axios.post(`${apiBase}/tasks/${id}/toggle`),
 	},
 	invoices: {
 		getAll: () => axios.get(`${apiBase}/invoices`),
