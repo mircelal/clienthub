@@ -234,10 +234,10 @@ export default {
 	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 	max-width: 500px;
 	width: 100%;
-	max-height: 90vh;
-	overflow-y: auto;
+	max-height: 85vh;
 	display: flex;
 	flex-direction: column;
+	overflow: hidden;
 }
 
 .modal-header {
@@ -277,6 +277,9 @@ export default {
 
 .modal-body {
 	padding: 20px;
+	overflow-y: auto;
+	flex: 1;
+	min-height: 0;
 }
 
 .payment-info {
@@ -342,6 +345,10 @@ export default {
 	margin-top: 24px;
 	padding-top: 20px;
 	border-top: 1px solid var(--color-border);
+	position: sticky;
+	bottom: 0;
+	background-color: var(--color-main-background);
+	z-index: 10;
 }
 
 .button-vue {

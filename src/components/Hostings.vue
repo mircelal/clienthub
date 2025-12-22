@@ -47,34 +47,38 @@
 				<p>{{ translate('domaincontrol', 'Loading packages...') }}</p>
 			</div>
 
-			<div v-else class="hosting-packages-grid">
+			<div v-else class="hosting-packages-list">
 				<div
 					v-for="pkg in hostingPackages"
 					:key="pkg.id"
-					class="hosting-package-card"
+					class="list-item package-item"
 					@click="editPackage(pkg)"
 				>
-					<div class="package-card-header">
-						<h3 class="package-card-title">{{ pkg.name }}</h3>
-						<span class="package-card-badge" :class="{ 'package-active': pkg.isActive, 'package-inactive': !pkg.isActive }">
-							{{ pkg.isActive ? translate('domaincontrol', 'Active') : translate('domaincontrol', 'Inactive') }}
-						</span>
+					<div class="list-item__avatar">
+						<MaterialIcon name="category-office" :size="24" />
 					</div>
-					<div class="package-card-content">
-						<div class="package-card-info">
-							<span class="package-card-label">{{ translate('domaincontrol', 'Provider') }}:</span>
-							<span class="package-card-value">{{ pkg.provider }}</span>
-						</div>
-						<div v-if="pkg.priceMonthly || pkg.priceYearly" class="package-card-info">
-							<span class="package-card-label">{{ translate('domaincontrol', 'Price') }}:</span>
-							<span class="package-card-value">
+					<div class="list-item__content">
+						<div class="list-item__title">{{ pkg.name }}</div>
+						<div class="list-item__meta">
+							<span>{{ pkg.provider }}</span>
+							<span v-if="pkg.priceMonthly || pkg.priceYearly" class="package-price">
 								<span v-if="pkg.priceMonthly">{{ formatCurrency(pkg.priceMonthly, pkg.currency) }}/{{ translate('domaincontrol', 'Month') }}</span>
 								<span v-if="pkg.priceMonthly && pkg.priceYearly"> / </span>
 								<span v-if="pkg.priceYearly">{{ formatCurrency(pkg.priceYearly, pkg.currency) }}/{{ translate('domaincontrol', 'Year') }}</span>
 							</span>
 						</div>
 					</div>
-					<div class="package-card-actions">
+					<div class="list-item__stats">
+						<div class="list-item__stat">
+							<div class="list-item__stat-label">{{ translate('domaincontrol', 'Status') }}</div>
+							<div class="list-item__stat-value">
+								<span class="status-badge" :class="{ 'package-active': pkg.isActive, 'package-inactive': !pkg.isActive }">
+									{{ pkg.isActive ? translate('domaincontrol', 'Active') : translate('domaincontrol', 'Inactive') }}
+								</span>
+							</div>
+						</div>
+					</div>
+					<div class="list-item__actions">
 						<button
 							class="action-button action-button--edit"
 							@click.stop="editPackage(pkg)"
@@ -768,50 +772,24 @@ export default {
 	border-color: var(--color-primary);
 }
 
-/* Hosting Packages Grid */
-.hosting-packages-grid {
+/* Hosting Packages List - Nextcloud style */
+.hosting-packages-list {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-	gap: 20px;
+	gap: 12px;
 	margin-top: 20px;
 }
 
-.hosting-package-card {
-	background-color: var(--color-background-dark);
-	border-radius: var(--border-radius-element);
-	padding: 20px;
-	border: 1px solid var(--color-border);
+.package-item {
 	cursor: pointer;
-	transition: background-color 0.2s ease, transform 0.2s ease;
-	position: relative;
 }
 
-.hosting-package-card:hover {
-	background-color: var(--color-background-hover);
-	transform: translateY(-2px);
-	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+.package-item .list-item__avatar .material-icon {
+	filter: brightness(0) invert(1);
 }
 
-.package-card-header {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	margin-bottom: 12px;
-}
-
-.package-card-title {
-	margin: 0;
-	font-size: 18px;
-	font-weight: 600;
-	color: var(--color-main-text);
-}
-
-.package-card-badge {
-	padding: 4px 8px;
-	border-radius: var(--border-radius-pill);
-	font-size: 11px;
-	font-weight: 600;
-	text-transform: uppercase;
+.package-price {
+	color: var(--color-primary-element);
+	font-weight: 500;
 }
 
 .package-active {
@@ -822,35 +800,6 @@ export default {
 .package-inactive {
 	background-color: var(--color-text-maxcontrast);
 	color: var(--color-main-background);
-}
-
-.package-card-content {
-	margin-bottom: 12px;
-}
-
-.package-card-info {
-	display: flex;
-	justify-content: space-between;
-	margin-bottom: 8px;
-	font-size: 14px;
-}
-
-.package-card-label {
-	color: var(--color-text-maxcontrast);
-}
-
-.package-card-value {
-	color: var(--color-main-text);
-	font-weight: 500;
-}
-
-.package-card-actions {
-	display: flex;
-	gap: 8px;
-	justify-content: flex-end;
-	margin-top: 12px;
-	padding-top: 12px;
-	border-top: 1px solid var(--color-border);
 }
 
 /* List Item Styling - Similar to Domains */
