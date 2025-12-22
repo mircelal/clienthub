@@ -144,7 +144,7 @@
 							v-model="formData.panelNotes"
 							class="form-control"
 							rows="2"
-							:placeholder="translate('domaincontrol', 'Username: admin&#10;Password: ****')"
+							:placeholder="translate('domaincontrol', 'Username: admin\\nPassword: ****')"
 						></textarea>
 					</div>
 					<div class="form-group">
