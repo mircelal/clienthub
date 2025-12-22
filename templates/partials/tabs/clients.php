@@ -1,18 +1,7 @@
 <!-- Clients Tab -->
 <div id="clients-tab" class="tab-content">
-	<!-- Client List View -->
-	<div id="clients-list-view">
-		<div class="domaincontrol-actions">
-			<button class="btn btn-primary" id="add-client-btn">
-				<span class="icon-add"></span> Müşteri Ekle
-			</button>
-			<div class="client-search-wrapper">
-				<input type="text" id="client-search-input" class="client-search-input" placeholder="Müşteri ara..." />
-				<span class="client-search-icon">🔍</span>
-			</div>
-		</div>
-		<div id="clients-list" class="domaincontrol-list"></div>
-	</div>
+	<!-- Vue.js Clients Component -->
+	<div id="vue-clients-container"></div>
 	
 	<!-- Client Detail View -->
 	<div id="client-detail-view" style="display: none;">

@@ -1,11 +1,12 @@
 /**
  * Vue.js Components Entry Point
- * Step-by-step migration: Dashboard and Navigation converted to Vue.js
+ * Step-by-step migration: Dashboard, Navigation, and Clients converted to Vue.js
  */
 
 import { createApp } from 'vue'
 import Dashboard from './components/Dashboard.vue'
 import Navigation from './components/Navigation.vue'
+import Clients from './components/Clients.vue'
 
 console.log('Vue Components: Loading...')
 
@@ -41,6 +42,21 @@ document.addEventListener('DOMContentLoaded', function() {
 		}
 	} else {
 		console.warn('Vue Components: Dashboard container not found')
+	}
+
+	// Mount Clients component
+	const clientsContainer = document.getElementById('vue-clients-container')
+	if (clientsContainer) {
+		console.log('Vue Components: Mounting Clients...')
+		try {
+			const clientsApp = createApp(Clients)
+			clientsApp.mount(clientsContainer)
+			console.log('Vue Components: Clients mounted successfully!')
+		} catch (error) {
+			console.error('Vue Components: Error mounting Clients:', error)
+		}
+	} else {
+		console.warn('Vue Components: Clients container not found')
 	}
 })
 

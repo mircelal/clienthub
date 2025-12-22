@@ -39,7 +39,23 @@
 		"Debts/Receivables": "Borç/Alacak",
 		"Reports": "Raporlar",
 		"Settings": "Ayarlar",
-		"General Settings": "Genel Ayarlar"
+		"General Settings": "Genel Ayarlar",
+		"Add Client": "Müşteri Ekle",
+		"Search clients...": "Müşteri ara...",
+		"No clients found": "Müşteri bulunamadı",
+		"Add First Client": "İlk Müşteriyi Ekle",
+		"Loading clients...": "Müşteriler yükleniyor...",
+		"Back": "Geri",
+		"Edit": "Düzenle",
+		"Delete": "Sil",
+		"Contact Information": "İletişim Bilgileri",
+		"Email": "E-posta",
+		"Phone": "Telefon",
+		"Created Date": "Kayıt Tarihi",
+		"Notes": "Notlar",
+		"No notes": "Not bulunmuyor",
+		"Are you sure you want to delete {name}?": "{name} müşterisini silmek istediğinize emin misiniz?",
+		"Error deleting client": "Müşteri silinirken hata oluştu"
 	},
 	"pluralForm": "nplurals=2; plural=(n > 1);"
 }
