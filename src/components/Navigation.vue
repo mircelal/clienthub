@@ -258,6 +258,7 @@ export default {
 
 /* Icon styling - Nextcloud standard with Material Design icons */
 /* Following Nextcloud's official navigation structure */
+/* Reference: https://docs.nextcloud.com/server/latest/developer_manual/html_css_design/navigation.html */
 .app-navigation-entry-icon {
 	width: 20px;
 	height: 20px;
@@ -265,8 +266,7 @@ export default {
 	align-items: center;
 	justify-content: center;
 	flex-shrink: 0;
-	opacity: 0.7;
-	transition: opacity 0.2s;
+	margin-right: 0;
 }
 
 .app-navigation-entry-icon .material-icon {
@@ -274,20 +274,17 @@ export default {
 	height: 20px;
 	color: var(--color-main-text);
 	transition: color 0.2s;
+	opacity: 0.7;
 }
 
-.app-navigation-entry-link:hover .app-navigation-entry-icon {
-	opacity: 1;
-}
-
-.app-navigation-entry.active .app-navigation-entry-icon,
-.app-navigation-entry-link[aria-current='page'] .app-navigation-entry-icon {
+.app-navigation-entry-link:hover .app-navigation-entry-icon .material-icon {
 	opacity: 1;
 }
 
 .app-navigation-entry.active .app-navigation-entry-icon .material-icon,
 .app-navigation-entry-link[aria-current='page'] .app-navigation-entry-icon .material-icon {
 	color: var(--color-primary-element-text);
+	opacity: 1;
 }
 
 .app-navigation-entry__name {
