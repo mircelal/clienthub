@@ -1,10 +1,10 @@
 /**
  * Vue.js Components Entry Point
- * Step-by-step migration: Only small components here
+ * Step-by-step migration: Dashboard converted to Vue.js
  */
 
 import { createApp } from 'vue'
-import StatsCard from './components/StatsCard.vue'
+import Dashboard from './components/Dashboard.vue'
 
 console.log('Vue Components: Loading...')
 
@@ -12,24 +12,19 @@ console.log('Vue Components: Loading...')
 document.addEventListener('DOMContentLoaded', function() {
 	console.log('Vue Components: DOM ready, initializing...')
 	
-	// Mount StatsCard component to test container
-	const statsCardContainer = document.getElementById('vue-stats-card-container')
-	if (statsCardContainer) {
-		console.log('Vue Components: Mounting StatsCard...')
+	// Mount Dashboard component
+	const dashboardContainer = document.getElementById('vue-dashboard-container')
+	if (dashboardContainer) {
+		console.log('Vue Components: Mounting Dashboard...')
 		try {
-			const app = createApp(StatsCard, {
-				title: 'Toplam Müşteri',
-				value: 0,
-				icon: 'icon-contacts',
-				color: 'primary'
-			})
-			app.mount(statsCardContainer)
-			console.log('Vue Components: StatsCard mounted successfully!')
+			const app = createApp(Dashboard)
+			app.mount(dashboardContainer)
+			console.log('Vue Components: Dashboard mounted successfully!')
 		} catch (error) {
-			console.error('Vue Components: Error mounting StatsCard:', error)
+			console.error('Vue Components: Error mounting Dashboard:', error)
 		}
 	} else {
-		console.warn('Vue Components: StatsCard container not found')
+		console.warn('Vue Components: Dashboard container not found')
 	}
 })
 

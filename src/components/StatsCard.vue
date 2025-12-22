@@ -1,11 +1,11 @@
 <template>
-	<div class="stat-card stat-card--gradient-primary">
+	<div class="stat-card" :class="`stat-card--${color}`">
 		<div class="stat-card__icon">
-			<span :class="icon"></span>
+			<span :class="icon" />
 		</div>
 		<div class="stat-card__info">
 			<div class="stat-card__label">{{ title }}</div>
-			<div class="stat-card__value">{{ value }}</div>
+			<div class="stat-card__value">{{ formattedValue }}</div>
 		</div>
 	</div>
 </template>
@@ -19,7 +19,7 @@ export default {
 			required: true
 		},
 		value: {
-			type: Number,
+			type: [Number, String],
 			default: 0
 		},
 		icon: {
@@ -30,6 +30,14 @@ export default {
 			type: String,
 			default: 'primary'
 		}
+	},
+	computed: {
+		formattedValue() {
+			if (typeof this.value === 'number') {
+				return this.value.toLocaleString('tr-TR')
+			}
+			return this.value
+		}
 	}
 }
 </script>
@@ -39,15 +47,58 @@ export default {
 	display: flex;
 	align-items: center;
 	padding: 20px;
-	border-radius: 8px;
+	border-radius: var(--border-radius-element);
 	background: var(--color-background-dark);
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.stat-card--primary {
+	background: var(--color-primary-light);
+}
+
+.stat-card--success {
+	background: var(--color-success);
+}
+
+.stat-card--warning {
+	background: var(--color-warning);
+}
+
+.stat-card--danger {
+	background: var(--color-error);
 }
 
 .stat-card__icon {
 	font-size: 2.5em;
 	margin-right: 15px;
 	color: var(--color-primary);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 50px;
+	height: 50px;
+}
+
+.stat-card--primary .stat-card__icon {
+	color: var(--color-primary-text);
+}
+
+.stat-card--success .stat-card__icon {
+	color: var(--color-success-text);
+}
+
+.stat-card--warning .stat-card__icon {
+	color: var(--color-warning-text);
+}
+
+.stat-card--danger .stat-card__icon {
+	color: var(--color-error-text);
 }
 
 .stat-card__info {
@@ -66,4 +117,3 @@ export default {
 	color: var(--color-main-text);
 }
 </style>
-

@@ -3259,7 +3259,7 @@
 				})
 				.catch(error => {
 					this.showError('Paket silinemedi: ' + error.message);
-				});
+			});
 		},
 
 		closeModal: function (modalId) {
@@ -4015,10 +4015,10 @@
 				const statusBadgeBg = svc.status === 'active' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(107, 114, 128, 0.15)';
 
 				html += `
-					<div class="list-item service-item" data-id="${svc.id}">
+				<div class="list-item service-item" data-id="${svc.id}">
 						<div class="service-item__icon" style="background: ${statusBgColor};">
 							${serviceType?.icon || '📦'}
-						</div>
+					</div>
 						<div class="service-item__content">
 							<div class="service-item__title">${this.escapeHtml(svc.name)}</div>
 							<div class="service-item__meta">
@@ -4026,7 +4026,7 @@
 								${serviceType ? `<span class="service-meta-item">📁 ${this.escapeHtml(serviceType.name)}</span>` : ''}
 								<span class="service-meta-item">📅 ${expiryText}</span>
 								${!isOneTime && daysLeft !== null ? `<span class="service-meta-item service-days-left ${daysLeft <= 7 ? 'text-danger' : daysLeft <= 30 ? 'text-warning' : 'text-success'}">⏰ ${daysLeft} gün</span>` : ''}
-							</div>
+					</div>
 						</div>
 						<div class="service-item__right">
 							<span class="service-item__price">${parseFloat(svc.price || 0).toFixed(2)} ${svc.currency || 'USD'}</span>
@@ -4037,9 +4037,9 @@
 								<button class="btn btn-sm btn-secondary btn-view-service" data-id="${svc.id}" title="Detay">Görüntüle</button>
 								<button class="btn btn-sm btn-success btn-invoice-service" data-id="${svc.id}" title="Fatura Oluştur">📄 Fatura</button>
 							</div>
-						</div>
 					</div>
-				`;
+				</div>
+			`;
 			});
 			list.innerHTML = html;
 
@@ -4447,7 +4447,7 @@
 					<div class="invoice-card__amount">${this.formatMoney(inv.totalAmount, inv.currency)}</div>
 					<div class="invoice-card__remaining ${remaining > 0 ? 'has-balance' : ''}">
 						${remaining > 0 ? this.formatMoney(remaining, inv.currency) : 'Tamamlandı'}
-					</div>
+						</div>
 					<div class="invoice-card__status" style="text-align: center;">
 						<span class="status-badge status-badge--${inv.status}">${statusText}</span>
 					</div>
@@ -5286,61 +5286,61 @@
 						return;
 					}
 
-					this.currentProjectId = id;
-					document.getElementById('projects-list-view').style.display = 'none';
-					document.getElementById('project-detail-view').style.display = 'block';
+			this.currentProjectId = id;
+			document.getElementById('projects-list-view').style.display = 'none';
+			document.getElementById('project-detail-view').style.display = 'block';
 
-					const client = this.clients.find(c => c.id == proj.clientId);
+			const client = this.clients.find(c => c.id == proj.clientId);
 					const currentUserId = this.getCurrentUserId();
 					const isOwner = (proj.userId === currentUserId);
 					const hasWriteAccess = isOwner || (proj.shares && proj.shares.some(s => s.sharedWithUserId === currentUserId && s.permissionLevel === 'write'));
 
-					const statusTexts = { active: 'Aktif', on_hold: 'Beklemede', completed: 'Tamamlandı', cancelled: 'İptal' };
-					const daysLeft = proj.deadline ? this.calculateDaysLeft(proj.deadline) : null;
+			const statusTexts = { active: 'Aktif', on_hold: 'Beklemede', completed: 'Tamamlandı', cancelled: 'İptal' };
+			const daysLeft = proj.deadline ? this.calculateDaysLeft(proj.deadline) : null;
 
-					const projectTypeLabels = {
-						website: '🌐 Web Sitesi',
-						ecommerce: '🛒 E-Ticaret',
-						webapp: '📱 Web Uygulaması',
-						theme: '🎨 Tema/Modül',
-						design: '🖼️ Grafik Tasarım',
-						server: '🖥️ Sunucu',
-						email: '📧 Mail',
-						hosting: '☁️ Hosting',
-						device: '📟 Cihaz',
-						support: '🛠️ Destek',
-						seo: '📈 SEO',
-						other: '📦 Diğer'
-					};
+			const projectTypeLabels = {
+				website: '🌐 Web Sitesi',
+				ecommerce: '🛒 E-Ticaret',
+				webapp: '📱 Web Uygulaması',
+				theme: '🎨 Tema/Modül',
+				design: '🖼️ Grafik Tasarım',
+				server: '🖥️ Sunucu',
+				email: '📧 Mail',
+				hosting: '☁️ Hosting',
+				device: '📟 Cihaz',
+				support: '🛠️ Destek',
+				seo: '📈 SEO',
+				other: '📦 Diğer'
+			};
 
-					document.getElementById('project-detail-name').textContent = proj.name;
-					document.getElementById('project-detail-client').textContent = client ? client.name : '-';
+			document.getElementById('project-detail-name').textContent = proj.name;
+			document.getElementById('project-detail-client').textContent = client ? client.name : '-';
 					document.getElementById('project-detail-owner').textContent = proj.userId || proj.user_id || '-';
-					document.getElementById('project-detail-type').textContent = proj.projectType ? (projectTypeLabels[proj.projectType] || proj.projectType) : '-';
+			document.getElementById('project-detail-type').textContent = proj.projectType ? (projectTypeLabels[proj.projectType] || proj.projectType) : '-';
 
-					// Status with badge
-					const statusEl = document.getElementById('project-detail-status');
-					statusEl.innerHTML = `<span class="status-badge project-status--${proj.status}">${statusTexts[proj.status] || proj.status}</span>`;
+			// Status with badge
+			const statusEl = document.getElementById('project-detail-status');
+			statusEl.innerHTML = `<span class="status-badge project-status--${proj.status}">${statusTexts[proj.status] || proj.status}</span>`;
 
-					// Deadline with days left
-					const deadlineEl = document.getElementById('project-detail-deadline');
-					if (proj.deadline) {
-						const deadlineClass = daysLeft <= 0 ? 'status-badge--overdue' : (daysLeft <= 7 ? 'status-badge--draft' : '');
-						deadlineEl.innerHTML = `${proj.deadline} ${daysLeft !== null ? `<span class="status-badge ${deadlineClass}">${daysLeft <= 0 ? 'Geçti!' : daysLeft + ' gün'}</span>` : ''}`;
-					} else {
-						deadlineEl.textContent = '-';
-					}
+			// Deadline with days left
+			const deadlineEl = document.getElementById('project-detail-deadline');
+			if (proj.deadline) {
+				const deadlineClass = daysLeft <= 0 ? 'status-badge--overdue' : (daysLeft <= 7 ? 'status-badge--draft' : '');
+				deadlineEl.innerHTML = `${proj.deadline} ${daysLeft !== null ? `<span class="status-badge ${deadlineClass}">${daysLeft <= 0 ? 'Geçti!' : daysLeft + ' gün'}</span>` : ''}`;
+			} else {
+				deadlineEl.textContent = '-';
+			}
 
-					// Start date
-					const startEl = document.getElementById('project-detail-start');
-					if (startEl) startEl.textContent = proj.startDate || '-';
+			// Start date
+			const startEl = document.getElementById('project-detail-start');
+			if (startEl) startEl.textContent = proj.startDate || '-';
 
-					document.getElementById('project-detail-budget').textContent = proj.budget ? `${proj.budget} ${proj.currency}` : '-';
-					document.getElementById('project-detail-description').textContent = proj.description || '-';
+			document.getElementById('project-detail-budget').textContent = proj.budget ? `${proj.budget} ${proj.currency}` : '-';
+			document.getElementById('project-detail-description').textContent = proj.description || '-';
 
-					// Notes
-					const notesEl = document.getElementById('project-detail-notes');
-					if (notesEl) notesEl.textContent = proj.notes || '-';
+			// Notes
+			const notesEl = document.getElementById('project-detail-notes');
+			if (notesEl) notesEl.textContent = proj.notes || '-';
 
 					// Show/hide edit and delete buttons based on access
 					const editBtn = document.getElementById('project-detail-edit-btn');
@@ -5392,14 +5392,14 @@
 						this.projects.push(proj);
 					}
 
-					// Load project tasks with progress
-					this.loadProjectTasks(id);
+			// Load project tasks with progress
+			this.loadProjectTasks(id);
 
-					// Load linked items
-					this.loadProjectItems(id);
+			// Load linked items
+			this.loadProjectItems(id);
 
-					// Load project invoices and calculate financials
-					this.loadProjectFinancials(id);
+			// Load project invoices and calculate financials
+			this.loadProjectFinancials(id);
 
 					// Load time tracking
 					this.loadTimeTracking(id);
@@ -5410,7 +5410,7 @@
 				.catch(e => {
 					console.error('Error loading project details:', e);
 					this.showError('Proje yüklenemedi: ' + e.message);
-				});
+			});
 		},
 
 		loadProjectFinancials: function (projectId) {
@@ -5505,16 +5505,16 @@
 			}
 
 			container.innerHTML = `
-				<div class="financial-summary">
+			<div class="financial-summary">
 					<div class="financial-item" style="margin-bottom: 12px;">
-						<span class="financial-label">Bütçe:</span>
-						<span class="financial-value">${budget.toFixed(2)} ${proj.currency || 'USD'}</span>
-					</div>
+					<span class="financial-label">Bütçe:</span>
+					<span class="financial-value">${budget.toFixed(2)} ${proj.currency || 'USD'}</span>
+				</div>
 					${totalInvoiced > 0 ? `
 						<div class="financial-item" style="margin-bottom: 12px;">
 							<span class="financial-label">Toplam Faturalanan:</span>
 							<span class="financial-value">${totalInvoiced.toFixed(2)} ${proj.currency || 'USD'}</span>
-						</div>
+			</div>
 						<div class="financial-item" style="margin-bottom: 12px;">
 							<span class="financial-label">Ödenen:</span>
 							<span class="financial-value" style="color: #10b981;">${totalPaid.toFixed(2)} ${proj.currency || 'USD'}</span>
@@ -5533,7 +5533,7 @@
 						📄 Fatura Oluştur
 					</button>
 				</div>
-			`;
+		`;
 
 			container.querySelector('.create-project-invoice-btn')?.addEventListener('click', () => {
 				this.createInvoiceFromProject(projectId);
@@ -6008,7 +6008,7 @@
 					const label = btn.textContent.split('(')[0].trim();
 					btn.textContent = `${label} (${counts[filter]})`;
 				}
-			});
+				});
 		},
 
 		renderTasks: function (filter = 'all') {
@@ -6048,7 +6048,7 @@
 					<div class="list-item__content">
 						<div style="display: flex; align-items: flex-start;">
 							<input type="checkbox" class="task-checkbox" data-id="${task.id}" ${task.status === 'done' ? 'checked' : ''} ${task.status === 'cancelled' ? 'disabled' : ''} style="margin-right: 18px; width: 22px; height: 22px; margin-top: 4px;">
-							<div>
+						<div>
 								<div class="list-item__title task-status--${task.status}">
 									${this.escapeHtml(task.title)}
 									${isToday ? '<span class="status-badge status-badge--draft" style="margin-left: 8px; font-size: 10px;">BUGÜN</span>' : ''}
@@ -6346,7 +6346,7 @@
 					this.closeModal('task-modal');
 					this.loadTasks().then(() => {
 						if (this.currentTaskId) this.showTaskDetail(this.currentTaskId);
-						if (this.currentProjectId) this.loadProjectTasks(this.currentProjectId);
+					if (this.currentProjectId) this.loadProjectTasks(this.currentProjectId);
 					});
 					this.showSuccess('Görev kaydedildi');
 				})
@@ -7490,7 +7490,7 @@
 					option.value = cat.id;
 					option.textContent = `${cat.icon || ''} ${cat.name}`;
 					select.appendChild(option);
-				});
+			});
 			}
 
 			if (selectedValue) {
@@ -7576,7 +7576,7 @@
 				})
 				.catch(e => {
 					this.showError('Silme hatası: ' + e.message);
-				});
+			});
 		},
 
 		// Debt Functions
@@ -7602,8 +7602,8 @@
 
 			if (this.debts.length === 0) {
 				list.innerHTML = '<p class="empty-message">Henüz borç/alacak kaydı yok</p>';
-				return;
-			}
+						return;
+					}
 
 			const activeFilter = document.querySelector('#debts-list-view .filter-buttons .btn-filter.active')?.getAttribute('data-filter') || 'all';
 			let filtered = this.debts;
@@ -7679,9 +7679,9 @@
 								${statusLabels[debt.status] || debt.status}
 							</span>
 							<button class="btn btn-sm btn-secondary" onclick="DomainControl.showDebtDetail(${debt.id}); event.stopPropagation();" style="padding: 6px 12px; font-size: 13px;">Görüntüle</button>
+							</div>
 						</div>
-					</div>
-				`;
+					`;
 			}).join('');
 
 			list.innerHTML = html;
@@ -7694,7 +7694,7 @@
 						this.showDebtDetail(id);
 					}
 				});
-			});
+				});
 		},
 
 		showDebtModal: function (id = null) {
@@ -7806,18 +7806,18 @@
 					document.getElementById('debt-detail-paid').textContent = `${parseFloat(debt.paidAmount || 0).toFixed(2)} ${debt.currency || 'USD'}`;
 					document.getElementById('debt-detail-remaining').textContent = `${remaining.toFixed(2)} ${debt.currency || 'USD'}`;
 
-					const statusLabels = {
+			const statusLabels = {
 						active: 'Aktif',
-						paid: 'Ödendi',
-						overdue: 'Gecikmiş',
-						cancelled: 'İptal'
-					};
-					const statusColors = {
+				paid: 'Ödendi',
+				overdue: 'Gecikmiş',
+				cancelled: 'İptal'
+			};
+			const statusColors = {
 						active: '#3b82f6',
 						paid: '#10b981',
 						overdue: '#ef4444',
 						cancelled: '#6b7280'
-					};
+			};
 					const statusEl = document.getElementById('debt-detail-status');
 					statusEl.innerHTML = `<span class="status-badge" style="background: ${statusColors[debt.status] || '#3b82f6'}20; color: ${statusColors[debt.status] || '#3b82f6'};">${statusLabels[debt.status] || debt.status}</span>`;
 
@@ -7917,8 +7917,8 @@
 							${payment.notes ? `<div style="font-size: 11px; color: var(--color-text-maxcontrast); margin-top: 4px;">${this.escapeHtml(payment.notes)}</div>` : ''}
 						</div>
 						<button class="btn btn-sm btn-danger" onclick="DomainControl.deleteDebtPayment(${payment.id})" title="Sil">🗑️</button>
-					</div>
-				`;
+						</div>
+					`;
 			}).join('');
 
 			container.innerHTML = html;

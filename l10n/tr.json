@@ -1,0 +1,35 @@
+{
+	"translations": {
+		"Welcome, {name}": "Hoş Geldiniz, {name}",
+		"Here's what's happening in your business today.": "Bugün işletmenizde neler olup bitiyor? İşte güncel özetiniz.",
+		"Total Clients": "Toplam Müşteri",
+		"Active Projects": "Aktif Projeler",
+		"Pending Tasks": "Bekleyen Görevler",
+		"Unpaid Invoices": "Ödenmemiş Fatura",
+		"Overview": "Genel Bakış",
+		"Domains": "Domainler",
+		"Hosting": "Hosting",
+		"Websites": "Websiteler",
+		"Income (This Month)": "Gelir (Bu Ay)",
+		"Expense (This Month)": "Gider (Bu Ay)",
+		"Net Profit/Loss": "Net Kar/Zarar",
+		"Quick Actions": "Hızlı İşlemler",
+		"New Client": "Yeni Müşteri",
+		"New Project": "Yeni Proje",
+		"New Task": "Yeni Görev",
+		"Create Invoice": "Fatura Oluştur",
+		"Recent Clients": "Son Eklenen Müşteriler",
+		"View All": "Tümünü Gör",
+		"No clients yet": "Henüz müşteri eklenmemiş",
+		"Overdue Payments": "Geciken Ödemeler",
+		"No overdue payments": "Geciken ödeme yok",
+		"Upcoming Payments": "Yaklaşan Ödemeler",
+		"No upcoming payments": "Yaklaşan ödeme yok",
+		"Upcoming Tasks": "Yaklaşan Görevler",
+		"No upcoming tasks": "Yaklaşan görev yok",
+		"Upcoming Debt Payments": "Yaklaşan Borç Ödemeleri",
+		"No upcoming debt payments": "Yaklaşan borç ödemesi yok"
+	},
+	"pluralForm": "nplurals=2; plural=(n > 1);"
+}
+
