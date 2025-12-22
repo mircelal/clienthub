@@ -39,7 +39,7 @@
 
 			<!-- Loading State -->
 			<div v-if="loading" class="loading-content">
-				<span class="icon-loading"></span>
+				<MaterialIcon name="loading" :size="32" class="loading-icon" />
 				<p>{{ translate('domaincontrol', 'Loading clients...') }}</p>
 			</div>
 
@@ -67,11 +67,11 @@
 							{{ getClientDomainCount(client.id) }}
 						</div>
 						<div class="client-stat-badge">
-							<span class="icon-category-office"></span>
+							<MaterialIcon name="category-office" :size="16" />
 							{{ getClientHostingCount(client.id) }}
 						</div>
 						<div class="client-stat-badge">
-							<span class="icon-link"></span>
+							<MaterialIcon name="link" :size="16" />
 							{{ getClientWebsiteCount(client.id) }}
 						</div>
 					</div>
@@ -118,7 +118,7 @@
 				<div class="detail-stats client-stats">
 					<div class="stat-card client-stat-card">
 						<div class="stat-card__icon client-stat-icon" style="background: rgba(59, 130, 246, 0.08);">
-							<span class="icon-public"></span>
+							<MaterialIcon name="public" :size="24" />
 						</div>
 						<div class="stat-card__content">
 							<div class="stat-card__label">{{ translate('domaincontrol', 'Domains') }}</div>
@@ -127,7 +127,7 @@
 					</div>
 					<div class="stat-card client-stat-card">
 						<div class="stat-card__icon client-stat-icon" style="background: rgba(16, 185, 129, 0.08);">
-							<span class="icon-category-office"></span>
+							<MaterialIcon name="category-office" :size="24" />
 						</div>
 						<div class="stat-card__content">
 							<div class="stat-card__label">{{ translate('domaincontrol', 'Hosting') }}</div>
@@ -136,7 +136,7 @@
 					</div>
 					<div class="stat-card client-stat-card">
 						<div class="stat-card__icon client-stat-icon" style="background: rgba(139, 92, 246, 0.08);">
-							<span class="icon-link"></span>
+							<MaterialIcon name="link" :size="24" />
 						</div>
 						<div class="stat-card__content">
 							<div class="stat-card__label">{{ translate('domaincontrol', 'Websites') }}</div>
@@ -183,7 +183,7 @@
 					<div class="detail-service-card client-service-card">
 						<div class="service-card-header">
 							<h3 class="service-card-title">
-								<span class="icon-public"></span>
+								<MaterialIcon name="public" :size="20" />
 								{{ translate('domaincontrol', 'Domains') }}
 							</h3>
 							<span class="service-card-count">{{ getClientDomainCount(selectedClient.id) }}</span>
@@ -209,7 +209,7 @@
 					<div class="detail-service-card client-service-card">
 						<div class="service-card-header">
 							<h3 class="service-card-title">
-								<span class="icon-category-office"></span>
+								<MaterialIcon name="category-office" :size="20" />
 								{{ translate('domaincontrol', 'Hosting') }}
 							</h3>
 							<span class="service-card-count">{{ getClientHostingCount(selectedClient.id) }}</span>
@@ -235,7 +235,7 @@
 					<div class="detail-service-card client-service-card">
 						<div class="service-card-header">
 							<h3 class="service-card-title">
-								<span class="icon-link"></span>
+								<MaterialIcon name="link" :size="20" />
 								{{ translate('domaincontrol', 'Websites') }}
 							</h3>
 							<span class="service-card-count">{{ getClientWebsiteCount(selectedClient.id) }}</span>
@@ -260,7 +260,7 @@
 					<div class="detail-service-card client-service-card">
 						<div class="service-card-header">
 							<h3 class="service-card-title">
-								<span class="icon-settings"></span>
+								<MaterialIcon name="settings" :size="20" />
 								{{ translate('domaincontrol', 'Services') }}
 							</h3>
 							<span class="service-card-count">{{ getClientServiceCount(selectedClient.id) }}</span>
@@ -286,7 +286,7 @@
 					<div class="detail-service-card client-service-card">
 						<div class="service-card-header">
 							<h3 class="service-card-title">
-								<span class="icon-files"></span>
+								<MaterialIcon name="files" :size="20" />
 								{{ translate('domaincontrol', 'Invoices') }}
 							</h3>
 							<span class="service-card-count">{{ getClientInvoiceCount(selectedClient.id) }}</span>
@@ -312,7 +312,7 @@
 					<div class="detail-service-card client-service-card">
 						<div class="service-card-header">
 							<h3 class="service-card-title">
-								<span class="icon-files"></span>
+								<MaterialIcon name="files" :size="20" />
 								{{ translate('domaincontrol', 'Payments') }}
 							</h3>
 							<span class="service-card-count">{{ getClientPaymentCount(selectedClient.id) }}</span>
