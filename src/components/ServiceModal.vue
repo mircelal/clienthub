@@ -156,13 +156,10 @@
 					<label for="service-notes" class="form-label">
 						{{ translate('domaincontrol', 'Notes') }}
 					</label>
-					<textarea
-						id="service-notes"
+					<RichTextEditor
 						v-model="formData.notes"
-						class="form-control"
-						rows="4"
 						:placeholder="translate('domaincontrol', 'Other notes...')"
-					></textarea>
+					/>
 				</div>
 
 				<div class="form-actions">
@@ -182,6 +179,7 @@
 <script>
 import api from '../services/api'
 import MaterialIcon from './MaterialIcon.vue'
+import RichTextEditor from './RichTextEditor.vue'
 
 export default {
 	name: 'ServiceModal',

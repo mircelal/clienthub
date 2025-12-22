@@ -48,13 +48,10 @@
 					</div>
 					<div class="form-group">
 						<label for="client-notes">{{ translate('domaincontrol', 'Notes') }}</label>
-						<textarea
-							id="client-notes"
+						<RichTextEditor
 							v-model="formData.notes"
-							class="form-control"
-							rows="4"
 							:placeholder="translate('domaincontrol', 'Additional notes')"
-						></textarea>
+						/>
 					</div>
 					<div class="form-actions">
 						<button type="button" class="button-vue button-vue--secondary" @click="closeModal">
@@ -123,11 +120,13 @@
 <script>
 import api from '../services/api'
 import MaterialIcon from './MaterialIcon.vue'
+import RichTextEditor from './RichTextEditor.vue'
 
 export default {
 	name: 'ClientModal',
 	components: {
 		MaterialIcon,
+		RichTextEditor,
 	},
 	props: {
 		open: {

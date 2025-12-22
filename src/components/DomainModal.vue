@@ -127,13 +127,10 @@
 					</div>
 					<div class="form-group">
 						<label for="domain-notes">{{ translate('domaincontrol', 'General Notes') }}</label>
-						<textarea
-							id="domain-notes"
+						<RichTextEditor
 							v-model="formData.notes"
-							class="form-control"
-							rows="2"
 							:placeholder="translate('domaincontrol', 'Other notes...')"
-						></textarea>
+						/>
 					</div>
 					<div class="form-actions">
 						<button type="button" class="button-vue button-vue--secondary" @click="closeModal">
@@ -151,9 +148,13 @@
 
 <script>
 import api from '../services/api'
+import RichTextEditor from './RichTextEditor.vue'
 
 export default {
 	name: 'DomainModal',
+	components: {
+		RichTextEditor,
+	},
 	props: {
 		open: {
 			type: Boolean,
