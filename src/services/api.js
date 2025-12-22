@@ -149,10 +149,6 @@ export default {
 		}),
 		delete: (id) => axios.delete(`${apiBase}/payments/${id}`),
 	},
-	payments: {
-		getAll: () => axios.get(`${apiBase}/payments`),
-		getMonthlyTotal: () => axios.get(`${apiBase}/payments/monthly-total`),
-	},
 	transactions: {
 		getAll: () => axios.get(`${apiBase}/transactions`),
 		getMonthlySummary: () => axios.get(`${apiBase}/transactions/monthly-summary`),

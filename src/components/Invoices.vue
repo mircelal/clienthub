@@ -98,7 +98,6 @@
 					v-for="invoice in filteredInvoices"
 					:key="invoice.id"
 					class="list-item invoice-item"
-					:class="getInvoiceStatusClass(invoice)"
 					@click="selectInvoice(invoice)"
 				>
 					<div class="list-item__avatar">
@@ -108,7 +107,6 @@
 						<div class="list-item__title">{{ invoice.invoiceNumber }}</div>
 						<div class="list-item__meta">
 							<span v-if="getClientName(invoice.clientId)">
-								<MaterialIcon name="contacts" :size="16" />
 								{{ getClientName(invoice.clientId) }}
 							</span>
 							<span>{{ formatDate(invoice.issueDate) }}</span>
@@ -121,34 +119,85 @@
 						</div>
 						<div class="list-item__stat">
 							<div class="list-item__stat-label">{{ translate('domaincontrol', 'Remaining') }}</div>
-							<div class="list-item__stat-value" :class="getRemainingClass(invoice)">
+							<div class="list-item__stat-value">
 								{{ formatCurrency(getRemaining(invoice), invoice.currency) }}
 							</div>
 						</div>
 						<div class="list-item__stat">
 							<div class="list-item__stat-label">{{ translate('domaincontrol', 'Status') }}</div>
 							<div class="list-item__stat-value">
-								<span class="status-badge" :class="getInvoiceStatusClass(invoice)">
+								<span class="status-badge status-badge--simple" :class="getInvoiceStatusClass(invoice)">
 									{{ getInvoiceStatusText(invoice.status) }}
 								</span>
 							</div>
 						</div>
 					</div>
 					<div class="list-item__actions">
-						<button
-							class="action-button action-button--edit"
-							@click.stop="editInvoice(invoice)"
-							:title="translate('domaincontrol', 'Edit')"
-						>
-							<MaterialIcon name="edit" :size="18" />
-						</button>
-						<button
-							class="action-button action-button--delete"
-							@click.stop="confirmDelete(invoice)"
-							:title="translate('domaincontrol', 'Delete')"
-						>
-							<MaterialIcon name="delete" :size="18" />
-						</button>
+						<div class="popover-menu-wrapper" @click.stop>
+							<button
+								class="action-button action-button--more"
+								@click.stop="togglePopover(invoice.id)"
+								:title="translate('domaincontrol', 'More options')"
+							>
+								<MaterialIcon name="more-vertical" :size="18" />
+							</button>
+							<div
+								v-if="openPopover === invoice.id"
+								class="popover-menu"
+								@click.stop
+							>
+								<button
+									class="popover-menu-item"
+									@click="editInvoice(invoice); closePopover()"
+								>
+									<MaterialIcon name="edit" :size="16" />
+									{{ translate('domaincontrol', 'Edit') }}
+								</button>
+								<button
+									class="popover-menu-item"
+									@click="changeStatusQuick(invoice, 'draft'); closePopover()"
+									v-if="invoice.status !== 'draft'"
+								>
+									{{ translate('domaincontrol', 'Set as Draft') }}
+								</button>
+								<button
+									class="popover-menu-item"
+									@click="changeStatusQuick(invoice, 'sent'); closePopover()"
+									v-if="invoice.status !== 'sent'"
+								>
+									{{ translate('domaincontrol', 'Set as Sent') }}
+								</button>
+								<button
+									class="popover-menu-item"
+									@click="changeStatusQuick(invoice, 'paid'); closePopover()"
+									v-if="invoice.status !== 'paid'"
+								>
+									{{ translate('domaincontrol', 'Set as Paid') }}
+								</button>
+								<button
+									class="popover-menu-item"
+									@click="changeStatusQuick(invoice, 'overdue'); closePopover()"
+									v-if="invoice.status !== 'overdue'"
+								>
+									{{ translate('domaincontrol', 'Set as Overdue') }}
+								</button>
+								<button
+									class="popover-menu-item"
+									@click="changeStatusQuick(invoice, 'cancelled'); closePopover()"
+									v-if="invoice.status !== 'cancelled'"
+								>
+									{{ translate('domaincontrol', 'Set as Cancelled') }}
+								</button>
+								<div class="popover-menu-separator"></div>
+								<button
+									class="popover-menu-item popover-menu-item--danger"
+									@click="confirmDelete(invoice); closePopover()"
+								>
+									<MaterialIcon name="delete" :size="16" />
+									{{ translate('domaincontrol', 'Delete') }}
+								</button>
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -247,22 +296,6 @@
 								:style="{ width: getPaymentPercent(selectedInvoice) + '%', backgroundColor: getProgressColor(selectedInvoice) }"
 							></div>
 						</div>
-					</div>
-				</div>
-
-				<!-- Status Change Buttons -->
-				<div class="detail-info-card">
-					<h3 class="info-card-title">{{ translate('domaincontrol', 'Change Status') }}</h3>
-					<div class="status-actions">
-						<button
-							v-for="status in invoiceStatuses"
-							:key="status.value"
-							class="button-vue button-vue--secondary"
-							:class="{ 'button-vue--primary': selectedInvoice.status === status.value }"
-							@click="changeStatus(status.value)"
-						>
-							{{ status.label }}
-						</button>
 					</div>
 				</div>
 
@@ -402,6 +435,7 @@ export default {
 			payingInvoice: null,
 			searchQuery: '',
 			currentFilter: 'all',
+			openPopover: null,
 			invoiceStatuses: [
 				{ value: 'draft', label: 'Draft' },
 				{ value: 'sent', label: 'Sent' },
@@ -441,6 +475,11 @@ export default {
 	},
 	mounted() {
 		this.loadData()
+		// Close popover when clicking outside
+		document.addEventListener('click', this.handleClickOutside)
+	},
+	beforeUnmount() {
+		document.removeEventListener('click', this.handleClickOutside)
 	},
 	methods: {
 		async loadData() {
@@ -601,6 +640,29 @@ export default {
 				alert(this.translate('domaincontrol', 'Error changing status'))
 			}
 		},
+		async changeStatusQuick(invoice, newStatus) {
+			try {
+				await api.invoices.update(invoice.id, { status: newStatus })
+				await this.loadInvoices()
+				if (this.selectedInvoice && this.selectedInvoice.id === invoice.id) {
+					await this.loadInvoiceDetail(invoice.id)
+				}
+			} catch (error) {
+				console.error('Error changing status:', error)
+				alert(this.translate('domaincontrol', 'Error changing status'))
+			}
+		},
+		togglePopover(invoiceId) {
+			this.openPopover = this.openPopover === invoiceId ? null : invoiceId
+		},
+		closePopover() {
+			this.openPopover = null
+		},
+		handleClickOutside(event) {
+			if (this.openPopover && !event.target.closest('.popover-menu-wrapper')) {
+				this.closePopover()
+			}
+		},
 		getClientName(clientId) {
 			const client = this.clients.find(c => c.id === clientId)
 			return client ? client.name : ''
@@ -756,6 +818,12 @@ export default {
 				'Are you sure you want to delete this payment?': 'Bu ödemeyi silmek istediğinize emin misiniz?',
 				'Error deleting payment': 'Ödeme silinirken hata oluştu',
 				'Error changing status': 'Durum değiştirilirken hata oluştu',
+				'More options': 'Daha fazla seçenek',
+				'Set as Draft': 'Taslak olarak işaretle',
+				'Set as Sent': 'Gönderildi olarak işaretle',
+				'Set as Paid': 'Ödendi olarak işaretle',
+				'Set as Overdue': 'Gecikmiş olarak işaretle',
+				'Set as Cancelled': 'İptal olarak işaretle',
 			}
 
 			return translations[text] || text
@@ -814,10 +882,95 @@ export default {
 
 .invoice-item {
 	cursor: pointer;
+	background-color: var(--color-main-background);
+	border: 1px solid var(--color-border);
+}
+
+.invoice-item:hover {
+	background-color: var(--color-background-hover);
+}
+
+.invoice-item .list-item__avatar {
+	background-color: var(--color-background-dark);
 }
 
 .invoice-item .list-item__avatar .material-icon {
-	filter: brightness(0) invert(1);
+	color: var(--color-text-maxcontrast);
+}
+
+.list-item__stat-value {
+	color: var(--color-main-text);
+	font-weight: 500;
+}
+
+.status-badge--simple {
+	padding: 4px 8px;
+	border-radius: var(--border-radius-pill);
+	font-size: 12px;
+	font-weight: 500;
+	background-color: var(--color-background-dark);
+	color: var(--color-main-text);
+	border: 1px solid var(--color-border);
+}
+
+.popover-menu-wrapper {
+	position: relative;
+}
+
+.popover-menu {
+	position: absolute;
+	right: 0;
+	top: 100%;
+	margin-top: 4px;
+	background-color: var(--color-main-background);
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius-container);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+	min-width: 180px;
+	z-index: 1000;
+	overflow: hidden;
+}
+
+.popover-menu-item {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: 100%;
+	padding: 10px 16px;
+	border: none;
+	background: none;
+	color: var(--color-main-text);
+	font-size: 14px;
+	text-align: left;
+	cursor: pointer;
+	transition: background-color 0.2s;
+}
+
+.popover-menu-item:hover {
+	background-color: var(--color-background-hover);
+}
+
+.popover-menu-item--danger {
+	color: var(--color-text-error);
+}
+
+.popover-menu-item--danger:hover {
+	background-color: var(--color-error);
+	color: var(--color-error-text);
+}
+
+.popover-menu-separator {
+	height: 1px;
+	background-color: var(--color-border);
+	margin: 4px 0;
+}
+
+.action-button--more {
+	opacity: 0.7;
+}
+
+.action-button--more:hover {
+	opacity: 1;
 }
 
 .invoice-detail-view {
@@ -1096,25 +1249,25 @@ export default {
 }
 
 .status-ok {
-	color: var(--color-success);
+	color: var(--color-text-success);
 }
 
 .status-warning {
-	color: var(--color-warning);
+	color: var(--color-text-error);
 }
 
 .status-critical {
-	color: var(--color-error);
+	color: var(--color-text-error);
 }
 
 .status-draft {
-	background-color: var(--color-text-maxcontrast);
-	color: var(--color-main-background);
+	background-color: var(--color-background-dark);
+	color: var(--color-text-maxcontrast);
 }
 
 .status-sent {
-	background-color: var(--color-primary-element);
-	color: var(--color-primary-element-text);
+	background-color: var(--color-primary-element-light);
+	color: var(--color-primary-element-light-text);
 }
 
 .status-paid {
@@ -1128,8 +1281,8 @@ export default {
 }
 
 .status-cancelled {
-	background-color: var(--color-text-maxcontrast);
-	color: var(--color-main-background);
+	background-color: var(--color-background-dark);
+	color: var(--color-text-maxcontrast);
 	opacity: 0.6;
 }
 
