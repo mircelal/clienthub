@@ -28,7 +28,18 @@
 		"Upcoming Tasks": "Yaklaşan Görevler",
 		"No upcoming tasks": "Yaklaşan görev yok",
 		"Upcoming Debt Payments": "Yaklaşan Borç Ödemeleri",
-		"No upcoming debt payments": "Yaklaşan borç ödemesi yok"
+		"No upcoming debt payments": "Yaklaşan borç ödemesi yok",
+		"Dashboard": "Dashboard",
+		"Clients": "Müşteriler",
+		"Services": "Hizmetler",
+		"Invoices": "Faturalar",
+		"Projects": "Projeler",
+		"Tasks": "Görevler",
+		"Income/Expense": "Gelir/Gider",
+		"Debts/Receivables": "Borç/Alacak",
+		"Reports": "Raporlar",
+		"Settings": "Ayarlar",
+		"General Settings": "Genel Ayarlar"
 	},
 	"pluralForm": "nplurals=2; plural=(n > 1);"
 }

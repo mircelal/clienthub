@@ -1,16 +1,32 @@
 /**
  * Vue.js Components Entry Point
- * Step-by-step migration: Dashboard converted to Vue.js
+ * Step-by-step migration: Dashboard and Navigation converted to Vue.js
  */
 
 import { createApp } from 'vue'
 import Dashboard from './components/Dashboard.vue'
+import Navigation from './components/Navigation.vue'
 
 console.log('Vue Components: Loading...')
 
 // Wait for DOM to be ready
 document.addEventListener('DOMContentLoaded', function() {
 	console.log('Vue Components: DOM ready, initializing...')
+	
+	// Mount Navigation component
+	const navigationContainer = document.getElementById('vue-navigation-container')
+	if (navigationContainer) {
+		console.log('Vue Components: Mounting Navigation...')
+		try {
+			const navApp = createApp(Navigation)
+			navApp.mount(navigationContainer)
+			console.log('Vue Components: Navigation mounted successfully!')
+		} catch (error) {
+			console.error('Vue Components: Error mounting Navigation:', error)
+		}
+	} else {
+		console.warn('Vue Components: Navigation container not found')
+	}
 	
 	// Mount Dashboard component
 	const dashboardContainer = document.getElementById('vue-dashboard-container')
