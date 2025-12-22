@@ -4,10 +4,10 @@
 		<div class="dashboard-header">
 			<div>
 				<h2 class="dashboard-title">
-					{{ t('domaincontrol', 'Welcome, {name}', { name: currentUserName }) }}
+					{{ translate('domaincontrol', 'Welcome, {name}', { name: currentUserName }) }}
 				</h2>
 				<p class="dashboard-subtitle">
-					{{ t('domaincontrol', 'Here\'s what\'s happening in your business today.') }}
+					{{ translate('domaincontrol', 'Here\'s what\'s happening in your business today.') }}
 				</p>
 			</div>
 			<div class="dashboard-date">
@@ -18,25 +18,25 @@
 		<!-- Main Stats Cards -->
 		<div class="dashboard-stats-grid">
 			<StatsCard
-				:title="t('domaincontrol', 'Total Clients')"
+				:title="translate('domaincontrol', 'Total Clients')"
 				:value="stats.clients"
 				icon="icon-contacts"
 				color="primary"
 			/>
 			<StatsCard
-				:title="t('domaincontrol', 'Active Projects')"
+				:title="translate('domaincontrol', 'Active Projects')"
 				:value="stats.projects"
 				icon="icon-folder"
 				color="success"
 			/>
 			<StatsCard
-				:title="t('domaincontrol', 'Pending Tasks')"
+				:title="translate('domaincontrol', 'Pending Tasks')"
 				:value="stats.tasks"
 				icon="icon-checkmark"
 				color="warning"
 			/>
 			<StatsCard
-				:title="t('domaincontrol', 'Unpaid Invoices')"
+				:title="translate('domaincontrol', 'Unpaid Invoices')"
 				:value="stats.unpaidInvoices"
 				icon="icon-files"
 				color="danger"
@@ -48,30 +48,30 @@
 			<div class="dashboard-column">
 				<!-- Detailed Stats -->
 				<div class="dashboard-card">
-					<h3 class="dashboard-card__header">{{ t('domaincontrol', 'Overview') }}</h3>
+					<h3 class="dashboard-card__header">{{ translate('domaincontrol', 'Overview') }}</h3>
 					<div class="mini-stats-grid">
 						<div class="mini-stat">
-							<span class="mini-stat__label">{{ t('domaincontrol', 'Domains') }}</span>
+							<span class="mini-stat__label">{{ translate('domaincontrol', 'Domains') }}</span>
 							<span class="mini-stat__value">{{ stats.domains }}</span>
 						</div>
 						<div class="mini-stat">
-							<span class="mini-stat__label">{{ t('domaincontrol', 'Hosting') }}</span>
+							<span class="mini-stat__label">{{ translate('domaincontrol', 'Hosting') }}</span>
 							<span class="mini-stat__value">{{ stats.hostings }}</span>
 						</div>
 						<div class="mini-stat">
-							<span class="mini-stat__label">{{ t('domaincontrol', 'Websites') }}</span>
+							<span class="mini-stat__label">{{ translate('domaincontrol', 'Websites') }}</span>
 							<span class="mini-stat__value">{{ stats.websites }}</span>
 						</div>
 						<div class="mini-stat">
-							<span class="mini-stat__label">{{ t('domaincontrol', 'Income (This Month)') }}</span>
+							<span class="mini-stat__label">{{ translate('domaincontrol', 'Income (This Month)') }}</span>
 							<span class="mini-stat__value">{{ formatCurrency(stats.monthlyIncome) }}</span>
 						</div>
 						<div class="mini-stat">
-							<span class="mini-stat__label">{{ t('domaincontrol', 'Expense (This Month)') }}</span>
+							<span class="mini-stat__label">{{ translate('domaincontrol', 'Expense (This Month)') }}</span>
 							<span class="mini-stat__value">{{ formatCurrency(stats.monthlyExpense) }}</span>
 						</div>
 						<div class="mini-stat">
-							<span class="mini-stat__label">{{ t('domaincontrol', 'Net Profit/Loss') }}</span>
+							<span class="mini-stat__label">{{ translate('domaincontrol', 'Net Profit/Loss') }}</span>
 							<span class="mini-stat__value" :class="{ 'text-error': stats.netProfit < 0, 'text-success': stats.netProfit > 0 }">
 								{{ formatCurrency(stats.netProfit) }}
 							</span>
@@ -81,31 +81,31 @@
 
 				<!-- Quick Actions -->
 				<div class="dashboard-card">
-					<h3 class="dashboard-card__header">{{ t('domaincontrol', 'Quick Actions') }}</h3>
+					<h3 class="dashboard-card__header">{{ translate('domaincontrol', 'Quick Actions') }}</h3>
 					<div class="quick-actions">
 						<NcButton type="primary" @click="quickAdd('client')">
 							<template #icon>
 								<span class="icon-contacts" />
 							</template>
-							{{ t('domaincontrol', 'New Client') }}
+							{{ translate('domaincontrol', 'New Client') }}
 						</NcButton>
 						<NcButton type="primary" @click="quickAdd('project')">
 							<template #icon>
 								<span class="icon-folder" />
 							</template>
-							{{ t('domaincontrol', 'New Project') }}
+							{{ translate('domaincontrol', 'New Project') }}
 						</NcButton>
 						<NcButton type="primary" @click="quickAdd('task')">
 							<template #icon>
 								<span class="icon-checkmark" />
 							</template>
-							{{ t('domaincontrol', 'New Task') }}
+							{{ translate('domaincontrol', 'New Task') }}
 						</NcButton>
 						<NcButton type="primary" @click="quickAdd('invoice')">
 							<template #icon>
 								<span class="icon-files" />
 							</template>
-							{{ t('domaincontrol', 'Create Invoice') }}
+							{{ translate('domaincontrol', 'Create Invoice') }}
 						</NcButton>
 					</div>
 				</div>
@@ -113,12 +113,12 @@
 				<!-- Recent Clients -->
 				<div class="dashboard-card">
 					<div class="dashboard-card__header">
-						<h3>{{ t('domaincontrol', 'Recent Clients') }}</h3>
+						<h3>{{ translate('domaincontrol', 'Recent Clients') }}</h3>
 						<NcButton type="tertiary" @click="switchToTab('clients')">
-							{{ t('domaincontrol', 'View All') }}
+							{{ translate('domaincontrol', 'View All') }}
 						</NcButton>
 					</div>
-					<NcEmptyContent v-if="recentClients.length === 0" :name="t('domaincontrol', 'No clients yet')">
+					<NcEmptyContent v-if="recentClients.length === 0" :name="translate('domaincontrol', 'No clients yet')">
 						<template #icon>
 							<span class="icon-contacts" />
 						</template>
@@ -140,12 +140,12 @@
 				<!-- Overdue Payments -->
 				<div class="dashboard-card alert-card alert-card--error">
 					<div class="dashboard-card__header">
-						<h3>{{ t('domaincontrol', 'Overdue Payments') }}</h3>
+						<h3>{{ translate('domaincontrol', 'Overdue Payments') }}</h3>
 						<NcCounterBubble v-if="alerts.overdue.length > 0">
 							{{ alerts.overdue.length }}
 						</NcCounterBubble>
 					</div>
-					<NcEmptyContent v-if="alerts.overdue.length === 0" :name="t('domaincontrol', 'No overdue payments')">
+					<NcEmptyContent v-if="alerts.overdue.length === 0" :name="translate('domaincontrol', 'No overdue payments')">
 						<template #icon>
 							<span class="icon-files" />
 						</template>
@@ -164,12 +164,12 @@
 				<!-- Upcoming Payments -->
 				<div class="dashboard-card alert-card alert-card--warning">
 					<div class="dashboard-card__header">
-						<h3>{{ t('domaincontrol', 'Upcoming Payments') }}</h3>
+						<h3>{{ translate('domaincontrol', 'Upcoming Payments') }}</h3>
 						<NcCounterBubble v-if="alerts.upcoming.length > 0">
 							{{ alerts.upcoming.length }}
 						</NcCounterBubble>
 					</div>
-					<NcEmptyContent v-if="alerts.upcoming.length === 0" :name="t('domaincontrol', 'No upcoming payments')">
+					<NcEmptyContent v-if="alerts.upcoming.length === 0" :name="translate('domaincontrol', 'No upcoming payments')">
 						<template #icon>
 							<span class="icon-files" />
 						</template>
@@ -188,12 +188,12 @@
 				<!-- Upcoming Tasks -->
 				<div class="dashboard-card alert-card alert-card--info">
 					<div class="dashboard-card__header">
-						<h3>{{ t('domaincontrol', 'Upcoming Tasks') }}</h3>
+						<h3>{{ translate('domaincontrol', 'Upcoming Tasks') }}</h3>
 						<NcCounterBubble v-if="alerts.tasks.length > 0">
 							{{ alerts.tasks.length }}
 						</NcCounterBubble>
 					</div>
-					<NcEmptyContent v-if="alerts.tasks.length === 0" :name="t('domaincontrol', 'No upcoming tasks')">
+					<NcEmptyContent v-if="alerts.tasks.length === 0" :name="translate('domaincontrol', 'No upcoming tasks')">
 						<template #icon>
 							<span class="icon-checkmark" />
 						</template>
@@ -211,12 +211,12 @@
 				<!-- Upcoming Debt Payments -->
 				<div class="dashboard-card alert-card alert-card--warning">
 					<div class="dashboard-card__header">
-						<h3>{{ t('domaincontrol', 'Upcoming Debt Payments') }}</h3>
+						<h3>{{ translate('domaincontrol', 'Upcoming Debt Payments') }}</h3>
 						<NcCounterBubble v-if="alerts.debts.length > 0">
 							{{ alerts.debts.length }}
 						</NcCounterBubble>
 					</div>
-					<NcEmptyContent v-if="alerts.debts.length === 0" :name="t('domaincontrol', 'No upcoming debt payments')">
+					<NcEmptyContent v-if="alerts.debts.length === 0" :name="translate('domaincontrol', 'No upcoming debt payments')">
 						<template #icon>
 							<span class="icon-files" />
 						</template>
@@ -292,12 +292,13 @@ export default {
 		this.loadDashboardData()
 	},
 	methods: {
-		t(appId, text, vars) {
+		translate(appId, text, vars) {
 			// Use global t() function from Nextcloud
-			if (typeof window.t === 'function') {
+			// Access via window to avoid webpack bundling issues
+			if (typeof window !== 'undefined' && typeof window.t === 'function') {
 				return window.t(appId, text, vars)
 			}
-			// Fallback
+			// Fallback - return original text
 			return text
 		},
 		updateDate() {
