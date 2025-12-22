@@ -945,8 +945,7 @@ export default {
 	text-align: center;
 }
 
-.loading-content .icon-loading {
-	font-size: 3em;
+.loading-content .loading-icon {
 	color: var(--color-primary);
 	animation: spin 1s linear infinite;
 	margin-bottom: 16px;
