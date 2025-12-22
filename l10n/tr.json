@@ -63,7 +63,20 @@
 		"No websites": "Website yok",
 		"No services": "Hizmet yok",
 		"No invoices": "Fatura yok",
-		"No payments": "Ödeme yok"
+		"No payments": "Ödeme yok",
+		"Edit Client": "Müşteri Düzenle",
+		"Select from Contacts": "Kişilerden Seç",
+		"Client name": "Müşteri adı",
+		"Email address": "E-posta adresi",
+		"Phone number": "Telefon numarası",
+		"Additional notes": "Ek notlar",
+		"Saving...": "Kaydediliyor...",
+		"Search contacts...": "Kişi ara (ad, e-posta, telefon...)",
+		"Loading contacts...": "Kişiler yükleniyor...",
+		"No contacts found": "Arama kriterinize uygun kişi bulunamadı",
+		"No contacts available": "Kişi bulunamadı",
+		"Name is required": "Ad alanı zorunludur",
+		"Error saving client": "Müşteri kaydedilirken hata oluştu"
 	},
 	"pluralForm": "nplurals=2; plural=(n > 1);"
 }

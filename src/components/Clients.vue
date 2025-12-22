@@ -1,5 +1,13 @@
 <template>
 	<div class="clients-view">
+		<!-- Client Modal -->
+		<ClientModal
+			:open="modalOpen"
+			:client="editingClient"
+			@close="closeModal"
+			@saved="handleClientSaved"
+		/>
+
 		<!-- Client List View -->
 		<div v-if="!selectedClient" class="clients-list-view">
 			<div class="domaincontrol-actions">
@@ -327,9 +335,13 @@
 
 <script>
 import api from '../services/api'
+import ClientModal from './ClientModal.vue'
 
 export default {
 	name: 'Clients',
+	components: {
+		ClientModal,
+	},
 	data() {
 		return {
 			clients: [],
@@ -342,6 +354,8 @@ export default {
 			selectedClient: null,
 			searchQuery: '',
 			loading: false,
+			modalOpen: false,
+			editingClient: null,
 		}
 	},
 	computed: {
@@ -605,13 +619,28 @@ export default {
 			}
 		},
 		showAddModal() {
-			if (typeof window.DomainControl !== 'undefined' && window.DomainControl.showClientModal) {
-				window.DomainControl.showClientModal()
-			}
+			this.editingClient = null
+			this.modalOpen = true
 		},
 		editClient(id) {
-			if (typeof window.DomainControl !== 'undefined' && window.DomainControl.showClientModal) {
-				window.DomainControl.showClientModal(id)
+			const client = this.clients.find(c => c.id === id)
+			if (client) {
+				this.editingClient = client
+				this.modalOpen = true
+			}
+		},
+		closeModal() {
+			this.modalOpen = false
+			this.editingClient = null
+		},
+		async handleClientSaved() {
+			// Reload clients list
+			await this.loadClients()
+			// Reload related data to update counts
+			await this.loadRelatedData()
+			// Refresh global DomainControl data
+			if (typeof window.DomainControl !== 'undefined' && window.DomainControl.loadClients) {
+				window.DomainControl.loadClients()
 			}
 		},
 		confirmDelete(client) {
