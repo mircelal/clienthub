@@ -83,30 +83,22 @@
 				<div class="dashboard-card">
 					<h3 class="dashboard-card__header">{{ translate('domaincontrol', 'Quick Actions') }}</h3>
 					<div class="quick-actions">
-						<NcButton type="primary" @click="quickAdd('client')">
-							<template #icon>
-								<span class="icon-contacts" />
-							</template>
+						<button class="button-vue button-vue--primary" @click="quickAdd('client')">
+							<span class="icon-contacts" />
 							{{ translate('domaincontrol', 'New Client') }}
-						</NcButton>
-						<NcButton type="primary" @click="quickAdd('project')">
-							<template #icon>
-								<span class="icon-folder" />
-							</template>
+						</button>
+						<button class="button-vue button-vue--primary" @click="quickAdd('project')">
+							<span class="icon-folder" />
 							{{ translate('domaincontrol', 'New Project') }}
-						</NcButton>
-						<NcButton type="primary" @click="quickAdd('task')">
-							<template #icon>
-								<span class="icon-checkmark" />
-							</template>
+						</button>
+						<button class="button-vue button-vue--primary" @click="quickAdd('task')">
+							<span class="icon-checkmark" />
 							{{ translate('domaincontrol', 'New Task') }}
-						</NcButton>
-						<NcButton type="primary" @click="quickAdd('invoice')">
-							<template #icon>
-								<span class="icon-files" />
-							</template>
+						</button>
+						<button class="button-vue button-vue--primary" @click="quickAdd('invoice')">
+							<span class="icon-files" />
 							{{ translate('domaincontrol', 'Create Invoice') }}
-						</NcButton>
+						</button>
 					</div>
 				</div>
 
@@ -114,18 +106,19 @@
 				<div class="dashboard-card">
 					<div class="dashboard-card__header">
 						<h3>{{ translate('domaincontrol', 'Recent Clients') }}</h3>
-						<NcButton type="tertiary" @click="switchToTab('clients')">
+						<button class="button-vue button-vue--tertiary" @click="switchToTab('clients')">
 							{{ translate('domaincontrol', 'View All') }}
-						</NcButton>
+						</button>
 					</div>
-					<NcEmptyContent v-if="recentClients.length === 0" :name="translate('domaincontrol', 'No clients yet')">
-						<template #icon>
-							<span class="icon-contacts" />
-						</template>
-					</NcEmptyContent>
+					<div v-if="recentClients.length === 0" class="empty-content">
+						<span class="icon-contacts empty-content__icon" />
+						<p class="empty-content__text">{{ translate('domaincontrol', 'No clients yet') }}</p>
+					</div>
 					<ul v-else class="recent-clients-list">
 						<li v-for="client in recentClients" :key="client.id" class="recent-client-item">
-							<NcAvatar :user="client.name" :size="40" />
+							<div class="avatar" :style="{ backgroundColor: getAvatarColor(client.name) }">
+								{{ getInitials(client.name) }}
+							</div>
 							<div class="recent-client-info">
 								<div class="recent-client-name">{{ client.name }}</div>
 								<div v-if="client.email" class="recent-client-email">{{ client.email }}</div>
@@ -141,15 +134,14 @@
 				<div class="dashboard-card alert-card alert-card--error">
 					<div class="dashboard-card__header">
 						<h3>{{ translate('domaincontrol', 'Overdue Payments') }}</h3>
-						<NcCounterBubble v-if="alerts.overdue.length > 0">
+						<span v-if="alerts.overdue.length > 0" class="counter-bubble">
 							{{ alerts.overdue.length }}
-						</NcCounterBubble>
+						</span>
 					</div>
-					<NcEmptyContent v-if="alerts.overdue.length === 0" :name="translate('domaincontrol', 'No overdue payments')">
-						<template #icon>
-							<span class="icon-files" />
-						</template>
-					</NcEmptyContent>
+					<div v-if="alerts.overdue.length === 0" class="empty-content">
+						<span class="icon-files empty-content__icon" />
+						<p class="empty-content__text">{{ translate('domaincontrol', 'No overdue payments') }}</p>
+					</div>
 					<ul v-else class="alert-list">
 						<li v-for="item in alerts.overdue" :key="item.id" class="alert-item">
 							<div class="alert-item__content">
@@ -165,15 +157,14 @@
 				<div class="dashboard-card alert-card alert-card--warning">
 					<div class="dashboard-card__header">
 						<h3>{{ translate('domaincontrol', 'Upcoming Payments') }}</h3>
-						<NcCounterBubble v-if="alerts.upcoming.length > 0">
+						<span v-if="alerts.upcoming.length > 0" class="counter-bubble">
 							{{ alerts.upcoming.length }}
-						</NcCounterBubble>
+						</span>
 					</div>
-					<NcEmptyContent v-if="alerts.upcoming.length === 0" :name="translate('domaincontrol', 'No upcoming payments')">
-						<template #icon>
-							<span class="icon-files" />
-						</template>
-					</NcEmptyContent>
+					<div v-if="alerts.upcoming.length === 0" class="empty-content">
+						<span class="icon-files empty-content__icon" />
+						<p class="empty-content__text">{{ translate('domaincontrol', 'No upcoming payments') }}</p>
+					</div>
 					<ul v-else class="alert-list">
 						<li v-for="item in alerts.upcoming" :key="item.id" class="alert-item">
 							<div class="alert-item__content">
@@ -189,15 +180,14 @@
 				<div class="dashboard-card alert-card alert-card--info">
 					<div class="dashboard-card__header">
 						<h3>{{ translate('domaincontrol', 'Upcoming Tasks') }}</h3>
-						<NcCounterBubble v-if="alerts.tasks.length > 0">
+						<span v-if="alerts.tasks.length > 0" class="counter-bubble">
 							{{ alerts.tasks.length }}
-						</NcCounterBubble>
+						</span>
 					</div>
-					<NcEmptyContent v-if="alerts.tasks.length === 0" :name="translate('domaincontrol', 'No upcoming tasks')">
-						<template #icon>
-							<span class="icon-checkmark" />
-						</template>
-					</NcEmptyContent>
+					<div v-if="alerts.tasks.length === 0" class="empty-content">
+						<span class="icon-checkmark empty-content__icon" />
+						<p class="empty-content__text">{{ translate('domaincontrol', 'No upcoming tasks') }}</p>
+					</div>
 					<ul v-else class="alert-list">
 						<li v-for="item in alerts.tasks" :key="item.id" class="alert-item">
 							<div class="alert-item__content">
@@ -212,15 +202,14 @@
 				<div class="dashboard-card alert-card alert-card--warning">
 					<div class="dashboard-card__header">
 						<h3>{{ translate('domaincontrol', 'Upcoming Debt Payments') }}</h3>
-						<NcCounterBubble v-if="alerts.debts.length > 0">
+						<span v-if="alerts.debts.length > 0" class="counter-bubble">
 							{{ alerts.debts.length }}
-						</NcCounterBubble>
+						</span>
 					</div>
-					<NcEmptyContent v-if="alerts.debts.length === 0" :name="translate('domaincontrol', 'No upcoming debt payments')">
-						<template #icon>
-							<span class="icon-files" />
-						</template>
-					</NcEmptyContent>
+					<div v-if="alerts.debts.length === 0" class="empty-content">
+						<span class="icon-files empty-content__icon" />
+						<p class="empty-content__text">{{ translate('domaincontrol', 'No upcoming debt payments') }}</p>
+					</div>
 					<ul v-else class="alert-list">
 						<li v-for="item in alerts.debts" :key="item.id" class="alert-item">
 							<div class="alert-item__content">
@@ -237,17 +226,12 @@
 </template>
 
 <script>
-import { NcButton, NcEmptyContent, NcAvatar, NcCounterBubble } from '@nextcloud/vue'
 import StatsCard from './StatsCard.vue'
 import api from '../services/api'
 
 export default {
 	name: 'Dashboard',
 	components: {
-		NcButton,
-		NcEmptyContent,
-		NcAvatar,
-		NcCounterBubble,
 		StatsCard,
 	},
 	data() {
@@ -467,6 +451,23 @@ export default {
 				window.DomainControl.switchTab(tab)
 			}
 		},
+		getInitials(name) {
+			if (!name) return '?'
+			const parts = name.trim().split(' ')
+			if (parts.length >= 2) {
+				return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+			}
+			return name.substring(0, 2).toUpperCase()
+		},
+		getAvatarColor(name) {
+			if (!name) return '#999'
+			let hash = 0
+			for (let i = 0; i < name.length; i++) {
+				hash = name.charCodeAt(i) + ((hash << 5) - hash)
+			}
+			const hue = hash % 360
+			return `hsl(${hue}, 70%, 50%)`
+		},
 	},
 }
 </script>
@@ -578,11 +579,43 @@ export default {
 	gap: 10px;
 }
 
-.quick-actions .nc-button {
+.quick-actions .button-vue {
 	width: 100%;
+	display: flex;
+	align-items: center;
 	justify-content: flex-start;
 	padding: 10px 15px;
 	font-size: 1em;
+	border: none;
+	border-radius: var(--border-radius-element);
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.button-vue--primary {
+	background-color: var(--color-primary);
+	color: var(--color-primary-text);
+}
+
+.button-vue--primary:hover {
+	background-color: var(--color-primary-hover);
+}
+
+.button-vue--tertiary {
+	background-color: transparent;
+	color: var(--color-primary);
+	border: 1px solid var(--color-primary);
+}
+
+.button-vue--tertiary:hover {
+	background-color: var(--color-primary-light);
+}
+
+.button-vue .icon-contacts,
+.button-vue .icon-folder,
+.button-vue .icon-checkmark,
+.button-vue .icon-files {
+	margin-right: 8px;
 }
 
 .recent-clients-list {
@@ -602,6 +635,32 @@ export default {
 	border-bottom: none;
 }
 
+.avatar {
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: white;
+	font-weight: bold;
+	font-size: 0.9em;
+	flex-shrink: 0;
+}
+
+.avatar {
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: white;
+	font-weight: bold;
+	font-size: 0.9em;
+	flex-shrink: 0;
+}
+
 .recent-client-info {
 	margin-left: 10px;
 }
@@ -614,6 +673,41 @@ export default {
 .recent-client-email {
 	font-size: 0.9em;
 	color: var(--color-text-maxcontrast);
+}
+
+.empty-content {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: 40px 20px;
+	text-align: center;
+}
+
+.empty-content__icon {
+	font-size: 3em;
+	color: var(--color-text-maxcontrast);
+	margin-bottom: 10px;
+	opacity: 0.5;
+}
+
+.empty-content__text {
+	color: var(--color-text-maxcontrast);
+	font-size: 1em;
+}
+
+.counter-bubble {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 24px;
+	height: 24px;
+	padding: 0 8px;
+	background-color: var(--color-primary);
+	color: var(--color-primary-text);
+	border-radius: 12px;
+	font-size: 0.85em;
+	font-weight: bold;
 }
 
 .alert-card--error {
@@ -665,6 +759,41 @@ export default {
 .alert-item__amount {
 	font-weight: bold;
 	white-space: nowrap;
+}
+
+.empty-content {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: 40px 20px;
+	text-align: center;
+}
+
+.empty-content__icon {
+	font-size: 3em;
+	color: var(--color-text-maxcontrast);
+	margin-bottom: 10px;
+	opacity: 0.5;
+}
+
+.empty-content__text {
+	color: var(--color-text-maxcontrast);
+	font-size: 1em;
+}
+
+.counter-bubble {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 24px;
+	height: 24px;
+	padding: 0 8px;
+	background-color: var(--color-primary);
+	color: var(--color-primary-text);
+	border-radius: 12px;
+	font-size: 0.85em;
+	font-weight: bold;
 }
 
 @media screen and (max-width: 1024px) {
