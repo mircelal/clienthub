@@ -421,6 +421,26 @@
 							</div>
 						</div>
 
+						<!-- Time by User -->
+						<div v-if="durationByUser.length > 0" class="user-time-summary">
+							<div class="user-time-header">
+								<strong>{{ translate('domaincontrol', 'Time by User') }}</strong>
+							</div>
+							<div class="user-time-list">
+								<div
+									v-for="userTime in durationByUser"
+									:key="userTime.user_id"
+									class="user-time-item"
+								>
+									<div class="user-time-info">
+										<span class="user-time-name">{{ getUserDisplayName(userTime.user_id) }}</span>
+										<span class="user-time-count">{{ userTime.entry_count }} {{ translate('domaincontrol', 'entries') }}</span>
+									</div>
+									<span class="user-time-duration">{{ formatDuration(userTime.total_duration) }}</span>
+								</div>
+							</div>
+						</div>
+
 						<!-- Time Entries List -->
 						<div v-if="timeEntriesLoading" class="loading-content">
 							<MaterialIcon name="loading" :size="32" class="loading-icon" />
@@ -576,8 +596,99 @@
 
 					<div class="detail-info-card">
 						<h3 class="info-card-title">{{ translate('domaincontrol', 'Notes') }}</h3>
-						<div class="detail-notes" v-html="selectedProject.notes || translate('domaincontrol', 'No notes')"></div>
+						<div class="detail-notes" v-html="selectedProject.notes || translate('domaincontrol', 'No notes')">						</div>
 					</div>
+				</div>
+
+				<!-- Project Sharing Section -->
+				<div class="detail-section" v-if="selectedProject && selectedProject.userId === OC.getCurrentUser().uid">
+					<div class="section-header">
+						<h3 class="section-title">
+							<MaterialIcon name="share" :size="24" />
+							{{ translate('domaincontrol', 'Share Project') }}
+						</h3>
+						<button class="button-vue button-vue--primary" @click="showShareProjectModal">
+							<MaterialIcon name="add" :size="18" />
+							{{ translate('domaincontrol', 'Share with user') }}
+						</button>
+					</div>
+					<div class="section-content">
+						<div v-if="projectSharesLoading" class="loading-content">
+							<MaterialIcon name="loading" :size="32" class="loading-icon" />
+							<p>{{ translate('domaincontrol', 'Loading...') }}</p>
+						</div>
+						<div v-else-if="projectShares.length === 0" class="empty-content">
+							<p class="empty-content__text">{{ translate('domaincontrol', 'No users shared') }}</p>
+						</div>
+						<div v-else class="project-shares-list">
+							<div
+								v-for="share in projectShares"
+								:key="share.id"
+								class="project-share-item"
+							>
+								<div class="share-info">
+									<span class="share-user">{{ getUserDisplayName(share.sharedWithUserId) }}</span>
+									<span class="share-permission">{{ share.permissionLevel === 'write' ? translate('domaincontrol', 'Write') : translate('domaincontrol', 'Read') }}</span>
+								</div>
+								<button
+									class="action-button action-button--delete"
+									@click.stop="unshareProject(share.sharedWithUserId)"
+									:title="translate('domaincontrol', 'Unshare')"
+								>
+									<MaterialIcon name="delete" :size="16" />
+								</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Share Project Modal -->
+		<div v-if="showShareModal" class="modal-overlay" @click.self="closeShareModal">
+			<div class="modal-content modal-content--medium">
+				<div class="modal-header">
+					<h2 class="modal-title">{{ translate('domaincontrol', 'Share Project') }}</h2>
+					<button class="modal-close" @click="closeShareModal">
+						<MaterialIcon name="close" :size="24" />
+					</button>
+				</div>
+				<div class="modal-body">
+					<div class="form-group">
+						<label class="form-label">{{ translate('domaincontrol', 'Select user') }}</label>
+						<input
+							v-model="shareUserSearch"
+							type="text"
+							class="form-control"
+							:placeholder="translate('domaincontrol', 'Search users...')"
+							@input="filteredAvailableUsers"
+						/>
+						<div v-if="filteredAvailableUsers.length > 0" class="user-select-list">
+							<div
+								v-for="user in filteredAvailableUsers"
+								:key="user.userId"
+								class="user-select-item"
+								@click="shareUserSearch = user.userId"
+							>
+								{{ user.displayName || user.userId }}
+							</div>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="form-label">{{ translate('domaincontrol', 'Permission') }}</label>
+						<select v-model="sharePermission" class="form-control">
+							<option value="read">{{ translate('domaincontrol', 'Read') }}</option>
+							<option value="write">{{ translate('domaincontrol', 'Write') }}</option>
+						</select>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button class="button-vue button-vue--secondary" @click="closeShareModal">
+						{{ translate('domaincontrol', 'Cancel') }}
+					</button>
+					<button class="button-vue button-vue--primary" @click="shareProject">
+						{{ translate('domaincontrol', 'Share') }}
+					</button>
 				</div>
 			</div>
 		</div>
@@ -637,6 +748,15 @@ export default {
 			hostings: [],
 			websites: [],
 			services: [],
+			// Project sharing
+			projectShares: [],
+			projectSharesLoading: false,
+			showShareModal: false,
+			availableUsers: [],
+			shareUserSearch: '',
+			sharePermission: 'read',
+			// Time tracking by user
+			durationByUser: [],
 		}
 	},
 	computed: {
@@ -765,6 +885,7 @@ export default {
 				this.loadTimeTracking(projectId),
 				this.loadProjectFinancials(projectId),
 				this.loadProjectItems(projectId),
+				this.loadProjectShares(projectId),
 			])
 		},
 		async confirmDelete(project) {
@@ -965,6 +1086,7 @@ export default {
 				const response = await api.timeEntries.byProject(projectId)
 				this.timeEntries = response.data.entries || []
 				this.totalTime = response.data.totalDuration || 0
+				this.durationByUser = response.data.durationByUser || []
 
 				const runningResponse = await api.timeEntries.getRunning(projectId)
 				if (runningResponse.data) {
@@ -978,6 +1100,7 @@ export default {
 				console.error('Error loading time tracking:', error)
 				this.timeEntries = []
 				this.totalTime = 0
+				this.durationByUser = []
 			} finally {
 				this.timeEntriesLoading = false
 			}
@@ -1211,6 +1334,98 @@ export default {
 				service: this.translate('domaincontrol', 'Service'),
 			}
 			return labels[type] || type
+		},
+		getUserDisplayName(userId) {
+			// Try to find user in availableUsers
+			const user = this.availableUsers.find(u => u.userId === userId)
+			if (user) {
+				return user.displayName || userId
+			}
+			// Fallback to userId
+			return userId
+		},
+		// Project Sharing
+		async loadProjectShares(projectId) {
+			this.projectSharesLoading = true
+			try {
+				const response = await api.projects.getShares(projectId)
+				this.projectShares = response.data || []
+			} catch (error) {
+				console.error('Error loading project shares:', error)
+				this.projectShares = []
+			} finally {
+				this.projectSharesLoading = false
+			}
+		},
+		async loadAvailableUsers() {
+			try {
+				const response = await api.users.getAll()
+				this.availableUsers = response.data || []
+			} catch (error) {
+				console.error('Error loading users:', error)
+				this.availableUsers = []
+			}
+		},
+		showShareProjectModal() {
+			this.showShareModal = true
+			this.shareUserSearch = ''
+			this.sharePermission = 'read'
+			if (this.availableUsers.length === 0) {
+				this.loadAvailableUsers()
+			}
+		},
+		closeShareModal() {
+			this.showShareModal = false
+		},
+		get filteredAvailableUsers() {
+			if (!this.shareUserSearch) return this.availableUsers
+			const query = this.shareUserSearch.toLowerCase()
+			return this.availableUsers.filter(user => {
+				const displayName = (user.displayName || '').toLowerCase()
+				const userId = (user.userId || '').toLowerCase()
+				return displayName.includes(query) || userId.includes(query)
+			})
+		},
+		async shareProject() {
+			if (!this.shareUserSearch) {
+				alert(this.translate('domaincontrol', 'Select user'))
+				return
+			}
+			const selectedUser = this.filteredAvailableUsers.find(u => 
+				u.userId === this.shareUserSearch || u.displayName === this.shareUserSearch
+			)
+			if (!selectedUser) {
+				alert(this.translate('domaincontrol', 'Select user'))
+				return
+			}
+			// Check if already shared
+			if (this.projectShares.find(s => s.sharedWithUserId === selectedUser.userId)) {
+				alert(this.translate('domaincontrol', 'Project already shared with this user'))
+				return
+			}
+			try {
+				await api.projects.share(this.selectedProject.id, {
+					sharedWithUserId: selectedUser.userId,
+					permissionLevel: this.sharePermission,
+				})
+				await this.loadProjectShares(this.selectedProject.id)
+				this.closeShareModal()
+			} catch (error) {
+				console.error('Error sharing project:', error)
+				alert(this.translate('domaincontrol', 'Error sharing project'))
+			}
+		},
+		async unshareProject(sharedWithUserId) {
+			if (!confirm(this.translate('domaincontrol', 'Are you sure you want to remove this share?'))) {
+				return
+			}
+			try {
+				await api.projects.unshare(this.selectedProject.id, sharedWithUserId)
+				await this.loadProjectShares(this.selectedProject.id)
+			} catch (error) {
+				console.error('Error unsharing project:', error)
+				alert(this.translate('domaincontrol', 'Error unsharing project'))
+			}
 		},
 		getItemTypeIcon(type) {
 			const icons = {

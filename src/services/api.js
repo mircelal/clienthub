@@ -171,6 +171,13 @@ export default {
 		}),
 		removeItem: (id, itemId) => axios.delete(`${apiBase}/projects/${id}/items/${itemId}`),
 		getTasks: (id) => axios.get(`${apiBase}/projects/${id}/tasks`),
+		getShares: (id) => axios.get(`${apiBase}/projects/${id}/shares`),
+		share: (id, data) => axios.post(`${apiBase}/projects/${id}/shares`, toFormData(data), {
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+		}),
+		unshare: (id, sharedWithUserId) => axios.delete(`${apiBase}/projects/${id}/shares/${sharedWithUserId}`),
 	},
 	timeEntries: {
 		byProject: (projectId) => axios.get(`${apiBase}/projects/${projectId}/time-entries`),
@@ -331,6 +338,9 @@ export default {
 				'Content-Type': 'application/x-www-form-urlencoded',
 			},
 		}),
+	},
+	users: {
+		getAll: () => axios.get(`${apiBase}/users`),
 	},
 }
 

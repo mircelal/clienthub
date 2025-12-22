@@ -43,10 +43,12 @@ class TimeEntryController extends Controller {
 			
 			$entries = $this->mapper->findByProject($projectId, $this->userId);
 			$totalDuration = $this->mapper->getTotalDuration($projectId, $this->userId);
+			$durationByUser = $this->mapper->getDurationByUser($projectId);
 			
 			return new JSONResponse([
 				'entries' => $entries,
-				'totalDuration' => $totalDuration
+				'totalDuration' => $totalDuration,
+				'durationByUser' => $durationByUser
 			]);
 		} catch (\Exception $e) {
 			return new JSONResponse(['error' => $e->getMessage()], 500);

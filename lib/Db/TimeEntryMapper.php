@@ -80,5 +80,34 @@ class TimeEntryMapper extends QBMapper {
 		
 		return (int)($row['total'] ?? 0);
 	}
+
+	/**
+	 * Get duration summary by user for a project
+	 * @param int $projectId
+	 * @return array Array of ['user_id' => string, 'total_duration' => int, 'entry_count' => int]
+	 */
+	public function getDurationByUser(int $projectId): array {
+		$qb = $this->db->getQueryBuilder();
+		$qb->select('user_id')
+			->selectAlias($qb->createFunction('COALESCE(SUM(duration), 0)'), 'total_duration')
+			->selectAlias($qb->createFunction('COUNT(*)'), 'entry_count')
+			->from($this->getTableName())
+			->where($qb->expr()->eq('project_id', $qb->createNamedParameter($projectId)))
+			->andWhere($qb->expr()->eq('is_running', $qb->createNamedParameter(false, \PDO::PARAM_BOOL)))
+			->groupBy('user_id')
+			->orderBy('total_duration', 'DESC');
+		
+		$result = $qb->executeQuery();
+		$rows = $result->fetchAll();
+		$result->closeCursor();
+		
+		return array_map(function($row) {
+			return [
+				'user_id' => $row['user_id'],
+				'total_duration' => (int)$row['total_duration'],
+				'entry_count' => (int)$row['entry_count'],
+			];
+		}, $rows);
+	}
 }
 

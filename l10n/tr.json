@@ -243,7 +243,25 @@
 		"Error deleting service type": "Hizmet türü silinirken hata oluştu",
 		"Predefined service types added successfully": "Önceden tanımlı hizmet türleri başarıyla eklendi",
 		"Error adding predefined service types": "Önceden tanımlı hizmet türleri eklenirken hata oluştu",
-		"Error saving settings": "Ayarlar kaydedilirken hata oluştu"
+		"Error saving settings": "Ayarlar kaydedilirken hata oluştu",
+		"Share Project": "Projeyi Paylaş",
+		"Shared With": "Paylaşılan Kişiler",
+		"Share with user": "Kullanıcı ile paylaş",
+		"Select user": "Kullanıcı seçin",
+		"Permission": "İzin",
+		"Read": "Okuma",
+		"Write": "Yazma",
+		"Share": "Paylaş",
+		"Unshare": "Paylaşımı Kaldır",
+		"No users shared": "Paylaşılan kullanıcı yok",
+		"Error sharing project": "Proje paylaşılırken hata oluştu",
+		"Error unsharing project": "Paylaşım kaldırılırken hata oluştu",
+		"Time by User": "Kullanıcıya Göre Süre",
+		"entries": "kayıt",
+		"Drag to reorder": "Sıralamak için sürükleyin",
+		"Loading...": "Yükleniyor...",
+		"Search users...": "Kullanıcı ara...",
+		"Are you sure you want to remove this share?": "Bu paylaşımı kaldırmak istediğinize emin misiniz?"
 	},
 	"pluralForm": "nplurals=2; plural=(n > 1);"
 }
