@@ -149,7 +149,27 @@ export default {
 	},
 	projects: {
 		getAll: () => axios.get(`${apiBase}/projects`),
+		get: (id) => axios.get(`${apiBase}/projects/${id}`),
 		getActive: () => axios.get(`${apiBase}/projects/active`),
+		approachingDeadline: () => axios.get(`${apiBase}/projects/approaching-deadline`),
+		create: (data) => axios.post(`${apiBase}/projects`, toFormData(data), {
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+		}),
+		update: (id, data) => axios.put(`${apiBase}/projects/${id}`, toFormData(data), {
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+		}),
+		delete: (id) => axios.delete(`${apiBase}/projects/${id}`),
+		getItems: (id) => axios.get(`${apiBase}/projects/${id}/items`),
+		addItem: (id, data) => axios.post(`${apiBase}/projects/${id}/items`, toFormData(data), {
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+		}),
+		removeItem: (id, itemId) => axios.delete(`${apiBase}/projects/${id}/items/${itemId}`),
 	},
 	tasks: {
 		getAll: () => axios.get(`${apiBase}/tasks`),
