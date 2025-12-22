@@ -270,6 +270,9 @@ export default {
 				if (this.formData.price) {
 					data.price = this.formData.price
 					data.currency = this.formData.currency
+				} else {
+					data.price = ''
+					data.currency = this.formData.currency
 				}
 
 				await api.domains.extend(this.extendingDomain.id, data)

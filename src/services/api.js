@@ -1,6 +1,7 @@
 /**
  * API Service for Vue.js components
  * Uses Nextcloud's axios instance
+ * Backend expects application/x-www-form-urlencoded format
  */
 
 import axios from '@nextcloud/axios'
@@ -8,21 +9,52 @@ import { generateUrl } from '@nextcloud/router'
 
 const apiBase = generateUrl('/apps/domaincontrol/api')
 
+// Helper function to convert object to URLSearchParams
+function toFormData(data) {
+	const params = new URLSearchParams()
+	for (const key in data) {
+		if (data[key] !== null && data[key] !== undefined) {
+			params.append(key, data[key])
+		}
+	}
+	return params.toString()
+}
+
 export default {
 	clients: {
 		getAll: () => axios.get(`${apiBase}/clients`),
 		get: (id) => axios.get(`${apiBase}/clients/${id}`),
-		create: (data) => axios.post(`${apiBase}/clients`, data),
-		update: (id, data) => axios.put(`${apiBase}/clients/${id}`, data),
+		create: (data) => axios.post(`${apiBase}/clients`, toFormData(data), {
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+		}),
+		update: (id, data) => axios.put(`${apiBase}/clients/${id}`, toFormData(data), {
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+		}),
 		delete: (id) => axios.delete(`${apiBase}/clients/${id}`),
 	},
 	domains: {
 		getAll: () => axios.get(`${apiBase}/domains`),
 		get: (id) => axios.get(`${apiBase}/domains/${id}`),
-		create: (data) => axios.post(`${apiBase}/domains`, data),
-		update: (id, data) => axios.put(`${apiBase}/domains/${id}`, data),
+		create: (data) => axios.post(`${apiBase}/domains`, toFormData(data), {
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+		}),
+		update: (id, data) => axios.put(`${apiBase}/domains/${id}`, toFormData(data), {
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+		}),
 		delete: (id) => axios.delete(`${apiBase}/domains/${id}`),
-		extend: (id, data) => axios.post(`${apiBase}/domains/${id}/extend`, data),
+		extend: (id, data) => axios.post(`${apiBase}/domains/${id}/extend`, toFormData(data), {
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+		}),
 	},
 	hostings: {
 		getAll: () => axios.get(`${apiBase}/hostings`),

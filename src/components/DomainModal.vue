@@ -293,14 +293,14 @@ export default {
 				const data = {
 					clientId: this.formData.clientId,
 					domainName: this.formData.domainName,
-					registrar: this.formData.registrar,
-					registrationDate: this.formData.registrationDate || null,
-					expirationDate: this.formData.expirationDate || null,
-					price: this.formData.price || null,
+					registrar: this.formData.registrar || '',
+					registrationDate: this.formData.registrationDate || '',
+					expirationDate: this.formData.expirationDate || '',
+					price: this.formData.price || '',
 					currency: this.formData.currency,
 					renewalInterval: this.formData.renewalInterval,
-					panelNotes: this.formData.panelNotes,
-					notes: this.formData.notes,
+					panelNotes: this.formData.panelNotes || '',
+					notes: this.formData.notes || '',
 				}
 
 				if (this.formData.id) {

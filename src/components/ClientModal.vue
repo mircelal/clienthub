@@ -252,9 +252,9 @@ export default {
 			try {
 				const data = {
 					name: this.formData.name.trim(),
-					email: this.formData.email.trim() || null,
-					phone: this.formData.phone.trim() || null,
-					notes: this.formData.notes.trim() || null,
+					email: this.formData.email.trim() || '',
+					phone: this.formData.phone.trim() || '',
+					notes: this.formData.notes.trim() || '',
 				}
 
 				if (this.editingClient) {
