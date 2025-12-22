@@ -28,7 +28,7 @@ style('domaincontrol', 'domaincontrol');
 		</div>
 	</div>
 
-	<?php include __DIR__ . '/partials/modals/client-modal.php'; ?>
+	<!-- Client Modal is now handled by Vue.js ClientModal component -->
 	<?php include __DIR__ . '/partials/modals/domain-modal.php'; ?>
 	<?php include __DIR__ . '/partials/modals/hosting-modal.php'; ?>
 	<?php include __DIR__ . '/partials/modals/hosting-package-modal.php'; ?>
