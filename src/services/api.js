@@ -19,6 +19,10 @@ export default {
 	domains: {
 		getAll: () => axios.get(`${apiBase}/domains`),
 		get: (id) => axios.get(`${apiBase}/domains/${id}`),
+		create: (data) => axios.post(`${apiBase}/domains`, data),
+		update: (id, data) => axios.put(`${apiBase}/domains/${id}`, data),
+		delete: (id) => axios.delete(`${apiBase}/domains/${id}`),
+		extend: (id, data) => axios.post(`${apiBase}/domains/${id}/extend`, data),
 	},
 	hostings: {
 		getAll: () => axios.get(`${apiBase}/hostings`),
