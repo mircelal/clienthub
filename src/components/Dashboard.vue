@@ -462,62 +462,117 @@ export default {
 			this.recentClients = this.allData.clients.slice(0, 5)
 		},
 		updateAlerts() {
-			// Overdue invoices
+			const today = new Date()
+			today.setHours(0, 0, 0, 0)
+
+			// Overdue invoices - check both status and dueDate
 			this.alerts.overdue = (this.allData.invoices || [])
-				.filter(i => i.status === 'overdue')
+				.filter(i => {
+					if (!i) return false
+					// Check if status is overdue OR if dueDate has passed
+					if (i.status === 'overdue') return true
+					if (i.dueDate) {
+						const dueDate = new Date(i.dueDate)
+						dueDate.setHours(0, 0, 0, 0)
+						if (dueDate < today && !['paid', 'cancelled'].includes(i.status)) {
+							return true
+						}
+					}
+					return false
+				})
 				.slice(0, 5)
 				.map(i => ({
 					id: i.id,
-					title: `Invoice #${i.invoiceNumber || i.id}`,
+					title: `Fatura #${i.invoiceNumber || i.id}`,
 					date: i.dueDate,
 					amount: parseFloat(i.totalAmount || 0) - parseFloat(i.paidAmount || 0),
 				}))
+
+			console.log('Overdue invoices:', this.alerts.overdue.length)
 
 			// Upcoming payments (invoices due in next 7 days)
 			const nextWeek = new Date()
 			nextWeek.setDate(nextWeek.getDate() + 7)
+			nextWeek.setHours(23, 59, 59, 999)
+			
 			this.alerts.upcoming = (this.allData.invoices || [])
 				.filter(i => {
-					if (!i.dueDate || ['paid', 'cancelled'].includes(i.status)) return false
-					const dueDate = new Date(i.dueDate)
-					return dueDate <= nextWeek && dueDate >= new Date()
+					if (!i || !i.dueDate) return false
+					if (['paid', 'cancelled', 'overdue'].includes(i.status)) return false
+					try {
+						const dueDate = new Date(i.dueDate)
+						dueDate.setHours(0, 0, 0, 0)
+						return dueDate >= today && dueDate <= nextWeek
+					} catch (e) {
+						return false
+					}
 				})
 				.slice(0, 5)
 				.map(i => ({
 					id: i.id,
-					title: `Invoice #${i.invoiceNumber || i.id}`,
+					title: `Fatura #${i.invoiceNumber || i.id}`,
 					date: i.dueDate,
 					amount: parseFloat(i.totalAmount || 0) - parseFloat(i.paidAmount || 0),
 				}))
 
+			console.log('Upcoming payments:', this.alerts.upcoming.length)
+
 			// Upcoming tasks
 			this.alerts.tasks = (this.allData.tasks || [])
 				.filter(t => {
-					if (!t.dueDate || t.status === 'done') return false
-					const dueDate = new Date(t.dueDate)
-					return dueDate >= new Date()
+					if (!t || !t.dueDate) return false
+					if (t.status === 'done' || t.status === 'completed') return false
+					try {
+						const dueDate = new Date(t.dueDate)
+						dueDate.setHours(0, 0, 0, 0)
+						return dueDate >= today
+					} catch (e) {
+						return false
+					}
+				})
+				.sort((a, b) => {
+					// Sort by dueDate ascending
+					const dateA = new Date(a.dueDate)
+					const dateB = new Date(b.dueDate)
+					return dateA - dateB
 				})
 				.slice(0, 5)
 				.map(t => ({
 					id: t.id,
-					title: t.title,
+					title: t.title || 'Görev',
 					date: t.dueDate,
 				}))
+
+			console.log('Upcoming tasks:', this.alerts.tasks.length)
 
 			// Upcoming debt payments
 			this.alerts.debts = (this.allData.debts || [])
 				.filter(d => {
+					if (!d) return false
 					if (!d.nextPaymentDate) return false
-					const paymentDate = new Date(d.nextPaymentDate)
-					return paymentDate >= new Date()
+					try {
+						const paymentDate = new Date(d.nextPaymentDate)
+						paymentDate.setHours(0, 0, 0, 0)
+						return paymentDate >= today
+					} catch (e) {
+						return false
+					}
+				})
+				.sort((a, b) => {
+					// Sort by nextPaymentDate ascending
+					const dateA = new Date(a.nextPaymentDate)
+					const dateB = new Date(b.nextPaymentDate)
+					return dateA - dateB
 				})
 				.slice(0, 5)
 				.map(d => ({
 					id: d.id,
-					title: d.description || `Debt #${d.id}`,
+					title: d.description || d.title || `Borç #${d.id}`,
 					date: d.nextPaymentDate,
-					amount: parseFloat(d.amount || 0),
+					amount: parseFloat(d.amount || d.monthlyPayment || 0),
 				}))
+
+			console.log('Upcoming debts:', this.alerts.debts.length)
 		},
 		formatCurrency(amount) {
 			if (typeof amount !== 'number') return '0 ₼'
