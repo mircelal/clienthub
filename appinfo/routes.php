@@ -98,13 +98,15 @@ return [
 		['name' => 'invoice#delete', 'url' => '/api/invoices/{id}', 'verb' => 'DELETE'],
 		['name' => 'invoice#byClient', 'url' => '/api/clients/{clientId}/invoices', 'verb' => 'GET'],
 
-		// Invoice Item routes
+		// Invoice Item routes - specific routes BEFORE {id} routes
+		['name' => 'invoice_item#byInvoice', 'url' => '/api/invoices/{invoiceId}/items', 'verb' => 'GET'],
+		['name' => 'invoice#addItem', 'url' => '/api/invoices/{id}/items', 'verb' => 'POST'],
+		['name' => 'invoice#removeItem', 'url' => '/api/invoices/{id}/items/{itemId}', 'verb' => 'DELETE'],
 		['name' => 'invoice_item#index', 'url' => '/api/invoice-items', 'verb' => 'GET'],
 		['name' => 'invoice_item#show', 'url' => '/api/invoice-items/{id}', 'verb' => 'GET'],
 		['name' => 'invoice_item#create', 'url' => '/api/invoice-items', 'verb' => 'POST'],
 		['name' => 'invoice_item#update', 'url' => '/api/invoice-items/{id}', 'verb' => 'PUT'],
 		['name' => 'invoice_item#delete', 'url' => '/api/invoice-items/{id}', 'verb' => 'DELETE'],
-		['name' => 'invoice_item#byInvoice', 'url' => '/api/invoices/{invoiceId}/items', 'verb' => 'GET'],
 
 		// Payment routes - specific routes BEFORE {id} routes
 		['name' => 'payment#index', 'url' => '/api/payments', 'verb' => 'GET'],
