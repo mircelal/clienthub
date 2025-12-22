@@ -15,9 +15,9 @@
 							:aria-current="$props.currentTab === item.id ? 'page' : undefined"
 							@click.prevent="handleTabClick(item.id)"
 						>
-							<div class="app-navigation-entry-icon">
-								<span :class="item.icon"></span>
-							</div>
+					<div class="app-navigation-entry-icon">
+						<span class="icon" :class="item.icon" aria-hidden="true"></span>
+					</div>
 							<span class="app-navigation-entry__name">
 								{{ translate('domaincontrol', item.label) }}
 							</span>
@@ -35,9 +35,9 @@
 						:class="{ active: $props.currentTab === 'settings' }"
 						@click.prevent="handleTabClick('settings')"
 					>
-						<div class="app-navigation-entry-icon">
-							<span class="icon-settings"></span>
-						</div>
+					<div class="app-navigation-entry-icon">
+						<span class="icon icon-settings" aria-hidden="true"></span>
+					</div>
 						<span class="app-navigation-entry__name">
 							{{ translate('domaincontrol', 'Settings') }}
 						</span>
@@ -191,7 +191,9 @@ export default {
 </script>
 
 <style scoped>
-/* Nextcloud native navigation structure */
+/* Nextcloud native navigation structure - Following official guidelines */
+/* Reference: https://docs.nextcloud.com/server/latest/developer_manual/html_css_design/index.html */
+
 .app-navigation__content {
 	display: flex;
 	flex-direction: column;
@@ -201,6 +203,7 @@ export default {
 .app-navigation__body {
 	flex: 1;
 	overflow-y: auto;
+	overflow-x: hidden;
 }
 
 .app-navigation-list {
@@ -220,15 +223,19 @@ export default {
 .app-navigation-entry-link {
 	display: flex;
 	align-items: center;
-	padding: 8px 12px;
+	padding: 0 12px;
 	color: var(--color-main-text);
 	text-decoration: none;
 	border-radius: var(--border-radius-large);
 	transition: background-color 0.2s, color 0.2s;
 	cursor: pointer;
+	min-height: 44px;
+	width: 100%;
+	box-sizing: border-box;
 }
 
-.app-navigation-entry-link:hover {
+.app-navigation-entry-link:hover,
+.app-navigation-entry-link:focus {
 	background-color: var(--color-background-hover);
 }
 
@@ -248,17 +255,20 @@ export default {
 	flex-shrink: 0;
 }
 
-.app-navigation-entry-icon span {
+.app-navigation-entry-icon .icon {
 	width: 20px;
 	height: 20px;
 	display: inline-block;
 	background-size: 20px;
 	background-position: center;
 	background-repeat: no-repeat;
+	opacity: 0.7;
+	transition: opacity 0.2s;
 }
 
-.app-navigation-entry.active .app-navigation-entry-icon span,
-.app-navigation-entry-link[aria-current='page'] .app-navigation-entry-icon span {
+.app-navigation-entry.active .app-navigation-entry-icon .icon,
+.app-navigation-entry-link[aria-current='page'] .app-navigation-entry-icon .icon {
+	opacity: 1;
 	filter: brightness(0) invert(1);
 }
 
@@ -267,6 +277,8 @@ export default {
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
+	font-size: var(--default-font-size);
+	line-height: var(--default-line-height);
 }
 
 .app-navigation-entry__settings {

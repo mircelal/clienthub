@@ -70,18 +70,85 @@
 	opacity: 0.8;
 }
 
-.btn {
+/* Nextcloud Button System - Following official guidelines */
+/* Reference: https://docs.nextcloud.com/server/latest/developer_manual/html_css_design/index.html */
+
+/* Button base styles - Nextcloud standard */
+.button-vue {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
 	padding: 11px 20px;
 	border: none;
 	border-radius: var(--border-radius);
 	cursor: pointer;
-	font-size: 14px;
+	font-size: var(--default-font-size);
 	font-weight: 500;
 	transition: all 0.2s;
+	gap: 8px;
+	text-decoration: none;
+	box-sizing: border-box;
+	min-height: 44px;
+}
+
+.button-vue--primary {
+	background-color: var(--color-primary-element);
+	color: var(--color-primary-element-text);
+}
+
+.button-vue--primary:hover,
+.button-vue--primary:focus {
+	background-color: var(--color-primary-element-hover);
+}
+
+.button-vue--secondary {
+	background-color: var(--color-background-dark);
+	color: var(--color-main-text);
+	border: 1px solid var(--color-border);
+}
+
+.button-vue--secondary:hover,
+.button-vue--secondary:focus {
+	background-color: var(--color-background-hover);
+}
+
+.button-vue--tertiary {
+	background-color: transparent;
+	color: var(--color-main-text);
+	border: 1px solid var(--color-border);
+}
+
+.button-vue--tertiary:hover,
+.button-vue--tertiary:focus {
+	background-color: var(--color-background-hover);
+}
+
+.button-vue--danger {
+	background-color: var(--color-error);
+	color: var(--color-error-text);
+}
+
+.button-vue--danger:hover,
+.button-vue--danger:focus {
+	background-color: var(--color-error-hover);
+}
+
+/* Legacy button classes for backward compatibility */
+.btn {
 	display: inline-flex;
 	align-items: center;
+	justify-content: center;
+	padding: 11px 20px;
+	border: none;
+	border-radius: var(--border-radius);
+	cursor: pointer;
+	font-size: var(--default-font-size);
+	font-weight: 500;
+	transition: all 0.2s;
 	gap: 8px;
-	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+	text-decoration: none;
+	box-sizing: border-box;
+	min-height: 44px;
 }
 
 .btn-primary {
@@ -89,7 +156,8 @@
 	color: var(--color-primary-element-text);
 }
 
-.btn-primary:hover {
+.btn-primary:hover,
+.btn-primary:focus {
 	background-color: var(--color-primary-element-hover);
 }
 
@@ -99,7 +167,8 @@
 	border: 1px solid var(--color-border);
 }
 
-.btn-secondary:hover {
+.btn-secondary:hover,
+.btn-secondary:focus {
 	background-color: var(--color-background-hover);
 }
 
