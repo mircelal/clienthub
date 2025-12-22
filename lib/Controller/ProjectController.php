@@ -13,6 +13,7 @@ use OCA\DomainControl\Db\TaskMapper;
 use OCA\DomainControl\Db\ProjectShareMapper;
 use OCA\DomainControl\Db\Project;
 use OCA\DomainControl\Db\ProjectItem;
+use OCA\DomainControl\Service\ProjectActivityService;
 
 class ProjectController extends Controller {
 	private $userId;
@@ -20,18 +21,21 @@ class ProjectController extends Controller {
 	private ProjectItemMapper $itemMapper;
 	private TaskMapper $taskMapper;
 	private ProjectShareMapper $shareMapper;
+	private ProjectActivityService $activityService;
 
 	public function __construct(IRequest $request,
 	                            ProjectMapper $mapper,
 	                            ProjectItemMapper $itemMapper,
 	                            TaskMapper $taskMapper,
 	                            ProjectShareMapper $shareMapper,
+	                            ProjectActivityService $activityService,
 	                            $userId) {
 		parent::__construct(Application::APP_ID, $request);
 		$this->mapper = $mapper;
 		$this->itemMapper = $itemMapper;
 		$this->taskMapper = $taskMapper;
 		$this->shareMapper = $shareMapper;
+		$this->activityService = $activityService;
 		$this->userId = $userId;
 	}
 
@@ -145,6 +149,13 @@ class ProjectController extends Controller {
 			$project->setUpdatedAt($now);
 			
 			$project = $this->mapper->insert($project);
+			
+			// Log activity - project created
+			$this->activityService->log($project->getId(), $this->userId, 'project_created', null, [
+				'projectId' => $project->getId(),
+				'name' => $project->getName(),
+			]);
+			
 			return new JSONResponse($project);
 		} catch (\Exception $e) {
 			return new JSONResponse(['error' => $e->getMessage()], 500);
@@ -178,6 +189,13 @@ class ProjectController extends Controller {
 			$project->setUpdatedAt(date('Y-m-d H:i:s'));
 			
 			$project = $this->mapper->update($project);
+			
+			// Log activity
+			$this->activityService->log($id, $this->userId, 'project_updated', null, [
+				'projectId' => $id,
+				'name' => $project->getName(),
+			]);
+			
 			return new JSONResponse($project);
 		} catch (\Exception $e) {
 			return new JSONResponse(['error' => $e->getMessage()], 500);
@@ -259,6 +277,13 @@ class ProjectController extends Controller {
 			$item->setCreatedAt(date('Y-m-d H:i:s'));
 			
 			$item = $this->itemMapper->insert($item);
+			
+			// Log activity
+			$this->activityService->log($id, $this->userId, 'item_linked', null, [
+				'itemType' => $itemType,
+				'itemId' => $itemId,
+			]);
+			
 			return new JSONResponse($item);
 		} catch (\Exception $e) {
 			return new JSONResponse(['error' => $e->getMessage()], 500);
@@ -282,7 +307,16 @@ class ProjectController extends Controller {
 				return new JSONResponse(['error' => 'Item does not belong to this project'], 400);
 			}
 			
+			$itemType = $item->getItemType();
+			$linkedItemId = $item->getItemId();
 			$this->itemMapper->delete($item);
+			
+			// Log activity
+			$this->activityService->log($id, $this->userId, 'item_unlinked', null, [
+				'itemType' => $itemType,
+				'itemId' => $linkedItemId,
+			]);
+			
 			return new JSONResponse(['success' => true]);
 		} catch (\Exception $e) {
 			return new JSONResponse(['error' => $e->getMessage()], 500);

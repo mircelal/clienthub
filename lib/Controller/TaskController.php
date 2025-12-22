@@ -10,22 +10,26 @@ use OCP\IRequest;
 use OCA\DomainControl\Db\TaskMapper;
 use OCA\DomainControl\Db\ProjectMapper;
 use OCA\DomainControl\Db\Task;
+use OCA\DomainControl\Service\ProjectActivityService;
 
 class TaskController extends Controller
 {
 	private $userId;
 	private TaskMapper $mapper;
 	private ProjectMapper $projectMapper;
+	private ProjectActivityService $activityService;
 
 	public function __construct(
 		IRequest $request,
 		TaskMapper $mapper,
 		ProjectMapper $projectMapper,
+		ProjectActivityService $activityService,
 		$userId
 	) {
 		parent::__construct(Application::APP_ID, $request);
 		$this->mapper = $mapper;
 		$this->projectMapper = $projectMapper;
+		$this->activityService = $activityService;
 		$this->userId = $userId;
 	}
 
@@ -180,6 +184,15 @@ class TaskController extends Controller
 			$task->setUpdatedAt($now);
 
 			$task = $this->mapper->insert($task);
+			
+			// Log activity if task has project
+			if ($task->getProjectId()) {
+				$this->activityService->log($task->getProjectId(), $this->userId, 'task_created', null, [
+					'taskId' => $task->getId(),
+					'title' => $task->getTitle(),
+				]);
+			}
+			
 			return new JSONResponse($task);
 		} catch (\Exception $e) {
 			return new JSONResponse(['error' => $e->getMessage()], 500);
@@ -239,6 +252,16 @@ class TaskController extends Controller
 			$task->setUpdatedAt(date('Y-m-d H:i:s'));
 
 			$task = $this->mapper->update($task);
+			
+			// Log activity if task has project
+			if ($task->getProjectId()) {
+				$activityType = ($task->getStatus() === 'done') ? 'task_completed' : 'task_updated';
+				$this->activityService->log($task->getProjectId(), $this->userId, $activityType, null, [
+					'taskId' => $task->getId(),
+					'title' => $task->getTitle(),
+				]);
+			}
+			
 			return new JSONResponse($task);
 		} catch (\Exception $e) {
 			return new JSONResponse(['error' => $e->getMessage()], 500);
@@ -252,7 +275,16 @@ class TaskController extends Controller
 	{
 		try {
 			$task = $this->mapper->find($id, $this->userId);
+			$projectId = $task->getProjectId();
 			$this->mapper->delete($task);
+			
+			// Log activity if task had project
+			if ($projectId) {
+				$this->activityService->log($projectId, $this->userId, 'task_deleted', null, [
+					'taskId' => $id,
+				]);
+			}
+			
 			return new JSONResponse(['success' => true]);
 		} catch (\Exception $e) {
 			return new JSONResponse(['error' => $e->getMessage()], 500);
@@ -286,10 +318,19 @@ class TaskController extends Controller
 				$task->setCancelledAt(null); // Clear cancellation if marked done
 			}
 
-			$task->setUpdatedAt(date('Y-m-d H:i:s'));
-			$task = $this->mapper->update($task);
+		$task->setUpdatedAt(date('Y-m-d H:i:s'));
+		$task = $this->mapper->update($task);
+		
+		// Log activity if task has project
+		if ($task->getProjectId()) {
+			$activityType = ($task->getStatus() === 'done') ? 'task_completed' : 'task_updated';
+			$this->activityService->log($task->getProjectId(), $this->userId, $activityType, null, [
+				'taskId' => $task->getId(),
+				'title' => $task->getTitle(),
+			]);
+		}
 
-			return new JSONResponse($task);
+		return new JSONResponse($task);
 		} catch (\Exception $e) {
 			return new JSONResponse(['error' => $e->getMessage()], 500);
 		}

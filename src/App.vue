@@ -116,9 +116,16 @@ export default {
 	padding-bottom: 40px;
 }
 
-/* Hide old tab-content system */
-.tab-content {
+/* Hide old tab-content system - but only for old PHP-based tabs */
+/* Vue project components use .tab-content class, so we must be specific */
+/* Old system is in #app-content, Vue is in #app-content-vue */
+#app-content .tab-content {
 	display: none !important;
+}
+
+/* Ensure Vue component tab-content is visible */
+#app-content-vue .tab-content {
+	display: block !important;
 }
 
 /* Ensure vue-app-root is a flex container */

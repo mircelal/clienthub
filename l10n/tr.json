@@ -261,7 +261,21 @@
 		"Drag to reorder": "Sıralamak için sürükleyin",
 		"Loading...": "Yükleniyor...",
 		"Search users...": "Kullanıcı ara...",
-		"Are you sure you want to remove this share?": "Bu paylaşımı kaldırmak istediğinize emin misiniz?"
+		"Are you sure you want to remove this share?": "Bu paylaşımı kaldırmak istediğinize emin misiniz?",
+		"Item Type": "Öğe Türü",
+		"Select Type": "Tür Seçin",
+		"Select Item": "Öğe Seçin",
+		"Link": "Bağla",
+		"Error linking item": "Öğe bağlanırken hata oluştu",
+		"Please select item type and item": "Lütfen öğe türü ve öğe seçin",
+		"Time Tracking": "Zaman Takibi",
+		"Files": "Dosyalar",
+		"Notes": "Notlar",
+		"Requirements": "İstekler",
+		"Challenges": "Zorluklar",
+		"Research": "Araştırmalar",
+		"Sharing": "Paylaşım",
+		"Activity": "Aktivite"
 	},
 	"pluralForm": "nplurals=2; plural=(n > 1);"
 }

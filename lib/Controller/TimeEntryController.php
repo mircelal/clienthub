@@ -10,19 +10,23 @@ use OCP\IRequest;
 use OCA\DomainControl\Db\TimeEntryMapper;
 use OCA\DomainControl\Db\TimeEntry;
 use OCA\DomainControl\Db\ProjectMapper;
+use OCA\DomainControl\Service\ProjectActivityService;
 
 class TimeEntryController extends Controller {
 	private $userId;
 	private TimeEntryMapper $mapper;
 	private ProjectMapper $projectMapper;
+	private ProjectActivityService $activityService;
 
 	public function __construct(IRequest $request,
 	                            TimeEntryMapper $mapper,
 	                            ProjectMapper $projectMapper,
+	                            ProjectActivityService $activityService,
 	                            $userId) {
 		parent::__construct(Application::APP_ID, $request);
 		$this->mapper = $mapper;
 		$this->projectMapper = $projectMapper;
+		$this->activityService = $activityService;
 		$this->userId = $userId;
 	}
 
@@ -101,6 +105,13 @@ class TimeEntryController extends Controller {
 			$entry->setUpdatedAt($now->format('Y-m-d H:i:s'));
 			
 			$entry = $this->mapper->insert($entry);
+			
+			// Log activity
+			$this->activityService->log($projectId, $this->userId, 'time_started', null, [
+				'entryId' => $entry->getId(),
+				'description' => $entry->getDescription(),
+			]);
+			
 			return new JSONResponse($entry);
 		} catch (\Exception $e) {
 			return new JSONResponse(['error' => $e->getMessage()], 500);
@@ -133,6 +144,13 @@ class TimeEntryController extends Controller {
 			$running->setUpdatedAt($endTimeStr);
 			
 			$running = $this->mapper->update($running);
+			
+			// Log activity
+			$this->activityService->log($projectId, $this->userId, 'time_stopped', null, [
+				'entryId' => $running->getId(),
+				'duration' => $running->getDuration(),
+			]);
+			
 			return new JSONResponse($running);
 		} catch (\Exception $e) {
 			return new JSONResponse(['error' => $e->getMessage()], 500);
@@ -163,6 +181,14 @@ class TimeEntryController extends Controller {
 			$entry->setUpdatedAt(date('Y-m-d H:i:s'));
 			$entry = $this->mapper->update($entry);
 			
+			// Log activity if entry has project
+			if ($entry->getProjectId()) {
+				$this->activityService->log($entry->getProjectId(), $this->userId, 'time_updated', null, [
+					'entryId' => $entry->getId(),
+					'description' => $entry->getDescription(),
+				]);
+			}
+			
 			return new JSONResponse($entry);
 		} catch (\Exception $e) {
 			return new JSONResponse(['error' => $e->getMessage()], 500);
@@ -175,7 +201,16 @@ class TimeEntryController extends Controller {
 	public function delete(int $id): JSONResponse {
 		try {
 			$entry = $this->mapper->find($id, $this->userId);
+			$projectId = $entry->getProjectId();
 			$this->mapper->delete($entry);
+			
+			// Log activity
+			if ($projectId) {
+				$this->activityService->log($projectId, $this->userId, 'time_deleted', null, [
+					'entryId' => $id,
+				]);
+			}
+			
 			return new JSONResponse(['success' => true]);
 		} catch (\Exception $e) {
 			return new JSONResponse(['error' => $e->getMessage()], 500);

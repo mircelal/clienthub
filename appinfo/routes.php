@@ -161,6 +161,22 @@ return [
 		['name' => 'time_entry#update', 'url' => '/api/time-entries/{id}', 'verb' => 'PUT'],
 		['name' => 'time_entry#delete', 'url' => '/api/time-entries/{id}', 'verb' => 'DELETE'],
 
+		// Project Note routes
+		['name' => 'project_note#index', 'url' => '/api/projects/{projectId}/notes', 'verb' => 'GET'],
+		['name' => 'project_note#show', 'url' => '/api/projects/{projectId}/notes/{id}', 'verb' => 'GET'],
+		['name' => 'project_note#create', 'url' => '/api/projects/{projectId}/notes', 'verb' => 'POST'],
+		['name' => 'project_note#update', 'url' => '/api/projects/{projectId}/notes/{id}', 'verb' => 'PUT'],
+		['name' => 'project_note#delete', 'url' => '/api/projects/{projectId}/notes/{id}', 'verb' => 'DELETE'],
+
+		// Project File routes
+		['name' => 'project_file#index', 'url' => '/api/projects/{projectId}/files', 'verb' => 'GET'],
+		['name' => 'project_file#show', 'url' => '/api/projects/{projectId}/files/{id}', 'verb' => 'GET'],
+		['name' => 'project_file#create', 'url' => '/api/projects/{projectId}/files', 'verb' => 'POST'],
+		['name' => 'project_file#delete', 'url' => '/api/projects/{projectId}/files/{id}', 'verb' => 'DELETE'],
+
+		// Project Activity routes
+		['name' => 'project_activity#index', 'url' => '/api/projects/{projectId}/activities', 'verb' => 'GET'],
+
 		// Transaction Category routes
 		['name' => 'transaction_category#index', 'url' => '/api/transaction-categories', 'verb' => 'GET'],
 		['name' => 'transaction_category#byType', 'url' => '/api/transaction-categories/type/{type}', 'verb' => 'GET'],

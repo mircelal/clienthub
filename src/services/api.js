@@ -171,6 +171,7 @@ export default {
 		}),
 		removeItem: (id, itemId) => axios.delete(`${apiBase}/projects/${id}/items/${itemId}`),
 		getTasks: (id) => axios.get(`${apiBase}/projects/${id}/tasks`),
+		getInvoices: (id) => axios.get(`${apiBase}/projects/${id}/invoices`),
 		getShares: (id) => axios.get(`${apiBase}/projects/${id}/shares`),
 		share: (id, data) => axios.post(`${apiBase}/projects/${id}/shares`, toFormData(data), {
 			headers: {
@@ -341,6 +342,63 @@ export default {
 	},
 	users: {
 		getAll: () => axios.get(`${apiBase}/users`),
+	},
+	projectShares: {
+		index: (projectId) => axios.get(`${apiBase}/projects/${projectId}/shares`),
+		share: (projectId, data) => axios.post(`${apiBase}/projects/${projectId}/shares`, toFormData(data), {
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+		}),
+		unshare: (projectId, sharedWithUserId) => axios.delete(`${apiBase}/projects/${projectId}/shares/${sharedWithUserId}`),
+	},
+	projectNotes: {
+		getAll: (projectId, category = null) => {
+			let url = `${apiBase}/projects/${projectId}/notes`
+			if (category) {
+				url += `?category=${encodeURIComponent(category)}`
+			}
+			return axios.get(url)
+		},
+		get: (projectId, id) => axios.get(`${apiBase}/projects/${projectId}/notes/${id}`),
+		create: (projectId, data) => axios.post(`${apiBase}/projects/${projectId}/notes`, toFormData(data), {
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+		}),
+		update: (projectId, id, data) => axios.put(`${apiBase}/projects/${projectId}/notes/${id}`, toFormData(data), {
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+		}),
+		delete: (projectId, id) => axios.delete(`${apiBase}/projects/${projectId}/notes/${id}`),
+	},
+	projectFiles: {
+		getAll: (projectId, category = null) => {
+			let url = `${apiBase}/projects/${projectId}/files`
+			if (category) {
+				url += `?category=${encodeURIComponent(category)}`
+			}
+			return axios.get(url)
+		},
+		get: (projectId, id) => axios.get(`${apiBase}/projects/${projectId}/files/${id}`),
+		upload: (projectId, file, category = 'general', description = '') => {
+			const formData = new FormData()
+			formData.append('file', file)
+			formData.append('category', category)
+			formData.append('description', description)
+			return axios.post(`${apiBase}/projects/${projectId}/files`, formData)
+		},
+		delete: (projectId, id) => axios.delete(`${apiBase}/projects/${projectId}/files/${id}`),
+	},
+	projectActivities: {
+		getAll: (projectId, type = null) => {
+			let url = `${apiBase}/projects/${projectId}/activities`
+			if (type) {
+				url += `?type=${encodeURIComponent(type)}`
+			}
+			return axios.get(url)
+		},
 	},
 }
 
