@@ -1,4 +1,7 @@
 <div id="dashboard-tab" class="tab-content active">
+	<!-- Vue.js Test Container -->
+	<div id="vue-test-container"></div>
+	
 	<!-- Welcome Header -->
 	<div class="dashboard-welcome">
 		<div class="welcome-text">
