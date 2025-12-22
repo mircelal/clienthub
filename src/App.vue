@@ -87,6 +87,7 @@ export default {
 
 <style>
 /* Nextcloud native app layout */
+/* Vue 3 allows multiple root elements, but we need to ensure proper layout */
 .app-navigation.domaincontrol-navigation {
 	width: 300px;
 	flex-shrink: 0;
@@ -96,26 +97,33 @@ export default {
 	flex-direction: column;
 	height: 100vh;
 	overflow: hidden;
+	position: fixed;
+	left: 0;
+	top: 0;
+	z-index: 100;
 }
 
 #app-content-vue {
 	flex: 1;
-	height: 100vh;
+	min-height: 100vh;
 	overflow-y: auto;
 	background-color: var(--color-main-background);
 	position: relative;
 	width: 100%;
 	box-sizing: border-box;
-}
-
-/* Ensure proper layout when both navigation and content are present */
-body:has(.app-navigation.domaincontrol-navigation) #app-content-vue {
-	margin-left: 0;
+	margin-left: 300px;
 }
 
 /* Hide old tab-content system */
 .tab-content {
 	display: none !important;
+}
+
+/* Ensure vue-app-root is a flex container */
+#vue-app-root {
+	display: flex;
+	width: 100%;
+	min-height: 100vh;
 }
 </style>
 
