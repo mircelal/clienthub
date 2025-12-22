@@ -277,31 +277,72 @@ export default {
 	},
 	methods: {
 		translate(appId, text, vars) {
-			// Use global t() function from Nextcloud
-			// Nextcloud's t() function is available globally
+			// Use Nextcloud's translation system
 			try {
 				if (typeof window !== 'undefined') {
-					// Try OC.L10n.translate if available (Nextcloud's translation system)
+					// Method 1: Try OC.L10n.translate (Nextcloud's official method)
 					if (typeof OC !== 'undefined' && OC.L10n && typeof OC.L10n.translate === 'function') {
-						return OC.L10n.translate(appId, text, vars || {})
+						const translated = OC.L10n.translate(appId, text, vars || {})
+						if (translated && translated !== text) {
+							return translated
+						}
 					}
-					// Fallback to global t() function
+					// Method 2: Try global t() function
 					if (typeof window.t === 'function') {
-						return window.t(appId, text, vars || {})
+						const translated = window.t(appId, text, vars || {})
+						if (translated && translated !== text) {
+							return translated
+						}
 					}
 				}
 			} catch (e) {
 				console.warn('Translation error:', e)
 			}
-			// Fallback - return original text or try to replace variables
+			
+			// Fallback: Manual translation from tr.json
+			const translations = {
+				'Welcome, {name}': 'Hoş Geldiniz, {name}',
+				"Here's what's happening in your business today.": 'Bugün işletmenizde neler olup bitiyor? İşte güncel özetiniz.',
+				'Total Clients': 'Toplam Müşteri',
+				'Active Projects': 'Aktif Projeler',
+				'Pending Tasks': 'Bekleyen Görevler',
+				'Unpaid Invoices': 'Ödenmemiş Fatura',
+				'Overview': 'Genel Bakış',
+				'Domains': 'Domainler',
+				'Hosting': 'Hosting',
+				'Websites': 'Websiteler',
+				'Income (This Month)': 'Gelir (Bu Ay)',
+				'Expense (This Month)': 'Gider (Bu Ay)',
+				'Net Profit/Loss': 'Net Kar/Zarar',
+				'Quick Actions': 'Hızlı İşlemler',
+				'New Client': 'Yeni Müşteri',
+				'New Project': 'Yeni Proje',
+				'New Task': 'Yeni Görev',
+				'Create Invoice': 'Fatura Oluştur',
+				'Recent Clients': 'Son Eklenen Müşteriler',
+				'View All': 'Tümünü Gör',
+				'No clients yet': 'Henüz müşteri eklenmemiş',
+				'Overdue Payments': 'Geciken Ödemeler',
+				'No overdue payments': 'Geciken ödeme yok',
+				'Upcoming Payments': 'Yaklaşan Ödemeler',
+				'No upcoming payments': 'Yaklaşan ödeme yok',
+				'Upcoming Tasks': 'Yaklaşan Görevler',
+				'No upcoming tasks': 'Yaklaşan görev yok',
+				'Upcoming Debt Payments': 'Yaklaşan Borç Ödemeleri',
+				'No upcoming debt payments': 'Yaklaşan borç ödemesi yok',
+			}
+			
+			// Get translation from fallback dictionary
+			let result = translations[text] || text
+			
+			// Replace variables if provided
 			if (vars && typeof vars === 'object') {
-				let result = text
 				for (const key in vars) {
 					result = result.replace(new RegExp(`\\{${key}\\}`, 'g'), vars[key])
 				}
-				return result
 			}
-			return text
+			
+			return result
 		},
 		updateDate() {
 			const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
