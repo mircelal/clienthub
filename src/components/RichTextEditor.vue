@@ -101,13 +101,6 @@ export default {
 				this.$refs.editor.innerHTML = newVal || ''
 			}
 		},
-		open(newVal) {
-			if (newVal && this.$refs.editor) {
-				this.$nextTick(() => {
-					this.$refs.editor.innerHTML = this.modelValue || ''
-				})
-			}
-		},
 	},
 	mounted() {
 		if (this.modelValue && this.$refs.editor) {
