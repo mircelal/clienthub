@@ -230,7 +230,7 @@
 						</button>
 						<div
 							v-if="detailPopoverOpen"
-							class="popover-menu popover-menu--detail"
+							class="popover-menu"
 							@click.stop
 						>
 							<button
@@ -1000,12 +1000,6 @@ export default {
 	overflow: hidden;
 }
 
-.popover-menu--detail {
-	top: auto;
-	bottom: 100%;
-	margin-top: 0;
-	margin-bottom: 4px;
-}
 
 .popover-menu-item {
 	display: flex;

@@ -94,6 +94,17 @@ export default {
 	websites: {
 		getAll: () => axios.get(`${apiBase}/websites`),
 		get: (id) => axios.get(`${apiBase}/websites/${id}`),
+		create: (data) => axios.post(`${apiBase}/websites`, toFormData(data), {
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+		}),
+		update: (id, data) => axios.put(`${apiBase}/websites/${id}`, toFormData(data), {
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+		}),
+		delete: (id) => axios.delete(`${apiBase}/websites/${id}`),
 	},
 	services: {
 		getAll: () => axios.get(`${apiBase}/services`),
