@@ -405,6 +405,7 @@ export default {
 		MaterialIcon,
 		ServiceModal,
 		ServiceExtendModal,
+		ServiceTypeModal,
 	},
 	data() {
 		return {
@@ -1070,5 +1071,104 @@ export default {
 
 .action-button--more:hover {
 	opacity: 1;
+}
+
+.service-types-view {
+	padding: 20px;
+	padding-bottom: 40px;
+}
+
+.service-types-list {
+	display: grid;
+	gap: 12px;
+	margin-top: 20px;
+}
+
+.service-type-item {
+	cursor: pointer;
+	background-color: var(--color-main-background);
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius-element);
+	padding: 12px;
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	transition: background-color 0.2s ease;
+}
+
+.service-type-item:hover {
+	background-color: var(--color-background-hover);
+}
+
+.service-type-item .list-item__avatar {
+	width: 48px;
+	height: 48px;
+	border-radius: 50%;
+	background-color: var(--color-background-dark);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+}
+
+.service-type-item .list-item__avatar .material-icon {
+	color: var(--color-text-maxcontrast);
+}
+
+.service-type-item .list-item__content {
+	flex: 1;
+	min-width: 0;
+}
+
+.service-type-item .list-item__title {
+	font-size: 16px;
+	font-weight: 500;
+	color: var(--color-main-text);
+	margin-bottom: 4px;
+}
+
+.service-type-item .list-item__meta {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	font-size: 13px;
+	color: var(--color-text-maxcontrast);
+	flex-wrap: wrap;
+}
+
+.service-type-price {
+	font-weight: 500;
+	color: var(--color-main-text);
+}
+
+.service-type-item .list-item__stats {
+	display: flex;
+	gap: 24px;
+	align-items: center;
+}
+
+.service-type-item .list-item__stat {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	min-width: 100px;
+}
+
+.service-type-item .list-item__stat-label {
+	font-size: 12px;
+	color: var(--color-text-maxcontrast);
+}
+
+.service-type-item .list-item__stat-value {
+	font-size: 14px;
+	font-weight: 500;
+	color: var(--color-main-text);
+}
+
+.service-type-item .list-item__actions {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-shrink: 0;
 }
 </style>
