@@ -659,6 +659,44 @@ export default {
 			})
 			return formatter.format(amount)
 		},
+		showServiceTypeModal() {
+			this.editingServiceType = null
+			this.serviceTypeModalOpen = true
+		},
+		editServiceType(serviceType) {
+			this.editingServiceType = serviceType
+			this.serviceTypeModalOpen = true
+		},
+		closeServiceTypeModal() {
+			this.serviceTypeModalOpen = false
+			this.editingServiceType = null
+		},
+		async handleServiceTypeSaved() {
+			await this.loadServiceTypes()
+			this.closeServiceTypeModal()
+		},
+		async initPredefinedTypes() {
+			try {
+				await api.serviceTypes.initPredefined()
+				await this.loadServiceTypes()
+				alert(this.translate('domaincontrol', 'Predefined service types added successfully'))
+			} catch (error) {
+				console.error('Error initializing predefined types:', error)
+				alert(this.translate('domaincontrol', 'Error adding predefined service types'))
+			}
+		},
+		async confirmDeleteServiceType(serviceType) {
+			if (!confirm(this.translate('domaincontrol', 'Are you sure you want to delete this service type?'))) {
+				return
+			}
+			try {
+				await api.serviceTypes.delete(serviceType.id)
+				await this.loadServiceTypes()
+			} catch (error) {
+				console.error('Error deleting service type:', error)
+				alert(this.translate('domaincontrol', 'Error deleting service type'))
+			}
+		},
 		translate(appId, text, vars) {
 			try {
 				if (typeof window !== 'undefined') {
@@ -681,6 +719,13 @@ export default {
 
 			const translations = {
 				'Add Service': 'Hizmet Ekle',
+				'Manage Service Types': 'Hizmet Türlerini Yönet',
+				'Add Service Type': 'Hizmet Türü Ekle',
+				'Add Predefined Types': 'Önceden Tanımlı Türleri Ekle',
+				'No service types yet': 'Henüz hizmet türü yok',
+				'Add First Service Type': 'İlk Hizmet Türünü Ekle',
+				'Loading service types...': 'Hizmet türleri yükleniyor...',
+				'Interval': 'Periyot',
 				'Search services...': 'Hizmetlerde ara...',
 				'No services found': 'Hizmet bulunamadı',
 				'No services yet': 'Henüz hizmet yok',
@@ -714,6 +759,10 @@ export default {
 				'days left': 'gün kaldı',
 				'Are you sure you want to delete this service?': 'Bu hizmeti silmek istediğinize emin misiniz?',
 				'Error deleting service': 'Hizmet silinirken hata oluştu',
+				'Are you sure you want to delete this service type?': 'Bu hizmet türünü silmek istediğinize emin misiniz?',
+				'Error deleting service type': 'Hizmet türü silinirken hata oluştu',
+				'Predefined service types added successfully': 'Önceden tanımlı hizmet türleri başarıyla eklendi',
+				'Error adding predefined service types': 'Önceden tanımlı hizmet türleri eklenirken hata oluştu',
 			}
 
 			return translations[text] || text
