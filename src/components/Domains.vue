@@ -545,6 +545,7 @@ export default {
 <style scoped>
 .domains-view {
 	padding: 20px;
+	padding-bottom: 40px;
 }
 
 .domains-list-view {
