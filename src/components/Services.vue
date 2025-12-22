@@ -414,10 +414,14 @@ export default {
 			serviceTypes: [],
 			selectedService: null,
 			loading: false,
+			serviceTypesLoading: false,
 			modalOpen: false,
 			editingService: null,
 			extendModalOpen: false,
 			extendingService: null,
+			serviceTypeModalOpen: false,
+			editingServiceType: null,
+			showServiceTypesView: false,
 			searchQuery: '',
 			openPopover: null,
 			detailPopoverOpen: false,
@@ -479,12 +483,15 @@ export default {
 			}
 		},
 		async loadServiceTypes() {
+			this.serviceTypesLoading = true
 			try {
 				const response = await api.serviceTypes.getAll()
 				this.serviceTypes = response.data || []
 			} catch (error) {
 				console.error('Error loading service types:', error)
 				this.serviceTypes = []
+			} finally {
+				this.serviceTypesLoading = false
 			}
 		},
 		filterServices() {

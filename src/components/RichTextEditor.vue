@@ -227,34 +227,62 @@ export default {
 
 .toolbar-separator {
 	width: 1px;
-	height: 20px;
+	height: 24px;
 	background: var(--color-border);
-	margin: 0 4px;
+	margin: 0 2px;
+	opacity: 0.5;
 }
 
 .rich-text-editor {
 	display: block;
 	width: 100%;
-	min-height: 120px;
-	max-height: 300px;
+	min-height: 140px;
+	max-height: 350px;
 	overflow-y: auto;
-	padding: 12px 14px;
+	padding: 14px 16px;
 	font-size: 14px;
-	line-height: 1.6;
+	line-height: 1.7;
 	color: var(--color-main-text);
 	outline: none;
 	box-sizing: border-box;
 	font-family: inherit;
+	transition: background-color 0.2s ease;
+	scrollbar-width: thin;
+	scrollbar-color: var(--color-border) transparent;
+}
+
+.rich-text-editor::-webkit-scrollbar {
+	width: 8px;
+}
+
+.rich-text-editor::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.rich-text-editor::-webkit-scrollbar-thumb {
+	background: var(--color-border);
+	border-radius: 4px;
+}
+
+.rich-text-editor::-webkit-scrollbar-thumb:hover {
+	background: var(--color-text-maxcontrast);
 }
 
 .rich-text-editor:empty:before {
 	content: attr(data-placeholder);
 	color: var(--color-text-maxcontrast);
 	font-style: italic;
+	opacity: 0.7;
+	pointer-events: none;
 }
 
 .rich-text-editor:focus {
 	outline: none;
+	background-color: var(--color-background-dark);
+}
+
+.rich-text-editor:focus:empty:before {
+	opacity: 0.5;
 }
 
 .rich-text-editor strong {
@@ -271,16 +299,18 @@ export default {
 
 .rich-text-editor ul,
 .rich-text-editor ol {
-	margin: 8px 0;
-	padding-left: 24px;
+	margin: 10px 0;
+	padding-left: 28px;
 }
 
 .rich-text-editor li {
-	margin: 4px 0;
+	margin: 6px 0;
+	line-height: 1.6;
 }
 
 .rich-text-editor p {
-	margin: 8px 0;
+	margin: 10px 0;
+	line-height: 1.7;
 }
 
 .rich-text-editor p:first-child {
@@ -289,6 +319,22 @@ export default {
 
 .rich-text-editor p:last-child {
 	margin-bottom: 0;
+}
+
+.rich-text-editor a {
+	color: var(--color-primary-element);
+	text-decoration: underline;
+}
+
+.rich-text-editor a:hover {
+	color: var(--color-primary-element-text);
+}
+
+.toolbar-btn strong,
+.toolbar-btn em,
+.toolbar-btn u {
+	pointer-events: none;
+	user-select: none;
 }
 </style>
 
