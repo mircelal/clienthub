@@ -109,9 +109,45 @@ export default {
 	},
 	invoices: {
 		getAll: () => axios.get(`${apiBase}/invoices`),
+		get: (id) => axios.get(`${apiBase}/invoices/${id}`),
 		getUnpaid: () => axios.get(`${apiBase}/invoices/unpaid`),
 		getOverdue: () => axios.get(`${apiBase}/invoices/overdue`),
 		getUpcoming: () => axios.get(`${apiBase}/invoices/upcoming`),
+		create: (data) => axios.post(`${apiBase}/invoices`, toFormData(data), {
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+		}),
+		update: (id, data) => axios.put(`${apiBase}/invoices/${id}`, toFormData(data), {
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+		}),
+		delete: (id) => axios.delete(`${apiBase}/invoices/${id}`),
+		getItems: (id) => axios.get(`${apiBase}/invoices/${id}/items`),
+		addItem: (id, data) => axios.post(`${apiBase}/invoices/${id}/items`, toFormData(data), {
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+		}),
+		removeItem: (id, itemId) => axios.delete(`${apiBase}/invoices/${id}/items/${itemId}`),
+		getPayments: (id) => axios.get(`${apiBase}/invoices/${id}/payments`),
+	},
+	payments: {
+		getAll: () => axios.get(`${apiBase}/payments`),
+		get: (id) => axios.get(`${apiBase}/payments/${id}`),
+		getMonthlyTotal: () => axios.get(`${apiBase}/payments/monthly-total`),
+		create: (data) => axios.post(`${apiBase}/payments`, toFormData(data), {
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+		}),
+		update: (id, data) => axios.put(`${apiBase}/payments/${id}`, toFormData(data), {
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+		}),
+		delete: (id) => axios.delete(`${apiBase}/payments/${id}`),
 	},
 	payments: {
 		getAll: () => axios.get(`${apiBase}/payments`),
