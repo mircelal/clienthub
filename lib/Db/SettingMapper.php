@@ -32,14 +32,21 @@ class SettingMapper extends QBMapper
 	 */
 	public function findByKey(string $userId, string $key): ?Setting
 	{
-		$qb = $this->db->getQueryBuilder();
-		$qb->select('*')
-			->from($this->getTableName())
-			->where($qb->expr()->eq('user_id', $qb->createNamedParameter($userId)))
-			->andWhere($qb->expr()->eq('setting_key', $qb->createNamedParameter($key)))
-			->setMaxResults(1);
+		try {
+			$qb = $this->db->getQueryBuilder();
+			$qb->select('*')
+				->from($this->getTableName())
+				->where($qb->expr()->eq('user_id', $qb->createNamedParameter($userId)))
+				->andWhere($qb->expr()->eq('setting_key', $qb->createNamedParameter($key)))
+				->setMaxResults(1);
 
-		return $this->findEntity($qb);
+			return $this->findEntity($qb);
+		} catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
+			return null;
+		} catch (\OCP\AppFramework\Db\MultipleObjectsReturnedException $e) {
+			// Should not happen due to unique constraint, but handle it anyway
+			return null;
+		}
 	}
 
 	/**

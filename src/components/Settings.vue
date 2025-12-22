@@ -104,6 +104,7 @@
 									v-for="(currency, index) in currencies"
 									:key="currency.code"
 									class="currency-item"
+									:data-default="currency.code === defaultCurrency"
 								>
 									<div class="currency-content">
 										<div class="currency-symbol">{{ currency.symbol }}</div>
@@ -208,6 +209,7 @@
 								placeholder="INV-"
 								@change="saveSettings"
 							/>
+							<p class="form-help">{{ translate('domaincontrol', 'Prefix that will be added to invoice numbers (e.g., INV-001)') }}</p>
 						</div>
 
 						<div class="form-group">
@@ -237,27 +239,33 @@
 						</p>
 					</div>
 					<div class="settings-card">
-						<div class="form-group">
-							<label class="module-checkbox">
+						<div class="form-group checkbox-group">
+							<label class="checkbox-label">
 								<input
 									type="checkbox"
 									v-model="notificationsEnabled"
 									@change="saveSettings"
+									class="checkbox-input"
 								/>
-								<span>{{ translate('domaincontrol', 'Enable Notifications') }}</span>
+								<span class="checkbox-custom"></span>
+								<span class="checkbox-text">{{ translate('domaincontrol', 'Enable Notifications') }}</span>
 							</label>
+							<p class="checkbox-description">{{ translate('domaincontrol', 'Receive notifications for important events and updates') }}</p>
 						</div>
 
-						<div class="form-group">
-							<label class="module-checkbox">
+						<div class="form-group checkbox-group">
+							<label class="checkbox-label" :class="{ 'disabled': !notificationsEnabled }">
 								<input
 									type="checkbox"
 									v-model="emailNotifications"
 									:disabled="!notificationsEnabled"
 									@change="saveSettings"
+									class="checkbox-input"
 								/>
-								<span>{{ translate('domaincontrol', 'Email Notifications') }}</span>
+								<span class="checkbox-custom"></span>
+								<span class="checkbox-text">{{ translate('domaincontrol', 'Email Notifications') }}</span>
 							</label>
+							<p class="checkbox-description">{{ translate('domaincontrol', 'Receive notifications via email') }}</p>
 						</div>
 					</div>
 				</div>
@@ -590,91 +598,137 @@ export default {
 .settings-view {
 	width: 100%;
 	height: 100%;
-	padding: 20px;
-	padding-bottom: 40px;
+	padding: 24px 32px;
+	padding-bottom: 60px;
+	background-color: var(--color-main-background);
 }
 
 .settings-container {
-	max-width: 1000px;
+	max-width: 1200px;
 	margin: 0 auto;
 }
 
 .settings-header {
-	margin-bottom: 32px;
+	margin-bottom: 40px;
+	padding-bottom: 24px;
+	border-bottom: 2px solid var(--color-border);
 }
 
 .settings-title {
 	display: flex;
 	align-items: center;
-	gap: 12px;
-	margin: 0 0 8px 0;
-	font-size: 28px;
-	font-weight: 600;
+	gap: 16px;
+	margin: 0 0 12px 0;
+	font-size: 32px;
+	font-weight: 700;
 	color: var(--color-main-text);
+	letter-spacing: -0.5px;
+}
+
+.settings-title .material-icon {
+	color: var(--color-primary-element);
+	opacity: 1;
 }
 
 .settings-subtitle {
 	margin: 0;
-	font-size: 16px;
+	font-size: 15px;
 	color: var(--color-text-maxcontrast);
+	line-height: 1.5;
 }
 
 .settings-content {
 	display: flex;
 	flex-direction: column;
-	gap: 32px;
+	gap: 28px;
 }
 
 .settings-section {
-	background-color: var(--color-background-dark);
-	border-radius: var(--border-radius-element);
-	padding: 24px;
+	background-color: var(--color-main-background);
+	border-radius: 12px;
+	padding: 28px;
 	border: 1px solid var(--color-border);
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+	transition: all 0.2s ease;
+}
+
+.settings-section:hover {
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+	border-color: var(--color-primary-element-light);
 }
 
 .section-header {
-	margin-bottom: 20px;
+	margin-bottom: 24px;
+	padding-bottom: 16px;
+	border-bottom: 1px solid var(--color-border);
 }
 
 .section-title {
 	display: flex;
 	align-items: center;
-	gap: 8px;
-	margin: 0 0 8px 0;
-	font-size: 20px;
+	gap: 10px;
+	margin: 0 0 10px 0;
+	font-size: 22px;
 	font-weight: 600;
 	color: var(--color-main-text);
+}
+
+.section-title .material-icon {
+	color: var(--color-primary-element);
+	opacity: 0.9;
 }
 
 .section-description {
 	margin: 0;
 	font-size: 14px;
 	color: var(--color-text-maxcontrast);
+	line-height: 1.6;
 }
 
 .settings-card {
 	display: flex;
 	flex-direction: column;
-	gap: 20px;
+	gap: 24px;
 }
 
 .modules-list {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-	gap: 12px;
+	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+	gap: 16px;
 }
 
 .module-item {
 	background-color: var(--color-main-background);
-	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius-element);
-	padding: 12px;
-	transition: all 0.2s;
+	border: 2px solid var(--color-border);
+	border-radius: 10px;
+	padding: 16px;
+	transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+	cursor: pointer;
+	position: relative;
+	overflow: hidden;
+}
+
+.module-item::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 4px;
+	height: 100%;
+	background-color: var(--color-primary-element);
+	transform: scaleY(0);
+	transition: transform 0.25s ease;
 }
 
 .module-item:hover {
 	background-color: var(--color-background-hover);
 	border-color: var(--color-primary-element);
+	transform: translateY(-2px);
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.module-item:hover::before {
+	transform: scaleY(1);
 }
 
 .module-checkbox {
@@ -682,32 +736,41 @@ export default {
 	align-items: center;
 	cursor: pointer;
 	margin: 0;
+	width: 100%;
 }
 
 .module-checkbox input[type="checkbox"] {
-	margin-right: 12px;
-	width: 18px;
-	height: 18px;
+	margin-right: 14px;
+	width: 20px;
+	height: 20px;
 	cursor: pointer;
+	accent-color: var(--color-primary-element);
+	flex-shrink: 0;
 }
 
 .module-content {
 	display: flex;
 	align-items: center;
-	gap: 12px;
+	gap: 14px;
 	flex: 1;
 }
 
 .module-icon {
-	width: 40px;
-	height: 40px;
-	border-radius: 50%;
-	background-color: var(--color-primary-element);
+	width: 44px;
+	height: 44px;
+	border-radius: 10px;
+	background: linear-gradient(135deg, var(--color-primary-element) 0%, var(--color-primary-element-light) 100%);
 	color: var(--color-primary-element-text);
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	flex-shrink: 0;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+	transition: transform 0.2s ease;
+}
+
+.module-item:hover .module-icon {
+	transform: scale(1.05);
 }
 
 .module-info {
@@ -716,33 +779,37 @@ export default {
 }
 
 .module-name {
-	font-size: 14px;
-	font-weight: 500;
+	font-size: 15px;
+	font-weight: 600;
 	color: var(--color-main-text);
-	margin-bottom: 2px;
+	margin-bottom: 4px;
+	line-height: 1.4;
 }
 
 .module-description {
-	font-size: 12px;
+	font-size: 13px;
 	color: var(--color-text-maxcontrast);
+	line-height: 1.4;
 }
 
 .currencies-list {
 	display: flex;
 	flex-direction: column;
-	gap: 16px;
+	gap: 20px;
 }
 
 .list-header {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	margin-bottom: 12px;
+	margin-bottom: 16px;
+	padding-bottom: 12px;
+	border-bottom: 1px solid var(--color-border);
 }
 
 .list-header h4 {
 	margin: 0;
-	font-size: 16px;
+	font-size: 17px;
 	font-weight: 600;
 	color: var(--color-main-text);
 }
@@ -750,87 +817,117 @@ export default {
 .currencies-items {
 	display: flex;
 	flex-direction: column;
-	gap: 12px;
+	gap: 14px;
 }
 
 .currency-item {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	padding: 12px;
+	padding: 16px 18px;
 	background-color: var(--color-main-background);
-	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius-element);
+	border: 2px solid var(--color-border);
+	border-radius: 10px;
+	transition: all 0.2s ease;
+}
+
+.currency-item:hover {
+	background-color: var(--color-background-hover);
+	border-color: var(--color-primary-element);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .currency-content {
 	display: flex;
 	align-items: center;
-	gap: 12px;
+	gap: 16px;
 }
 
 .currency-symbol {
-	font-size: 24px;
+	font-size: 28px;
 	font-weight: 600;
-	color: var(--color-main-text);
-	min-width: 40px;
+	color: var(--color-primary-element);
+	min-width: 48px;
 	text-align: center;
+	line-height: 1;
 }
 
 .currency-info {
 	display: flex;
 	flex-direction: column;
-	gap: 2px;
+	gap: 4px;
 }
 
 .currency-code {
-	font-size: 16px;
+	font-size: 17px;
 	font-weight: 600;
 	color: var(--color-main-text);
+	letter-spacing: 0.5px;
 }
 
 .currency-name {
-	font-size: 13px;
+	font-size: 14px;
 	color: var(--color-text-maxcontrast);
 }
 
 .currency-actions {
 	display: flex;
-	gap: 8px;
+	gap: 10px;
 }
 
 .form-group {
 	display: flex;
 	flex-direction: column;
-	gap: 8px;
+	gap: 10px;
 }
 
 .form-label {
 	font-size: 14px;
-	font-weight: 500;
+	font-weight: 600;
 	color: var(--color-main-text);
+	margin-bottom: 2px;
 }
 
 .form-control {
-	padding: 8px 12px;
-	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius-element);
+	padding: 11px 14px;
+	border: 2px solid var(--color-border);
+	border-radius: 8px;
 	background-color: var(--color-main-background);
 	color: var(--color-main-text);
 	font-size: 14px;
 	font-family: inherit;
+	transition: all 0.2s ease;
+}
+
+.form-control:hover {
+	border-color: var(--color-primary-element-light);
 }
 
 .form-control:focus {
 	outline: none;
 	border-color: var(--color-primary-element);
+	box-shadow: 0 0 0 3px rgba(var(--color-primary-element-rgb), 0.1);
+}
+
+.form-control:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+	background-color: var(--color-background-dark);
+}
+
+.form-help {
+	margin: 4px 0 0 0;
+	font-size: 12px;
+	color: var(--color-text-maxcontrast);
+	line-height: 1.4;
 }
 
 .settings-actions {
 	display: flex;
 	justify-content: flex-end;
-	padding-top: 24px;
-	border-top: 1px solid var(--color-border);
+	padding-top: 28px;
+	margin-top: 28px;
+	border-top: 2px solid var(--color-border);
 }
 
 .modal-overlay {
@@ -839,37 +936,60 @@ export default {
 	left: 0;
 	right: 0;
 	bottom: 0;
-	background-color: rgba(0, 0, 0, 0.5);
+	background-color: rgba(0, 0, 0, 0.6);
+	backdrop-filter: blur(4px);
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	z-index: 10000;
 	padding: 20px;
+	animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
 }
 
 .modal-content {
 	background-color: var(--color-main-background);
-	border-radius: var(--border-radius-container);
-	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-	max-width: 500px;
+	border-radius: 16px;
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+	max-width: 520px;
 	width: 100%;
 	max-height: 90vh;
 	overflow-y: auto;
 	display: flex;
 	flex-direction: column;
+	animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+	from {
+		transform: translateY(20px);
+		opacity: 0;
+	}
+	to {
+		transform: translateY(0);
+		opacity: 1;
+	}
 }
 
 .modal-header {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	padding: 20px;
-	border-bottom: 1px solid var(--color-border);
+	padding: 24px 28px;
+	border-bottom: 2px solid var(--color-border);
 }
 
 .modal-title {
 	margin: 0;
-	font-size: 20px;
+	font-size: 22px;
 	font-weight: 600;
 	color: var(--color-main-text);
 }
@@ -879,9 +999,9 @@ export default {
 	border: none;
 	color: var(--color-text-maxcontrast);
 	cursor: pointer;
-	padding: 4px;
-	border-radius: var(--border-radius-small);
-	transition: background-color 0.2s;
+	padding: 6px;
+	border-radius: 8px;
+	transition: all 0.2s ease;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -889,13 +1009,15 @@ export default {
 
 .modal-close:hover {
 	background-color: var(--color-background-hover);
+	color: var(--color-main-text);
+	transform: rotate(90deg);
 }
 
 .modal-body {
-	padding: 20px;
+	padding: 28px;
 	display: flex;
 	flex-direction: column;
-	gap: 16px;
+	gap: 20px;
 }
 
 .form-actions {
@@ -903,8 +1025,8 @@ export default {
 	justify-content: flex-end;
 	gap: 12px;
 	margin-top: 8px;
-	padding-top: 16px;
-	border-top: 1px solid var(--color-border);
+	padding-top: 20px;
+	border-top: 2px solid var(--color-border);
 }
 
 .loading-content {
@@ -912,12 +1034,19 @@ export default {
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-	padding: 60px 20px;
-	gap: 16px;
+	padding: 80px 20px;
+	gap: 20px;
+}
+
+.loading-content p {
+	margin: 0;
+	font-size: 15px;
+	color: var(--color-text-maxcontrast);
 }
 
 .loading-icon {
 	animation: spin 1s linear infinite;
+	color: var(--color-primary-element);
 }
 
 @keyframes spin {
@@ -926,6 +1055,156 @@ export default {
 	}
 	to {
 		transform: rotate(360deg);
+	}
+}
+
+/* Checkbox improvements */
+.module-checkbox input[type="checkbox"]:checked + .module-content .module-icon {
+	background: linear-gradient(135deg, var(--color-primary-element) 0%, var(--color-primary-element-dark) 100%);
+	box-shadow: 0 3px 10px rgba(var(--color-primary-element-rgb), 0.3);
+}
+
+/* Currency item default badge */
+.currency-item[data-default="true"] {
+	border-color: var(--color-primary-element);
+	background: linear-gradient(135deg, rgba(var(--color-primary-element-rgb), 0.05) 0%, rgba(var(--color-primary-element-rgb), 0.02) 100%);
+}
+
+.currency-item[data-default="true"]::before {
+	content: 'Default';
+	position: absolute;
+	top: 8px;
+	right: 8px;
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--color-primary-element);
+	background-color: rgba(var(--color-primary-element-rgb), 0.1);
+	padding: 2px 8px;
+	border-radius: 4px;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+/* Custom checkbox styling */
+.checkbox-group {
+	gap: 8px;
+}
+
+.checkbox-label {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	cursor: pointer;
+	margin: 0;
+	padding: 12px;
+	border-radius: 8px;
+	transition: background-color 0.2s ease;
+}
+
+.checkbox-label:hover {
+	background-color: var(--color-background-hover);
+}
+
+.checkbox-label.disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.checkbox-label.disabled:hover {
+	background-color: transparent;
+}
+
+.checkbox-input {
+	position: absolute;
+	opacity: 0;
+	width: 0;
+	height: 0;
+}
+
+.checkbox-custom {
+	width: 22px;
+	height: 22px;
+	border: 2px solid var(--color-border);
+	border-radius: 6px;
+	background-color: var(--color-main-background);
+	position: relative;
+	flex-shrink: 0;
+	transition: all 0.2s ease;
+}
+
+.checkbox-input:checked + .checkbox-custom {
+	background-color: var(--color-primary-element);
+	border-color: var(--color-primary-element);
+}
+
+.checkbox-input:checked + .checkbox-custom::after {
+	content: '';
+	position: absolute;
+	left: 7px;
+	top: 3px;
+	width: 5px;
+	height: 10px;
+	border: solid var(--color-primary-element-text);
+	border-width: 0 2px 2px 0;
+	transform: rotate(45deg);
+}
+
+.checkbox-input:focus + .checkbox-custom {
+	box-shadow: 0 0 0 3px rgba(var(--color-primary-element-rgb), 0.2);
+}
+
+.checkbox-text {
+	font-size: 15px;
+	font-weight: 500;
+	color: var(--color-main-text);
+	flex: 1;
+}
+
+.checkbox-description {
+	margin: 0 0 0 34px;
+	font-size: 13px;
+	color: var(--color-text-maxcontrast);
+	line-height: 1.5;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+	.settings-view {
+		padding: 16px 20px;
+	}
+
+	.settings-header {
+		margin-bottom: 28px;
+		padding-bottom: 20px;
+	}
+
+	.settings-title {
+		font-size: 26px;
+	}
+
+	.settings-section {
+		padding: 20px;
+	}
+
+	.modules-list {
+		grid-template-columns: 1fr;
+	}
+
+	.currency-item {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 12px;
+	}
+
+	.currency-actions {
+		width: 100%;
+		justify-content: flex-end;
+	}
+
+	.list-header {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 12px;
 	}
 }
 </style>
