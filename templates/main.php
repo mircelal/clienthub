@@ -1,7 +1,4 @@
 <?php
-// Vue.js CDN for testing
-echo '<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>';
-
 script('domaincontrol', 'chart.min');
 script('domaincontrol', 'domaincontrol-main');
 script('domaincontrol', 'reports');

@@ -1,5 +1,5 @@
 <div id="dashboard-tab" class="tab-content active">
-	<!-- Vue.js Test Container -->
+	<!-- Vue.js Test Container (Nextcloud Native) -->
 	<div id="vue-test-container"></div>
 	
 	<!-- Welcome Header -->
