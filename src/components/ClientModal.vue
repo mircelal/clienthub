@@ -10,7 +10,7 @@
 			<div class="modal-body">
 				<div style="margin-bottom: 16px;">
 					<button type="button" class="button-vue button-vue--secondary" @click="showContactsModal">
-						<span class="icon-contacts"></span>
+						<MaterialIcon name="contacts" :size="20" />
 						{{ translate('domaincontrol', 'Select from Contacts') }}
 					</button>
 				</div>
@@ -86,11 +86,11 @@
 						/>
 					</div>
 					<div v-if="contactsLoading" class="loading-content">
-						<span class="icon-loading"></span>
+						<MaterialIcon name="loading" :size="32" class="loading-icon" />
 						<p>{{ translate('domaincontrol', 'Loading contacts...') }}</p>
 					</div>
 					<div v-else-if="filteredContacts.length === 0" class="empty-content">
-						<span class="icon-contacts empty-content__icon" />
+						<MaterialIcon name="contacts" :size="48" color="var(--color-text-maxcontrast)" class="empty-content__icon" />
 						<p class="empty-content__text">
 							{{ contactsSearchQuery ? translate('domaincontrol', 'No contacts found') : translate('domaincontrol', 'No contacts available') }}
 						</p>
@@ -122,9 +122,13 @@
 
 <script>
 import api from '../services/api'
+import MaterialIcon from './MaterialIcon.vue'
 
 export default {
 	name: 'ClientModal',
+	components: {
+		MaterialIcon,
+	},
 	props: {
 		open: {
 			type: Boolean,
@@ -616,7 +620,7 @@ export default {
 	background-color: var(--color-background-hover);
 }
 
-.button-vue .icon-contacts {
+.button-vue .material-icon {
 	margin-right: 8px;
 }
 
@@ -699,8 +703,6 @@ export default {
 }
 
 .empty-content__icon {
-	font-size: 3em;
-	color: var(--color-text-maxcontrast);
 	margin-bottom: 12px;
 	opacity: 0.5;
 }
