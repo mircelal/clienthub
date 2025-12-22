@@ -52,7 +52,6 @@
 					v-for="website in filteredWebsites"
 					:key="website.id"
 					class="list-item website-item"
-					:class="getWebsiteStatusClass(website)"
 					@click="selectWebsite(website)"
 				>
 					<div class="list-item__avatar">
@@ -62,11 +61,9 @@
 						<div class="list-item__title">{{ website.name || website.software || translate('domaincontrol', 'Website') }}</div>
 						<div class="list-item__meta">
 							<span v-if="getClientName(website.clientId)">
-								<MaterialIcon name="contacts" :size="16" />
 								{{ getClientName(website.clientId) }}
 							</span>
 							<span v-if="getDomainName(website.domainId)">
-								<MaterialIcon name="public" :size="16" />
 								{{ getDomainName(website.domainId) }}
 							</span>
 							<span v-if="website.software">
@@ -87,6 +84,12 @@
 							<div class="list-item__stat-label">{{ translate('domaincontrol', 'Hosting') }}</div>
 							<div class="list-item__stat-value">
 								{{ getHostingName(website.hostingId) || '-' }}
+							</div>
+						</div>
+						<div class="list-item__stat">
+							<div class="list-item__stat-label">{{ translate('domaincontrol', 'Software') }}</div>
+							<div class="list-item__stat-value">
+								{{ website.software || '-' }}
 							</div>
 						</div>
 					</div>
@@ -145,7 +148,7 @@
 						</button>
 						<div
 							v-if="detailPopoverOpen"
-							class="popover-menu popover-menu--detail"
+							class="popover-menu"
 							@click.stop
 						>
 							<button
@@ -595,6 +598,14 @@ export default {
 	padding-bottom: 40px;
 }
 
+.domaincontrol-actions {
+	display: flex;
+	gap: 12px;
+	align-items: center;
+	margin-bottom: 20px;
+	flex-wrap: wrap;
+}
+
 .website-search-wrapper {
 	flex: 1;
 	min-width: 200px;
@@ -624,6 +635,12 @@ export default {
 	cursor: pointer;
 	background-color: var(--color-main-background);
 	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius-element);
+	padding: 12px;
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	transition: background-color 0.2s ease;
 }
 
 .website-item:hover {
@@ -631,11 +648,70 @@ export default {
 }
 
 .website-item .list-item__avatar {
+	width: 48px;
+	height: 48px;
+	border-radius: 50%;
 	background-color: var(--color-background-dark);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
 }
 
 .website-item .list-item__avatar .material-icon {
 	color: var(--color-text-maxcontrast);
+}
+
+.website-item .list-item__content {
+	flex: 1;
+	min-width: 0;
+}
+
+.website-item .list-item__title {
+	font-size: 16px;
+	font-weight: 500;
+	color: var(--color-main-text);
+	margin-bottom: 4px;
+}
+
+.website-item .list-item__meta {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	font-size: 13px;
+	color: var(--color-text-maxcontrast);
+	flex-wrap: wrap;
+}
+
+.website-item .list-item__stats {
+	display: flex;
+	gap: 24px;
+	align-items: center;
+}
+
+.website-item .list-item__stat {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	min-width: 100px;
+}
+
+.website-item .list-item__stat-label {
+	font-size: 12px;
+	color: var(--color-text-maxcontrast);
+}
+
+.website-item .list-item__stat-value {
+	font-size: 14px;
+	font-weight: 500;
+	color: var(--color-main-text);
+}
+
+.website-item .list-item__actions {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-shrink: 0;
 }
 
 .website-detail-view {
@@ -841,12 +917,6 @@ export default {
 	overflow: hidden;
 }
 
-.popover-menu--detail {
-	top: auto;
-	bottom: 100%;
-	margin-top: 0;
-	margin-bottom: 4px;
-}
 
 .popover-menu-item {
 	display: flex;
