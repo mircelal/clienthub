@@ -742,6 +742,7 @@ export default {
 .hosting-detail-view,
 .hosting-packages-view {
 	padding: 20px;
+	padding-bottom: 40px;
 	max-width: 1200px;
 	margin: 0 auto;
 }
