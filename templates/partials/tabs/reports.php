@@ -1,6 +1,7 @@
 <!-- Reports Tab -->
 <div id="reports-tab" class="tab-content">
-	<div class="reports-container">
+	<!-- Vue.js Reports Component -->
+	<div id="vue-reports-container"></div>
 		<div class="reports-header">
 			<h2>📊 Raporlar ve Analitik</h2>
 			<p class="reports-subtitle">İş performansınızı analiz edin ve kararlarınızı veriye dayalı alın</p>
