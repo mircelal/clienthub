@@ -125,7 +125,6 @@
 import api from '../services/api'
 import MaterialIcon from './MaterialIcon.vue'
 import RichTextEditor from './RichTextEditor.vue'
-import RichTextEditor from './RichTextEditor.vue'
 
 export default {
 	name: 'InvoiceModal',

@@ -185,6 +185,7 @@ export default {
 	name: 'ServiceModal',
 	components: {
 		MaterialIcon,
+		RichTextEditor,
 	},
 	props: {
 		open: {

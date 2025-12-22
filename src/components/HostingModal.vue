@@ -174,6 +174,9 @@ import RichTextEditor from './RichTextEditor.vue'
 
 export default {
 	name: 'HostingModal',
+	components: {
+		RichTextEditor,
+	},
 	props: {
 		open: {
 			type: Boolean,
