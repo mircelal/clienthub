@@ -21,18 +21,18 @@
 		<div v-if="!selectedDomain" class="domains-list-view">
 			<div class="domaincontrol-actions">
 				<button class="button-vue button-vue--primary" @click="showAddModal">
-					<span class="icon-add"></span>
+					<MaterialIcon name="add" :size="20" />
 					{{ translate('domaincontrol', 'Add Domain') }}
 				</button>
 				<button class="button-vue button-vue--secondary" @click="testEmail" title="Süresi yaklaşan domainler için test e-postası gönder">
-					<span class="icon-mail"></span>
+					<MaterialIcon name="mail" :size="20" />
 					{{ translate('domaincontrol', 'Test Email') }}
 				</button>
 			</div>
 
 			<!-- Empty State -->
 			<div v-if="filteredDomains.length === 0 && !loading" class="empty-content">
-				<span class="icon-public empty-content__icon" />
+				<MaterialIcon name="public" :size="48" color="var(--color-text-maxcontrast)" class="empty-content__icon" />
 				<p class="empty-content__text">
 					{{ translate('domaincontrol', 'No domains yet') }}
 				</p>
@@ -57,7 +57,7 @@
 					@click="selectDomain(domain)"
 				>
 					<div class="list-item__avatar">
-						<span class="icon-public"></span>
+						<MaterialIcon name="public" :size="24" />
 					</div>
 					<div class="list-item__content">
 						<div class="list-item__title">{{ domain.domainName }}</div>
@@ -98,15 +98,19 @@
 							+{{ domain.renewalInterval || 1 }}Y
 						</button>
 						<button
-							class="icon-edit action-button"
+							class="action-button action-button--edit"
 							@click.stop="editDomain(domain.id)"
 							:title="translate('domaincontrol', 'Edit')"
-						></button>
+						>
+							<MaterialIcon name="edit" :size="18" />
+						</button>
 						<button
-							class="icon-delete action-button"
+							class="action-button action-button--delete"
 							@click.stop="confirmDelete(domain)"
 							:title="translate('domaincontrol', 'Delete')"
-						></button>
+						>
+							<MaterialIcon name="delete" :size="18" />
+						</button>
 					</div>
 				</div>
 			</div>
@@ -116,7 +120,7 @@
 		<div v-else class="domain-detail-view">
 			<div class="detail-header">
 				<button class="button-vue button-vue--tertiary" @click="backToList">
-					<span class="icon-arrow-left"></span>
+					<MaterialIcon name="arrow-left" :size="20" />
 					{{ translate('domaincontrol', 'Back') }}
 				</button>
 				<h2 class="detail-title">{{ selectedDomain.domainName }}</h2>
@@ -138,7 +142,7 @@
 				<div class="detail-stats">
 					<div class="stat-card">
 						<div class="stat-card__icon">
-							<span class="icon-calendar-dark"></span>
+							<MaterialIcon name="calendar" :size="24" />
 						</div>
 						<div class="stat-card__content">
 							<div class="stat-card__label">{{ translate('domaincontrol', 'Expiry Date') }}</div>
@@ -147,7 +151,7 @@
 					</div>
 					<div class="stat-card">
 						<div class="stat-card__icon" :class="getDomainStatusClass(selectedDomain)">
-							<span class="icon-timezone"></span>
+							<MaterialIcon name="calendar" :size="24" />
 						</div>
 						<div class="stat-card__content">
 							<div class="stat-card__label">{{ translate('domaincontrol', 'Days Left') }}</div>
@@ -158,7 +162,7 @@
 					</div>
 					<div class="stat-card">
 						<div class="stat-card__icon">
-							<span class="icon-category-monitoring"></span>
+							<MaterialIcon name="monitoring" :size="24" />
 						</div>
 						<div class="stat-card__content">
 							<div class="stat-card__label">{{ translate('domaincontrol', 'Status') }}</div>
@@ -171,7 +175,7 @@
 					</div>
 					<div class="stat-card">
 						<div class="stat-card__icon">
-							<span class="icon-files"></span>
+							<MaterialIcon name="files" :size="24" />
 						</div>
 						<div class="stat-card__content">
 							<div class="stat-card__label">{{ translate('domaincontrol', 'Price') }}</div>
@@ -270,12 +274,14 @@
 import api from '../services/api'
 import DomainModal from './DomainModal.vue'
 import DomainExtendModal from './DomainExtendModal.vue'
+import MaterialIcon from './MaterialIcon.vue'
 
 export default {
 	name: 'Domains',
 	components: {
 		DomainModal,
 		DomainExtendModal,
+		MaterialIcon,
 	},
 	data() {
 		return {

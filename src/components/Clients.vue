@@ -12,7 +12,7 @@
 		<div v-if="!selectedClient" class="clients-list-view">
 			<div class="domaincontrol-actions">
 				<button class="button-vue button-vue--primary" @click="showAddModal">
-					<span class="icon-add"></span>
+					<MaterialIcon name="add" :size="20" />
 					{{ translate('domaincontrol', 'Add Client') }}
 				</button>
 				<div class="client-search-wrapper">
@@ -28,7 +28,7 @@
 
 			<!-- Empty State -->
 			<div v-if="filteredClients.length === 0 && !loading" class="empty-content">
-				<span class="icon-contacts empty-content__icon" />
+				<MaterialIcon name="contacts" :size="48" color="var(--color-text-maxcontrast)" class="empty-content__icon" />
 				<p class="empty-content__text">
 					{{ searchQuery ? translate('domaincontrol', 'No clients found') : translate('domaincontrol', 'No clients yet') }}
 				</p>
@@ -63,7 +63,7 @@
 					</div>
 					<div class="list-item__stats">
 						<div class="client-stat-badge">
-							<span class="icon-public"></span>
+							<MaterialIcon name="public" :size="16" />
 							{{ getClientDomainCount(client.id) }}
 						</div>
 						<div class="client-stat-badge">
@@ -77,15 +77,19 @@
 					</div>
 					<div class="list-item__actions">
 						<button
-							class="icon-edit action-button"
+							class="action-button action-button--edit"
 							@click.stop="editClient(client.id)"
 							:title="translate('domaincontrol', 'Edit')"
-						></button>
+						>
+							<MaterialIcon name="edit" :size="18" />
+						</button>
 						<button
-							class="icon-delete action-button"
+							class="action-button action-button--delete"
 							@click.stop="confirmDelete(client)"
 							:title="translate('domaincontrol', 'Delete')"
-						></button>
+						>
+							<MaterialIcon name="delete" :size="18" />
+						</button>
 					</div>
 				</div>
 			</div>
@@ -95,7 +99,7 @@
 		<div v-else class="client-detail-view">
 			<div class="detail-header">
 				<button class="button-vue button-vue--tertiary" @click="backToList">
-					<span class="icon-arrow-left"></span>
+					<MaterialIcon name="arrow-left" :size="20" />
 					{{ translate('domaincontrol', 'Back') }}
 				</button>
 				<h2 class="detail-title">{{ selectedClient.name }}</h2>
@@ -336,11 +340,13 @@
 <script>
 import api from '../services/api'
 import ClientModal from './ClientModal.vue'
+import MaterialIcon from './MaterialIcon.vue'
 
 export default {
 	name: 'Clients',
 	components: {
 		ClientModal,
+		MaterialIcon,
 	},
 	data() {
 		return {

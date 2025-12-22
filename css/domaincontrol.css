@@ -172,6 +172,7 @@
 	background-color: var(--color-background-hover);
 }
 
+/* Material Design Icons - Deprecated, use MaterialIcon component instead */
 .icon-add::before {
 	content: '+';
 	font-weight: bold;
@@ -326,14 +327,25 @@
 	color: var(--color-main-text);
 }
 
-.list-item__actions .icon-edit:hover {
+.list-item__actions .action-button--edit:hover {
 	color: var(--color-primary-element);
 	background-color: rgba(var(--color-primary-element-rgb), 0.1);
 }
 
-.list-item__actions .icon-delete:hover {
+.list-item__actions .action-button--delete:hover {
 	color: var(--color-error);
 	background-color: rgba(var(--color-error-rgb), 0.1);
+}
+
+/* Material Icon styling */
+.action-button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.action-button .material-icon {
+	opacity: 1;
 }
 
 /* Domain Status Colors */
