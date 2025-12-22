@@ -88,6 +88,7 @@ export default {
 <style>
 /* Nextcloud native app layout */
 /* Vue 3 allows multiple root elements, but we need to ensure proper layout */
+/* Reference: https://docs.nextcloud.com/server/latest/developer_manual/html_css_design/navigation.html */
 .app-navigation.domaincontrol-navigation {
 	width: 300px;
 	flex-shrink: 0;
@@ -95,11 +96,11 @@ export default {
 	border-right: 1px solid var(--color-border);
 	display: flex;
 	flex-direction: column;
-	height: 100vh;
+	height: calc(100vh - var(--header-height, 50px));
 	overflow: hidden;
 	position: fixed;
 	left: 0;
-	top: 0;
+	top: var(--header-height, 50px);
 	z-index: 100;
 }
 

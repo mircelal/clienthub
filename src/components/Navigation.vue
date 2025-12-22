@@ -11,13 +11,11 @@
 					<div class="app-navigation-entry" :class="{ active: $props.currentTab === item.id }">
 						<a
 							href="#"
-							:class="['app-navigation-entry-link', item.icon]"
+							class="app-navigation-entry-link"
 							:aria-current="$props.currentTab === item.id ? 'page' : undefined"
 							@click.prevent="handleTabClick(item.id)"
 						>
-					<div class="app-navigation-entry-icon">
-						<span class="icon" :class="item.icon" aria-hidden="true"></span>
-					</div>
+							<span class="icon" :class="item.icon" aria-hidden="true"></span>
 							<span class="app-navigation-entry__name">
 								{{ translate('domaincontrol', item.label) }}
 							</span>
@@ -35,9 +33,7 @@
 						:class="{ active: $props.currentTab === 'settings' }"
 						@click.prevent="handleTabClick('settings')"
 					>
-					<div class="app-navigation-entry-icon">
 						<span class="icon icon-settings" aria-hidden="true"></span>
-					</div>
 						<span class="app-navigation-entry__name">
 							{{ translate('domaincontrol', 'Settings') }}
 						</span>
@@ -245,30 +241,26 @@ export default {
 	color: var(--color-primary-element-text);
 }
 
-.app-navigation-entry-icon {
+/* Icon styling - Nextcloud standard */
+.app-navigation-entry-link .icon {
 	width: 20px;
 	height: 20px;
 	margin-right: 12px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	flex-shrink: 0;
-}
-
-.app-navigation-entry-icon .icon {
-	width: 20px;
-	height: 20px;
 	display: inline-block;
 	background-size: 20px;
 	background-position: center;
 	background-repeat: no-repeat;
 	opacity: 0.7;
 	transition: opacity 0.2s;
+	flex-shrink: 0;
+	/* Icon color - white for all icons */
+	filter: brightness(0) invert(1);
 }
 
-.app-navigation-entry.active .app-navigation-entry-icon .icon,
-.app-navigation-entry-link[aria-current='page'] .app-navigation-entry-icon .icon {
+.app-navigation-entry.active .app-navigation-entry-link .icon,
+.app-navigation-entry-link[aria-current='page'] .icon {
 	opacity: 1;
+	/* Keep white color for active state */
 	filter: brightness(0) invert(1);
 }
 
