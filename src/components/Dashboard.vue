@@ -350,32 +350,69 @@ export default {
 		},
 		async loadDashboardData() {
 			try {
-				// Load all necessary data
+				// Load all necessary data with proper error handling
 				const [clients, domains, hostings, websites, projects, tasks, invoices, payments, transactions, debts] = await Promise.all([
-					api.clients.getAll().catch(() => []),
-					api.domains.getAll().catch(() => []),
-					api.hostings.getAll().catch(() => []),
-					api.websites.getAll().catch(() => []),
-					api.projects.getActive().catch(() => []),
-					api.tasks.getPending().catch(() => []),
-					api.invoices.getAll().catch(() => []),
-					api.payments.getAll().catch(() => []),
-					api.transactions.getAll().catch(() => []),
-					api.debts.getUpcomingPayments().catch(() => []),
+					api.clients.getAll().catch((e) => {
+						console.warn('Failed to load clients:', e)
+						return { data: [] }
+					}),
+					api.domains.getAll().catch((e) => {
+						console.warn('Failed to load domains:', e)
+						return { data: [] }
+					}),
+					api.hostings.getAll().catch((e) => {
+						console.warn('Failed to load hostings:', e)
+						return { data: [] }
+					}),
+					api.websites.getAll().catch((e) => {
+						console.warn('Failed to load websites:', e)
+						return { data: [] }
+					}),
+					api.projects.getActive().catch((e) => {
+						console.warn('Failed to load projects:', e)
+						return { data: [] }
+					}),
+					api.tasks.getAll().catch((e) => {
+						console.warn('Failed to load tasks:', e)
+						return { data: [] }
+					}),
+					api.invoices.getAll().catch((e) => {
+						console.warn('Failed to load invoices:', e)
+						return { data: [] }
+					}),
+					api.payments.getAll().catch((e) => {
+						console.warn('Failed to load payments:', e)
+						return { data: [] }
+					}),
+					api.transactions.getAll().catch((e) => {
+						console.warn('Failed to load transactions:', e)
+						return { data: [] }
+					}),
+					api.debts.getAll().catch((e) => {
+						console.warn('Failed to load debts:', e)
+						return { data: [] }
+					}),
 				])
 
 				this.allData = {
-					clients: clients.data || [],
-					domains: domains.data || [],
-					hostings: hostings.data || [],
-					websites: websites.data || [],
-					projects: projects.data || [],
-					tasks: tasks.data || [],
-					invoices: invoices.data || [],
-					payments: payments.data || [],
-					transactions: transactions.data || [],
-					debts: debts.data || [],
+					clients: clients.data || clients || [],
+					domains: domains.data || domains || [],
+					hostings: hostings.data || hostings || [],
+					websites: websites.data || websites || [],
+					projects: projects.data || projects || [],
+					tasks: tasks.data || tasks || [],
+					invoices: invoices.data || invoices || [],
+					payments: payments.data || payments || [],
+					transactions: transactions.data || transactions || [],
+					debts: debts.data || debts || [],
 				}
+
+				console.log('Dashboard data loaded:', {
+					clients: this.allData.clients.length,
+					invoices: this.allData.invoices.length,
+					tasks: this.allData.tasks.length,
+					debts: this.allData.debts.length,
+				})
 
 				this.calculateStats()
 				this.updateRecentClients()
