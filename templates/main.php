@@ -2,7 +2,7 @@
 script('domaincontrol', 'chart.min');
 script('domaincontrol', 'domaincontrol-main');
 script('domaincontrol', 'reports');
-script('domaincontrol', 'vue-test');
+script('domaincontrol', 'vue-components'); // Vue.js components
 style('domaincontrol', 'domaincontrol');
 ?>
 

@@ -16,7 +16,11 @@
 	<!-- Main Stats Overview -->
 	<div class="section">
 		<div class="dashboard-grid">
-			<div class="stat-card stat-card--gradient-primary">
+			<!-- Vue.js Component Test (First card) -->
+			<div id="vue-stats-card-container"></div>
+			
+			<!-- Original cards (keeping for now) -->
+			<div class="stat-card stat-card--gradient-primary" style="display: none;">
 				<div class="stat-card__icon">👥</div>
 				<div class="stat-card__info">
 					<div class="stat-card__label">Toplam Müşteri</div>
