@@ -277,7 +277,31 @@ export default {
 	},
 	debts: {
 		getAll: () => axios.get(`${apiBase}/debts`),
-		getUpcomingPayments: () => axios.get(`${apiBase}/debts/upcoming-payments`),
+		get: (id) => axios.get(`${apiBase}/debts/${id}`),
+		byType: (type) => axios.get(`${apiBase}/debts/type/${type}`),
+		upcomingPayments: (days) => axios.get(`${apiBase}/debts/upcoming-payments`, {
+			params: { days },
+		}),
+		overdue: () => axios.get(`${apiBase}/debts/overdue`),
+		create: (data) => axios.post(`${apiBase}/debts`, toFormData(data), {
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+		}),
+		update: (id, data) => axios.put(`${apiBase}/debts/${id}`, toFormData(data), {
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+		}),
+		delete: (id) => axios.delete(`${apiBase}/debts/${id}`),
+		addPayment: (id, data) => axios.post(`${apiBase}/debts/${id}/payments`, toFormData(data), {
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+		}),
+	},
+	debtPayments: {
+		delete: (id) => axios.delete(`${apiBase}/debt-payments/${id}`),
 	},
 }
 
