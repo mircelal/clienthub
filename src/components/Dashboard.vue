@@ -278,11 +278,29 @@ export default {
 	methods: {
 		translate(appId, text, vars) {
 			// Use global t() function from Nextcloud
-			// Access via window to avoid webpack bundling issues
-			if (typeof window !== 'undefined' && typeof window.t === 'function') {
-				return window.t(appId, text, vars)
+			// Nextcloud's t() function is available globally
+			try {
+				if (typeof window !== 'undefined') {
+					// Try OC.L10n.translate if available (Nextcloud's translation system)
+					if (typeof OC !== 'undefined' && OC.L10n && typeof OC.L10n.translate === 'function') {
+						return OC.L10n.translate(appId, text, vars || {})
+					}
+					// Fallback to global t() function
+					if (typeof window.t === 'function') {
+						return window.t(appId, text, vars || {})
+					}
+				}
+			} catch (e) {
+				console.warn('Translation error:', e)
 			}
-			// Fallback - return original text
+			// Fallback - return original text or try to replace variables
+			if (vars && typeof vars === 'object') {
+				let result = text
+				for (const key in vars) {
+					result = result.replace(new RegExp(`\\{${key}\\}`, 'g'), vars[key])
+				}
+				return result
+			}
 			return text
 		},
 		updateDate() {
