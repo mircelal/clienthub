@@ -106,7 +106,6 @@
 								id="hpkg-domains-allowed"
 								v-model="formData.domainsAllowed"
 								class="form-control"
-								:value="formData.domainsAllowed || 1"
 								min="1"
 							/>
 						</div>
@@ -117,7 +116,6 @@
 								id="hpkg-databases-allowed"
 								v-model="formData.databasesAllowed"
 								class="form-control"
-								:value="formData.databasesAllowed || 0"
 								min="0"
 							/>
 						</div>
@@ -128,7 +126,6 @@
 								id="hpkg-email-accounts"
 								v-model="formData.emailAccounts"
 								class="form-control"
-								:value="formData.emailAccounts || 0"
 								min="0"
 							/>
 						</div>
@@ -141,7 +138,6 @@
 								id="hpkg-ftp-accounts"
 								v-model="formData.ftpAccounts"
 								class="form-control"
-								:value="formData.ftpAccounts || 0"
 								min="0"
 							/>
 						</div>
@@ -250,10 +246,10 @@ export default {
 						diskSpaceGb: this.package.diskSpaceGb || null,
 						trafficGb: this.package.trafficGb || null,
 						bandwidthUnlimited: this.package.bandwidthUnlimited || 0,
-						domainsAllowed: this.package.domainsAllowed || 1,
-						databasesAllowed: this.package.databasesAllowed || 0,
-						emailAccounts: this.package.emailAccounts || 0,
-						ftpAccounts: this.package.ftpAccounts || 0,
+						domainsAllowed: this.package.domainsAllowed || '1',
+						databasesAllowed: this.package.databasesAllowed || '0',
+						emailAccounts: this.package.emailAccounts || '0',
+						ftpAccounts: this.package.ftpAccounts || '0',
 						sslIncluded: this.package.sslIncluded || 0,
 						backupIncluded: this.package.backupIncluded || 0,
 						description: this.package.description || '',
@@ -365,10 +361,10 @@ export default {
 					diskSpaceGb: this.formData.diskSpaceGb || null,
 					trafficGb: this.formData.trafficGb || null,
 					bandwidthUnlimited: this.formData.bandwidthUnlimited || 0,
-					domainsAllowed: this.formData.domainsAllowed || 1,
-					databasesAllowed: this.formData.databasesAllowed || 0,
-					emailAccounts: this.formData.emailAccounts || 0,
-					ftpAccounts: this.formData.ftpAccounts || 0,
+					domainsAllowed: parseInt(this.formData.domainsAllowed) || 1,
+					databasesAllowed: parseInt(this.formData.databasesAllowed) || 0,
+					emailAccounts: parseInt(this.formData.emailAccounts) || 0,
+					ftpAccounts: parseInt(this.formData.ftpAccounts) || 0,
 					sslIncluded: this.formData.sslIncluded || 0,
 					backupIncluded: this.formData.backupIncluded || 0,
 					description: this.formData.description || '',
