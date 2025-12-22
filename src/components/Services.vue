@@ -698,6 +698,7 @@ export default {
 			}
 		},
 		translate(appId, text, vars) {
+			// Use Nextcloud's translation system - translations should be in l10n/tr.json
 			try {
 				if (typeof window !== 'undefined') {
 					if (typeof OC !== 'undefined' && OC.L10n && typeof OC.L10n.translate === 'function') {
@@ -717,55 +718,9 @@ export default {
 				console.warn('Translation error:', e)
 			}
 
-			const translations = {
-				'Add Service': 'Hizmet Ekle',
-				'Manage Service Types': 'Hizmet Türlerini Yönet',
-				'Add Service Type': 'Hizmet Türü Ekle',
-				'Add Predefined Types': 'Önceden Tanımlı Türleri Ekle',
-				'No service types yet': 'Henüz hizmet türü yok',
-				'Add First Service Type': 'İlk Hizmet Türünü Ekle',
-				'Loading service types...': 'Hizmet türleri yükleniyor...',
-				'Interval': 'Periyot',
-				'Search services...': 'Hizmetlerde ara...',
-				'No services found': 'Hizmet bulunamadı',
-				'No services yet': 'Henüz hizmet yok',
-				'Add First Service': 'İlk Hizmeti Ekle',
-				'Loading services...': 'Hizmetler yükleniyor...',
-				'Price': 'Fiyat',
-				'Status': 'Durum',
-				'Expiry': 'Bitiş',
-				'More options': 'Daha fazla seçenek',
-				'Edit': 'Düzenle',
-				'Extend': 'Uzat',
-				'Delete': 'Sil',
-				'Back': 'Geri',
-				'Client': 'Müşteri',
-				'Expiration Date': 'Bitiş Tarihi',
-				'Service Information': 'Hizmet Bilgileri',
-				'Start Date': 'Başlangıç Tarihi',
-				'Renewal Interval': 'Yenileme Periyodu',
-				'Service Type': 'Hizmet Türü',
-				'Notes': 'Notlar',
-				'No notes': 'Not yok',
-				'Active': 'Aktif',
-				'Paused': 'Durduruldu',
-				'Cancelled': 'İptal',
-				'One-time': 'Tek Seferlik',
-				'Monthly': 'Aylık',
-				'Quarterly': '3 Aylık',
-				'Yearly': 'Yıllık',
-				'days overdue': 'gün gecikti',
-				'Today': 'Bugün',
-				'days left': 'gün kaldı',
-				'Are you sure you want to delete this service?': 'Bu hizmeti silmek istediğinize emin misiniz?',
-				'Error deleting service': 'Hizmet silinirken hata oluştu',
-				'Are you sure you want to delete this service type?': 'Bu hizmet türünü silmek istediğinize emin misiniz?',
-				'Error deleting service type': 'Hizmet türü silinirken hata oluştu',
-				'Predefined service types added successfully': 'Önceden tanımlı hizmet türleri başarıyla eklendi',
-				'Error adding predefined service types': 'Önceden tanımlı hizmet türleri eklenirken hata oluştu',
-			}
-
-			return translations[text] || text
+			// If translation not found, return original text
+			// All translations should be in l10n/tr.json
+			return text
 		},
 	},
 }
