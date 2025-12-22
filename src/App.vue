@@ -1,24 +1,22 @@
 <template>
-	<div id="app">
+	<div class="app-navigation domaincontrol-navigation">
 		<Navigation :current-tab="currentTab" @switch-tab="handleTabSwitch" />
-		<div id="app-content">
-			<div id="app-content-wrapper">
-				<Dashboard v-if="currentTab === 'dashboard'" />
-				<Clients v-if="currentTab === 'clients'" />
-				<Domains v-if="currentTab === 'domains'" />
-				<Hostings v-if="currentTab === 'hostings'" />
-				<Websites v-if="currentTab === 'websites'" />
-				<Services v-if="currentTab === 'services'" />
-				<Invoices v-if="currentTab === 'invoices'" />
-				<Projects v-if="currentTab === 'projects'" />
-				<Tasks v-if="currentTab === 'tasks'" />
-				<Transactions v-if="currentTab === 'transactions'" />
-				<Debts v-if="currentTab === 'debts'" />
-				<Reports v-if="currentTab === 'reports'" />
-				<Settings v-if="currentTab === 'settings'" />
-			</div>
-		</div>
 	</div>
+	<main id="app-content-vue" class="app-content no-snapper">
+		<Dashboard v-if="currentTab === 'dashboard'" />
+		<Clients v-if="currentTab === 'clients'" />
+		<Domains v-if="currentTab === 'domains'" />
+		<Hostings v-if="currentTab === 'hostings'" />
+		<Websites v-if="currentTab === 'websites'" />
+		<Services v-if="currentTab === 'services'" />
+		<Invoices v-if="currentTab === 'invoices'" />
+		<Projects v-if="currentTab === 'projects'" />
+		<Tasks v-if="currentTab === 'tasks'" />
+		<Transactions v-if="currentTab === 'transactions'" />
+		<Debts v-if="currentTab === 'debts'" />
+		<Reports v-if="currentTab === 'reports'" />
+		<Settings v-if="currentTab === 'settings'" />
+	</main>
 </template>
 
 <script>
@@ -88,6 +86,36 @@ export default {
 </script>
 
 <style>
-/* Global styles will be here if needed */
+/* Nextcloud native app layout */
+.app-navigation.domaincontrol-navigation {
+	width: 300px;
+	flex-shrink: 0;
+	background-color: var(--color-main-background);
+	border-right: 1px solid var(--color-border);
+	display: flex;
+	flex-direction: column;
+	height: 100vh;
+	overflow: hidden;
+}
+
+#app-content-vue {
+	flex: 1;
+	height: 100vh;
+	overflow-y: auto;
+	background-color: var(--color-main-background);
+	position: relative;
+	width: 100%;
+	box-sizing: border-box;
+}
+
+/* Ensure proper layout when both navigation and content are present */
+body:has(.app-navigation.domaincontrol-navigation) #app-content-vue {
+	margin-left: 0;
+}
+
+/* Hide old tab-content system */
+.tab-content {
+	display: none !important;
+}
 </style>
 

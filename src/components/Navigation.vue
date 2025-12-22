@@ -1,54 +1,51 @@
 <template>
-	<div id="app-navigation">
-		<ul class="with-icon">
-			<li
-				v-for="item in menuItems"
-				:key="item.id"
-				:data-id="item.id"
-				:class="{ active: $props.currentTab === item.id }"
-			>
-				<a
-					href="#"
-					:class="['tab-button', item.icon]"
-					:data-tab="item.id"
-					@click.prevent="handleTabClick(item.id)"
+	<nav id="app-navigation-vue" class="app-navigation__content" aria-label="ClientHub">
+		<div class="app-navigation__body">
+			<ul class="app-navigation-list">
+				<li
+					v-for="item in menuItems"
+					:key="item.id"
+					class="app-navigation-entry-wrapper"
+					:class="{ 'app-navigation-entry--opened': $props.currentTab === item.id }"
 				>
-					{{ translate('domaincontrol', item.label) }}
-				</a>
-			</li>
-		</ul>
-
-		<div id="app-settings" class="app-navigation-entry">
-			<div id="app-settings-header">
-				<button
-					class="settings-button"
-					@click="toggleSettings"
-					:aria-expanded="settingsOpen"
-					:aria-controls="'app-settings-content'"
-				>
-					<span class="icon-settings"></span>
-					<span>{{ translate('domaincontrol', 'Settings') }}</span>
-				</button>
-			</div>
-			<div
-				id="app-settings-content"
-				:class="{ hidden: !settingsOpen }"
-			>
-				<ul>
-					<li>
+					<div class="app-navigation-entry" :class="{ active: $props.currentTab === item.id }">
 						<a
 							href="#"
-							class="icon-settings tab-button"
-							data-tab="settings"
-							@click.prevent="handleTabClick('settings')"
+							:class="['app-navigation-entry-link', item.icon]"
+							:aria-current="$props.currentTab === item.id ? 'page' : undefined"
+							@click.prevent="handleTabClick(item.id)"
 						>
-							{{ translate('domaincontrol', 'General Settings') }}
+							<div class="app-navigation-entry-icon">
+								<span :class="item.icon"></span>
+							</div>
+							<span class="app-navigation-entry__name">
+								{{ translate('domaincontrol', item.label) }}
+							</span>
 						</a>
-					</li>
-				</ul>
-			</div>
+					</div>
+				</li>
+			</ul>
 		</div>
-	</div>
+		<ul class="app-navigation-entry__settings">
+			<li class="app-navigation-entry-wrapper">
+				<div class="app-navigation-entry">
+					<a
+						href="#"
+						class="app-navigation-entry-link"
+						:class="{ active: $props.currentTab === 'settings' }"
+						@click.prevent="handleTabClick('settings')"
+					>
+						<div class="app-navigation-entry-icon">
+							<span class="icon-settings"></span>
+						</div>
+						<span class="app-navigation-entry__name">
+							{{ translate('domaincontrol', 'Settings') }}
+						</span>
+					</a>
+				</div>
+			</li>
+		</ul>
+	</nav>
 </template>
 
 <script>
@@ -194,137 +191,89 @@ export default {
 </script>
 
 <style scoped>
-#app-navigation {
-	width: 300px;
-	flex-shrink: 0;
-	background-color: var(--color-main-background);
-	border-right: 1px solid var(--color-border);
+/* Nextcloud native navigation structure */
+.app-navigation__content {
 	display: flex;
 	flex-direction: column;
-	height: 100vh;
+	height: 100%;
 }
 
-#app-navigation ul {
-	padding: 10px;
+.app-navigation__body {
 	flex: 1;
 	overflow-y: auto;
-	list-style: none;
-	margin: 0;
 }
 
-#app-navigation ul li {
-	position: relative;
-	margin-bottom: 2px;
-}
-
-#app-navigation ul li a {
-	display: block;
-	height: 44px;
-	line-height: 44px;
-	padding: 0 12px 0 44px;
-	border-radius: var(--border-radius-large);
-	color: var(--color-main-text);
-	background-position: 14px center;
-	background-repeat: no-repeat;
-	background-size: 20px;
-	transition: background-color 0.2s, color 0.2s;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	text-decoration: none;
-	cursor: pointer;
-}
-
-#app-navigation ul li a:hover,
-#app-navigation ul li a:focus {
-	background-color: var(--color-background-hover);
-}
-
-#app-navigation ul li.active a {
-	background-color: var(--color-primary-element);
-	color: var(--color-primary-element-text);
-}
-
-#app-navigation ul li.active a [class^='icon-'],
-#app-navigation ul li.active a [class*=' icon-'] {
-	filter: brightness(0) invert(1);
-}
-
-.app-navigation-entry {
-	border-top: 1px solid var(--color-border);
-	padding: 10px;
-}
-
-.settings-button {
-	display: flex;
-	align-items: center;
-	width: 100%;
-	padding: 10px 12px;
-	background: transparent;
-	border: none;
-	border-radius: var(--border-radius-large);
-	color: var(--color-main-text);
-	cursor: pointer;
-	transition: background-color 0.2s;
-	font-size: 14px;
-}
-
-.settings-button:hover {
-	background-color: var(--color-background-hover);
-}
-
-.settings-button .icon-settings {
-	margin-right: 8px;
-	width: 20px;
-	height: 20px;
-	display: inline-block;
-}
-
-#app-settings-content {
-	transition: max-height 0.3s ease;
-	overflow: hidden;
-}
-
-#app-settings-content.hidden {
-	max-height: 0;
-	display: none;
-}
-
-#app-settings-content:not(.hidden) {
-	max-height: 500px;
-	display: block;
-}
-
-#app-settings-content ul {
+.app-navigation-list {
 	list-style: none;
 	padding: 0;
 	margin: 0;
 }
 
-#app-settings-content ul li {
-	margin-bottom: 2px;
+.app-navigation-entry-wrapper {
+	margin: 0;
 }
 
-#app-settings-content ul li a {
-	display: block;
-	height: 44px;
-	line-height: 44px;
-	padding: 0 12px 0 44px;
-	border-radius: var(--border-radius-large);
+.app-navigation-entry {
+	position: relative;
+}
+
+.app-navigation-entry-link {
+	display: flex;
+	align-items: center;
+	padding: 8px 12px;
 	color: var(--color-main-text);
-	background-position: 14px center;
-	background-repeat: no-repeat;
-	background-size: 20px;
-	transition: background-color 0.2s, color 0.2s;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
 	text-decoration: none;
+	border-radius: var(--border-radius-large);
+	transition: background-color 0.2s, color 0.2s;
 	cursor: pointer;
 }
 
-#app-settings-content ul li a:hover {
+.app-navigation-entry-link:hover {
 	background-color: var(--color-background-hover);
+}
+
+.app-navigation-entry.active .app-navigation-entry-link,
+.app-navigation-entry-link[aria-current='page'] {
+	background-color: var(--color-primary-element);
+	color: var(--color-primary-element-text);
+}
+
+.app-navigation-entry-icon {
+	width: 20px;
+	height: 20px;
+	margin-right: 12px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+}
+
+.app-navigation-entry-icon span {
+	width: 20px;
+	height: 20px;
+	display: inline-block;
+	background-size: 20px;
+	background-position: center;
+	background-repeat: no-repeat;
+}
+
+.app-navigation-entry.active .app-navigation-entry-icon span,
+.app-navigation-entry-link[aria-current='page'] .app-navigation-entry-icon span {
+	filter: brightness(0) invert(1);
+}
+
+.app-navigation-entry__name {
+	flex: 1;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.app-navigation-entry__settings {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	border-top: 1px solid var(--color-border);
 }
 </style>
 
