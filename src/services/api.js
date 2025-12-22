@@ -59,6 +59,37 @@ export default {
 	hostings: {
 		getAll: () => axios.get(`${apiBase}/hostings`),
 		get: (id) => axios.get(`${apiBase}/hostings/${id}`),
+		create: (data) => axios.post(`${apiBase}/hostings`, toFormData(data), {
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+		}),
+		update: (id, data) => axios.put(`${apiBase}/hostings/${id}`, toFormData(data), {
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+		}),
+		delete: (id) => axios.delete(`${apiBase}/hostings/${id}`),
+		addPayment: (id, data) => axios.post(`${apiBase}/hostings/${id}/payment`, toFormData(data), {
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+		}),
+	},
+	hostingPackages: {
+		getAll: () => axios.get(`${apiBase}/hosting-packages`),
+		get: (id) => axios.get(`${apiBase}/hosting-packages/${id}`),
+		create: (data) => axios.post(`${apiBase}/hosting-packages`, toFormData(data), {
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+		}),
+		update: (id, data) => axios.put(`${apiBase}/hosting-packages/${id}`, toFormData(data), {
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+		}),
+		delete: (id) => axios.delete(`${apiBase}/hosting-packages/${id}`),
 	},
 	websites: {
 		getAll: () => axios.get(`${apiBase}/websites`),

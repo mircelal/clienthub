@@ -2,7 +2,7 @@
 <div id="client-modal" class="modal">
 	<div class="modal-content">
 		<div class="modal-header">
-			<h3 id="client-modal-title">Müşteri Ekle</h3>
+			<h3 id="client-modal-title">Müşteri Ekleeeeee</h3>
 			<span class="modal-close" data-modal="client-modal">&times;</span>
 		</div>
 		<div class="modal-body">
