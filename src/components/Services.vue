@@ -18,12 +18,113 @@
 			@extended="handleServiceExtended"
 		/>
 
+		<!-- Service Type Modal -->
+		<ServiceTypeModal
+			:open="serviceTypeModalOpen"
+			:serviceType="editingServiceType"
+			@close="closeServiceTypeModal"
+			@saved="handleServiceTypeSaved"
+		/>
+
+		<!-- Service Types View -->
+		<div v-if="showServiceTypesView" class="service-types-view">
+			<div class="domaincontrol-actions">
+				<button class="button-vue button-vue--tertiary" @click="showServiceTypesView = false">
+					<MaterialIcon name="arrow-left" :size="20" />
+					{{ translate('domaincontrol', 'Back') }}
+				</button>
+				<button class="button-vue button-vue--primary" @click="showServiceTypeModal()">
+					<MaterialIcon name="add" :size="20" />
+					{{ translate('domaincontrol', 'Add Service Type') }}
+				</button>
+				<button class="button-vue button-vue--secondary" @click="initPredefinedTypes">
+					<MaterialIcon name="category-office" :size="20" />
+					{{ translate('domaincontrol', 'Add Predefined Types') }}
+				</button>
+			</div>
+
+			<!-- Service Types List -->
+			<div v-if="serviceTypes.length === 0 && !serviceTypesLoading" class="empty-content">
+				<MaterialIcon name="category-office" :size="48" color="var(--color-text-maxcontrast)" class="empty-content__icon" />
+				<p class="empty-content__text">
+					{{ translate('domaincontrol', 'No service types yet') }}
+				</p>
+				<button class="button-vue button-vue--primary" @click="showServiceTypeModal()">
+					{{ translate('domaincontrol', 'Add First Service Type') }}
+				</button>
+			</div>
+
+			<div v-else-if="serviceTypesLoading" class="loading-content">
+				<MaterialIcon name="loading" :size="32" class="loading-icon" />
+				<p>{{ translate('domaincontrol', 'Loading service types...') }}</p>
+			</div>
+
+			<div v-else class="service-types-list">
+				<div
+					v-for="type in serviceTypes"
+					:key="type.id"
+					class="list-item service-type-item"
+					@click="editServiceType(type)"
+				>
+					<div class="list-item__avatar">
+						<MaterialIcon name="category-office" :size="24" />
+					</div>
+					<div class="list-item__content">
+						<div class="list-item__title">{{ type.name }}</div>
+						<div class="list-item__meta">
+							<span v-if="type.description">{{ type.description }}</span>
+							<span v-if="type.defaultPrice" class="service-type-price">
+								{{ formatCurrency(type.defaultPrice, type.defaultCurrency) }}
+							</span>
+							<span v-if="getRenewalIntervalText(type.renewalInterval)">
+								{{ getRenewalIntervalText(type.renewalInterval) }}
+							</span>
+						</div>
+					</div>
+					<div class="list-item__stats">
+						<div class="list-item__stat">
+							<div class="list-item__stat-label">{{ translate('domaincontrol', 'Interval') }}</div>
+							<div class="list-item__stat-value">
+								{{ getRenewalIntervalText(type.renewalInterval) || '-' }}
+							</div>
+						</div>
+						<div class="list-item__stat">
+							<div class="list-item__stat-label">{{ translate('domaincontrol', 'Price') }}</div>
+							<div class="list-item__stat-value">
+								{{ formatCurrency(type.defaultPrice, type.defaultCurrency) }}
+							</div>
+						</div>
+					</div>
+					<div class="list-item__actions">
+						<button
+							class="action-button action-button--edit"
+							@click.stop="editServiceType(type)"
+							:title="translate('domaincontrol', 'Edit')"
+						>
+							<MaterialIcon name="edit" :size="18" />
+						</button>
+						<button
+							class="action-button action-button--delete"
+							@click.stop="confirmDeleteServiceType(type)"
+							:title="translate('domaincontrol', 'Delete')"
+						>
+							<MaterialIcon name="delete" :size="18" />
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
 		<!-- Service List View -->
-		<div v-if="!selectedService" class="services-list-view">
+		<div v-else-if="!selectedService" class="services-list-view">
 			<div class="domaincontrol-actions">
 				<button class="button-vue button-vue--primary" @click="showAddModal">
 					<MaterialIcon name="add" :size="20" />
 					{{ translate('domaincontrol', 'Add Service') }}
+				</button>
+				<button class="button-vue button-vue--secondary" @click="showServiceTypesView = true">
+					<MaterialIcon name="category-office" :size="20" />
+					{{ translate('domaincontrol', 'Manage Service Types') }}
 				</button>
 				<div class="service-search-wrapper">
 					<input
@@ -296,6 +397,7 @@ import api from '../services/api'
 import MaterialIcon from './MaterialIcon.vue'
 import ServiceModal from './ServiceModal.vue'
 import ServiceExtendModal from './ServiceExtendModal.vue'
+import ServiceTypeModal from './ServiceTypeModal.vue'
 
 export default {
 	name: 'Services',

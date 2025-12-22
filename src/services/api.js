@@ -141,6 +141,11 @@ export default {
 			},
 		}),
 		delete: (id) => axios.delete(`${apiBase}/service-types/${id}`),
+		initPredefined: () => axios.post(`${apiBase}/service-types/init`, {}, {
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+		}),
 	},
 	projects: {
 		getAll: () => axios.get(`${apiBase}/projects`),
