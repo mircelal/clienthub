@@ -5,7 +5,7 @@
 				v-for="item in menuItems"
 				:key="item.id"
 				:data-id="item.id"
-				:class="{ active: currentTab === item.id }"
+				:class="{ active: $props.currentTab === item.id }"
 			>
 				<a
 					href="#"
@@ -129,18 +129,11 @@ export default {
 			const originalSwitchTab = window.DomainControl.switchTab
 			// Override to update Vue component
 			window.DomainControl.switchTab = (tabName) => {
-				this.currentTab = tabName
+				this.$emit('switch-tab', tabName)
 				if (originalSwitchTab) {
 					originalSwitchTab.call(window.DomainControl, tabName)
 				}
 			}
-		}
-
-		// Initialize current tab from URL or default
-		const urlParams = new URLSearchParams(window.location.search)
-		const tabFromUrl = urlParams.get('tab')
-		if (tabFromUrl) {
-			this.currentTab = tabFromUrl
 		}
 	},
 	methods: {
@@ -186,7 +179,6 @@ export default {
 			return translations[text] || text
 		},
 		handleTabClick(tabId) {
-			this.currentTab = tabId
 			// Emit event to parent App component
 			this.$emit('switch-tab', tabId)
 			// Call existing DomainControl.switchTab if available

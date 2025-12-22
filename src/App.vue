@@ -1,6 +1,6 @@
 <template>
 	<div id="app">
-		<Navigation @switch-tab="handleTabSwitch" />
+		<Navigation :current-tab="currentTab" @switch-tab="handleTabSwitch" />
 		<div id="app-content">
 			<div id="app-content-wrapper">
 				<Dashboard v-if="currentTab === 'dashboard'" />
