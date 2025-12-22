@@ -814,6 +814,7 @@ export default {
 
 .client-detail-view {
 	padding: 20px;
+	padding-bottom: 40px;
 }
 
 .detail-header {

@@ -220,14 +220,72 @@
 						<MaterialIcon name="add" :size="20" />
 						{{ translate('domaincontrol', 'Add Item') }}
 					</button>
-					<button class="button-vue button-vue--secondary" @click="editInvoice(selectedInvoice)">
-						<MaterialIcon name="edit" :size="20" />
-						{{ translate('domaincontrol', 'Edit') }}
-					</button>
-					<button class="button-vue button-vue--danger" @click="confirmDelete(selectedInvoice)">
-						<MaterialIcon name="delete" :size="20" />
-						{{ translate('domaincontrol', 'Delete') }}
-					</button>
+					<div class="popover-menu-wrapper" @click.stop>
+						<button
+							class="button-vue button-vue--secondary action-button--more"
+							@click.stop="toggleDetailPopover()"
+							:title="translate('domaincontrol', 'More options')"
+						>
+							<MaterialIcon name="more-vertical" :size="20" />
+						</button>
+						<div
+							v-if="detailPopoverOpen"
+							class="popover-menu popover-menu--detail"
+							@click.stop
+						>
+							<button
+								class="popover-menu-item"
+								@click="editInvoice(selectedInvoice); closeDetailPopover()"
+							>
+								<MaterialIcon name="edit" :size="16" />
+								{{ translate('domaincontrol', 'Edit') }}
+							</button>
+							<div class="popover-menu-separator"></div>
+							<button
+								class="popover-menu-item"
+								@click="changeStatus('draft'); closeDetailPopover()"
+								v-if="selectedInvoice.status !== 'draft'"
+							>
+								{{ translate('domaincontrol', 'Set as Draft') }}
+							</button>
+							<button
+								class="popover-menu-item"
+								@click="changeStatus('sent'); closeDetailPopover()"
+								v-if="selectedInvoice.status !== 'sent'"
+							>
+								{{ translate('domaincontrol', 'Set as Sent') }}
+							</button>
+							<button
+								class="popover-menu-item"
+								@click="changeStatus('paid'); closeDetailPopover()"
+								v-if="selectedInvoice.status !== 'paid'"
+							>
+								{{ translate('domaincontrol', 'Set as Paid') }}
+							</button>
+							<button
+								class="popover-menu-item"
+								@click="changeStatus('overdue'); closeDetailPopover()"
+								v-if="selectedInvoice.status !== 'overdue'"
+							>
+								{{ translate('domaincontrol', 'Set as Overdue') }}
+							</button>
+							<button
+								class="popover-menu-item"
+								@click="changeStatus('cancelled'); closeDetailPopover()"
+								v-if="selectedInvoice.status !== 'cancelled'"
+							>
+								{{ translate('domaincontrol', 'Set as Cancelled') }}
+							</button>
+							<div class="popover-menu-separator"></div>
+							<button
+								class="popover-menu-item popover-menu-item--danger"
+								@click="confirmDelete(selectedInvoice); closeDetailPopover()"
+							>
+								<MaterialIcon name="delete" :size="16" />
+								{{ translate('domaincontrol', 'Delete') }}
+							</button>
+						</div>
+					</div>
 				</div>
 			</div>
 
@@ -436,6 +494,7 @@ export default {
 			searchQuery: '',
 			currentFilter: 'all',
 			openPopover: null,
+			detailPopoverOpen: false,
 			invoiceStatuses: [
 				{ value: 'draft', label: 'Draft' },
 				{ value: 'sent', label: 'Sent' },
@@ -662,6 +721,15 @@ export default {
 			if (this.openPopover && !event.target.closest('.popover-menu-wrapper')) {
 				this.closePopover()
 			}
+			if (this.detailPopoverOpen && !event.target.closest('.popover-menu-wrapper')) {
+				this.closeDetailPopover()
+			}
+		},
+		toggleDetailPopover() {
+			this.detailPopoverOpen = !this.detailPopoverOpen
+		},
+		closeDetailPopover() {
+			this.detailPopoverOpen = false
 		},
 		getClientName(clientId) {
 			const client = this.clients.find(c => c.id === clientId)
@@ -840,6 +908,7 @@ export default {
 
 .invoices-list-view {
 	padding: 20px;
+	padding-bottom: 40px;
 }
 
 .domaincontrol-actions {
@@ -931,6 +1000,13 @@ export default {
 	overflow: hidden;
 }
 
+.popover-menu--detail {
+	top: auto;
+	bottom: 100%;
+	margin-top: 0;
+	margin-bottom: 4px;
+}
+
 .popover-menu-item {
 	display: flex;
 	align-items: center;
@@ -975,6 +1051,7 @@ export default {
 
 .invoice-detail-view {
 	padding: 20px;
+	padding-bottom: 40px;
 }
 
 .detail-header {

@@ -113,6 +113,7 @@ export default {
 	width: 100%;
 	box-sizing: border-box;
 	margin-left: 300px;
+	padding-bottom: 40px;
 }
 
 /* Hide old tab-content system */

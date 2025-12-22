@@ -626,6 +626,7 @@ export default {
 <style scoped>
 .dashboard-view {
 	padding: 20px;
+	padding-bottom: 40px;
 }
 
 .dashboard-header {
