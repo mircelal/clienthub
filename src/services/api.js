@@ -237,7 +237,43 @@ export default {
 	},
 	transactions: {
 		getAll: () => axios.get(`${apiBase}/transactions`),
-		getMonthlySummary: () => axios.get(`${apiBase}/transactions/monthly-summary`),
+		get: (id) => axios.get(`${apiBase}/transactions/${id}`),
+		byType: (type) => axios.get(`${apiBase}/transactions/type/${type}`),
+		byCategory: (categoryId) => axios.get(`${apiBase}/transactions/category/${categoryId}`),
+		byProject: (projectId) => axios.get(`${apiBase}/projects/${projectId}/transactions`),
+		byClient: (clientId) => axios.get(`${apiBase}/clients/${clientId}/transactions`),
+		monthlySummary: (yearMonth) => axios.get(`${apiBase}/transactions/monthly-summary`, {
+			params: { yearMonth },
+		}),
+		summaryByCategory: (yearMonth, type) => axios.get(`${apiBase}/transactions/summary-by-category`, {
+			params: { yearMonth, type },
+		}),
+		create: (data) => axios.post(`${apiBase}/transactions`, toFormData(data), {
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+		}),
+		update: (id, data) => axios.put(`${apiBase}/transactions/${id}`, toFormData(data), {
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+		}),
+		delete: (id) => axios.delete(`${apiBase}/transactions/${id}`),
+	},
+	transactionCategories: {
+		getAll: () => axios.get(`${apiBase}/transaction-categories`),
+		byType: (type) => axios.get(`${apiBase}/transaction-categories/type/${type}`),
+		create: (data) => axios.post(`${apiBase}/transaction-categories`, toFormData(data), {
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+		}),
+		update: (id, data) => axios.put(`${apiBase}/transaction-categories/${id}`, toFormData(data), {
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+		}),
+		delete: (id) => axios.delete(`${apiBase}/transaction-categories/${id}`),
 	},
 	debts: {
 		getAll: () => axios.get(`${apiBase}/debts`),
