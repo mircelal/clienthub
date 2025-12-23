@@ -30,3 +30,7 @@ js/vue-components.js
 js/vue-components.js.map
 js/*.LICENSE.txt
 package-lock.json
+
+# Documentation files (except README.md)
+*.md
+!README.md
