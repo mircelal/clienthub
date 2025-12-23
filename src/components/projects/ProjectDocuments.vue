@@ -56,37 +56,32 @@
                     <p>{{ translate('domaincontrol', 'No files in this category') }}</p>
                 </div>
 
-                <div v-else class="nc-file-list">
-                    <div class="nc-list-header-row">
-                        <div class="col-icon"></div>
-                        <div class="col-name">{{ translate('domaincontrol', 'Name') }}</div>
-                        <div class="col-size">{{ translate('domaincontrol', 'Size') }}</div>
-                        <div class="col-date">{{ translate('domaincontrol', 'Modified') }}</div>
-                        <div class="col-actions"></div>
-                    </div>
-
+                <div v-else class="nc-list-container">
                     <div
                         v-for="file in filteredFiles"
                         :key="file.id"
-                        class="nc-file-row"
+                        class="nc-list-item"
                     >
-                        <div class="col-icon">
-                            <div class="file-icon-bg">
-                                <component :is="getFileIcon(file.mimeType)" :size="24" />
+                        <div class="nc-list-item__icon">
+                            <component :is="getFileIcon(file.mimeType)" :size="24" />
+                        </div>
+                        <div class="nc-list-item__content">
+                            <div class="nc-list-item__title">
+                                {{ file.fileName }}
+                            </div>
+                            <div class="nc-list-item__subtitle">
+                                <span class="file-meta">{{ formatFileSize(file.fileSize) }}</span>
+                                <span class="file-meta-separator">•</span>
+                                <span class="file-meta">{{ formatDate(file.createdAt) }}</span>
+                                <span v-if="file.category !== 'general'" class="file-category-badge">
+                                    {{ getFileCategoryLabel(file.category) }}
+                                </span>
                             </div>
                         </div>
-                        <div class="col-name">
-                            <div class="file-name-text">{{ file.fileName }}</div>
-                            <div v-if="file.category !== 'general'" class="file-category-badge">
-                                {{ getFileCategoryLabel(file.category) }}
-                            </div>
-                        </div>
-                        <div class="col-size">{{ formatFileSize(file.fileSize) }}</div>
-                        <div class="col-date">{{ formatDate(file.createdAt) }}</div>
-                        <div class="col-actions">
+                        <div class="nc-list-item__actions">
                             <button
-                                class="nc-action-btn delete-btn"
-                                @click="deleteFile(file.id)"
+                                class="nc-action-btn"
+                                @click.stop="deleteFile(file.id)"
                                 :title="translate('domaincontrol', 'Delete')"
                             >
                                 <Delete :size="20" />
@@ -141,35 +136,43 @@
                     <p>{{ translate('domaincontrol', 'No notes yet') }}</p>
                 </div>
 
-                <div v-else class="nc-note-grid">
+                <div v-else class="nc-list-container">
                     <div
                         v-for="note in filteredNotes"
                         :key="note.id"
-                        class="nc-note-card"
+                        class="nc-list-item nc-list-item--clickable"
                         @click="editNote(note)"
                     >
-                        <div class="note-card-header">
-                            <div class="note-badges">
-                                <span class="nc-badge">{{ getNoteCategoryLabel(note.category) }}</span>
+                        <div class="nc-list-item__icon">
+                            <Notebook :size="24" />
+                        </div>
+                        <div class="nc-list-item__content">
+                            <div class="nc-list-item__title-row">
+                                <div class="nc-list-item__title">{{ note.title }}</div>
+                                <span class="note-category-badge">{{ getNoteCategoryLabel(note.category) }}</span>
                             </div>
-                            <div class="note-card-actions">
-                                <button class="icon-btn" @click.stop="editNote(note)">
-                                    <Pencil :size="16" />
-                                </button>
-                                <button class="icon-btn delete" @click.stop="deleteNote(note.id)">
-                                    <Delete :size="16" />
-                                </button>
+                            <div class="nc-list-item__subtitle">
+                                <span class="note-preview">{{ stripHtml(note.content).substring(0, 120) }}{{ stripHtml(note.content).length > 120 ? '...' : '' }}</span>
+                            </div>
+                            <div class="nc-list-item__meta">
+                                <span class="note-date">{{ formatDate(note.updatedAt || note.createdAt) }}</span>
                             </div>
                         </div>
-                        
-                        <h4 class="note-card-title">{{ note.title }}</h4>
-                        
-                        <div class="note-card-preview">
-                            {{ stripHtml(note.content).substring(0, 100) }}...
-                        </div>
-                        
-                        <div class="note-card-footer">
-                            {{ formatDate(note.updatedAt || note.createdAt) }}
+                        <div class="nc-list-item__actions" @click.stop>
+                            <button
+                                class="nc-action-btn"
+                                @click.stop="editNote(note)"
+                                :title="translate('domaincontrol', 'Edit')"
+                            >
+                                <Pencil :size="20" />
+                            </button>
+                            <button
+                                class="nc-action-btn"
+                                @click.stop="deleteNote(note.id)"
+                                :title="translate('domaincontrol', 'Delete')"
+                            >
+                                <Delete :size="20" />
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -598,152 +601,168 @@ export default {
 @keyframes spin { 100% { transform: rotate(360deg); } }
 
 
-/* --- FILES LIST (Table-like) --- */
-.nc-file-list {
+/* --- NEXTCLOUD STANDARD LIST CONTAINER --- */
+.nc-list-container {
     display: flex;
     flex-direction: column;
+    gap: 4px;
 }
 
-.nc-list-header-row {
-    display: flex;
-    padding: 0 12px 8px 12px;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--color-text-maxcontrast);
-    text-transform: uppercase;
-    border-bottom: 1px solid var(--color-border);
-}
-
-.nc-file-row {
+/* --- NEXTCLOUD STANDARD LIST ITEM --- */
+.nc-list-item {
     display: flex;
     align-items: center;
-    padding: 12px;
-    border-bottom: 1px solid var(--color-border);
-    background: var(--color-main-background);
-    transition: background 0.1s;
-}
-.nc-file-row:hover {
-    background: var(--color-background-hover);
-}
-.nc-file-row:last-child {
-    border-bottom: none;
+    gap: 12px;
+    padding: 12px 16px;
+    background-color: var(--color-main-background);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    transition: all 0.15s ease;
+    min-height: 60px;
 }
 
-/* Columns */
-.col-icon { width: 48px; flex-shrink: 0; }
-.col-name { flex: 2; display: flex; align-items: center; gap: 8px; min-width: 0; }
-.col-size { width: 100px; color: var(--color-text-maxcontrast); font-size: 13px; text-align: right; }
-.col-date { width: 140px; color: var(--color-text-maxcontrast); font-size: 13px; text-align: right; padding-right: 20px; }
-.col-actions { width: 40px; display: flex; justify-content: flex-end; }
+.nc-list-item:hover {
+    background-color: var(--color-background-hover);
+    border-color: var(--color-primary-element);
+}
 
-.file-icon-bg {
-    width: 32px;
-    height: 32px;
-    background-color: var(--color-background-dark);
-    border-radius: 8px;
+.nc-list-item--clickable {
+    cursor: pointer;
+}
+
+.nc-list-item__icon {
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
     color: var(--color-text-maxcontrast);
+    background-color: var(--color-background-dark);
+    border-radius: var(--border-radius);
 }
 
-.file-name-text { font-weight: 500; color: var(--color-main-text); truncate: true; }
-.file-category-badge {
-    font-size: 10px;
-    padding: 2px 6px;
-    background-color: var(--color-background-dark);
-    border-radius: 4px;
+.nc-list-item__content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.nc-list-item__title-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.nc-list-item__title {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--color-main-text);
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+.nc-list-item__subtitle {
+    font-size: 13px;
     color: var(--color-text-maxcontrast);
+    line-height: 1.4;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.nc-list-item__meta {
+    font-size: 12px;
+    color: var(--color-text-maxcontrast);
+    margin-top: 2px;
+}
+
+.nc-list-item__actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    flex-shrink: 0;
+}
+
+.nc-list-item:hover .nc-list-item__actions {
+    opacity: 1;
 }
 
 .nc-action-btn {
     background: transparent;
     border: none;
     cursor: pointer;
-    padding: 6px;
-    border-radius: 50%;
+    padding: 8px;
+    border-radius: var(--border-radius);
     color: var(--color-text-maxcontrast);
-    opacity: 0; /* Hidden by default */
-    transition: all 0.2s;
-}
-.nc-file-row:hover .nc-action-btn { opacity: 1; }
-.nc-action-btn:hover { background-color: var(--color-background-dark); color: var(--color-main-text); }
-.delete-btn:hover { color: var(--color-error); background-color: var(--color-error-background); }
-
-/* --- NOTES GRID (Cards) --- */
-.nc-note-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 16px;
-}
-
-.nc-note-card {
-    background-color: var(--color-main-background);
-    border: 1px solid var(--color-border);
-    border-radius: var(--border-radius-large);
-    padding: 16px;
-    cursor: pointer;
-    transition: all 0.2s ease;
     display: flex;
-    flex-direction: column;
-    height: 200px;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+    width: 36px;
+    height: 36px;
 }
 
-.nc-note-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    border-color: var(--color-primary-element);
-}
-
-.note-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 12px;
-}
-
-.note-badges .nc-badge {
-    font-size: 11px;
-    padding: 2px 8px;
+.nc-action-btn:hover {
     background-color: var(--color-background-dark);
-    border-radius: 10px;
-    font-weight: 600;
-}
-
-.note-card-actions {
-    display: flex;
-    gap: 4px;
-    opacity: 0;
-    transition: opacity 0.2s;
-}
-.nc-note-card:hover .note-card-actions { opacity: 1; }
-
-.icon-btn {
-    background: none; border: none; padding: 4px; cursor: pointer; color: var(--color-text-maxcontrast); border-radius: 4px;
-}
-.icon-btn:hover { background-color: var(--color-background-hover); color: var(--color-main-text); }
-.icon-btn.delete:hover { color: var(--color-error); }
-
-.note-card-title {
-    font-size: 16px;
-    font-weight: 600;
-    margin: 0 0 8px 0;
     color: var(--color-main-text);
 }
 
-.note-card-preview {
-    font-size: 13px;
-    color: var(--color-text-maxcontrast);
-    flex: 1;
-    overflow: hidden;
-    line-height: 1.5;
+.nc-action-btn:active {
+    background-color: var(--color-background-hover);
 }
 
-.note-card-footer {
-    margin-top: 12px;
-    font-size: 12px;
+/* File specific styles */
+.file-meta {
+    font-size: 13px;
     color: var(--color-text-maxcontrast);
-    text-align: right;
+}
+
+.file-meta-separator {
+    color: var(--color-text-maxcontrast);
+    opacity: 0.5;
+    margin: 0 4px;
+}
+
+.file-category-badge {
+    font-size: 11px;
+    padding: 2px 8px;
+    background-color: var(--color-background-dark);
+    border-radius: 12px;
+    color: var(--color-text-maxcontrast);
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+/* Note specific styles */
+.note-preview {
+    color: var(--color-text-maxcontrast);
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.note-category-badge {
+    font-size: 11px;
+    padding: 2px 8px;
+    background-color: var(--color-primary-element);
+    color: var(--color-primary-element-text);
+    border-radius: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.note-date {
+    color: var(--color-text-maxcontrast);
+    font-size: 12px;
 }
 
 /* --- MODAL --- */
@@ -819,10 +838,26 @@ export default {
 
 /* Mobile */
 @media (max-width: 768px) {
-    .nc-list-header-row { display: none; }
-    .nc-file-row { flex-wrap: wrap; }
-    .col-name { width: 100%; margin-bottom: 4px; }
-    .col-size, .col-date { text-align: left; width: auto; margin-right: 12px; font-size: 11px; }
-    .col-actions { margin-left: auto; }
+    .nc-list-item {
+        padding: 10px 12px;
+        min-height: 56px;
+    }
+    
+    .nc-list-item__icon {
+        width: 36px;
+        height: 36px;
+    }
+    
+    .nc-list-item__title {
+        font-size: 14px;
+    }
+    
+    .nc-list-item__subtitle {
+        font-size: 12px;
+    }
+    
+    .nc-list-item__actions {
+        opacity: 1;
+    }
 }
 </style>

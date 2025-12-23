@@ -201,12 +201,14 @@ export default {
 		getNavigationLabel(label) {
 			try {
 				if (typeof window !== 'undefined') {
+					// Try OC.L10n.translate first (Nextcloud's standard method)
 					if (typeof OC !== 'undefined' && OC.L10n && typeof OC.L10n.translate === 'function') {
 						const translated = OC.L10n.translate('domaincontrol', label, {})
 						if (translated && translated !== label) {
 							return translated
 						}
 					}
+					// Fallback to window.t
 					if (typeof window.t === 'function') {
 						const translated = window.t('domaincontrol', label, {})
 						if (translated && translated !== label) {
@@ -217,22 +219,8 @@ export default {
 			} catch (e) {
 				console.warn('Translation error:', e)
 			}
-			const translations = {
-				'Dashboard': 'Dashboards',
-				'Clients': 'Müşteriler',
-				'Domains': 'Domainler',
-				'Hosting': 'Hosting',
-				'Websites': 'Websiteler',
-				'Services': 'Hizmetler',
-				'Invoices': 'Faturalar',
-				'Projects': 'Projeler',
-				'Tasks': 'Görevler',
-				'Income/Expense': 'Gelir/Gider',
-				'Debts/Receivables': 'Borç/Alacak',
-				'Reports': 'Raporlar',
-				'Settings': 'Ayarlar',
-			}
-			return translations[label] || label
+			// Fallback: return label if translation not found
+			return label
 		},
 	},
 }

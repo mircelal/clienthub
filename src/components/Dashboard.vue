@@ -99,15 +99,15 @@
                         
                         <!-- Financial Stats -->
                         <div v-if="isModuleActive('transactions')" class="mini-stat-item">
-                            <span class="mini-label">{{ translate('domaincontrol', 'Income (Mo)') }}</span>
+                            <span class="mini-label">{{ translate('domaincontrol', 'Income (This Month)') }}</span>
                             <span class="mini-value text-success">{{ formatCurrency(stats.monthlyIncome) }}</span>
                         </div>
                         <div v-if="isModuleActive('transactions')" class="mini-stat-item">
-                            <span class="mini-label">{{ translate('domaincontrol', 'Expense (Mo)') }}</span>
+                            <span class="mini-label">{{ translate('domaincontrol', 'Expense (This Month)') }}</span>
                             <span class="mini-value text-subtle">{{ formatCurrency(stats.monthlyExpense) }}</span>
                         </div>
                         <div v-if="isModuleActive('transactions')" class="mini-stat-item">
-                            <span class="mini-label">{{ translate('domaincontrol', 'Net Profit') }}</span>
+                            <span class="mini-label">{{ translate('domaincontrol', 'Net Profit/Loss') }}</span>
                             <span class="mini-value" :class="stats.netProfit >= 0 ? 'text-success' : 'text-error'">
                                 {{ formatCurrency(stats.netProfit) }}
                             </span>
@@ -376,22 +376,37 @@ export default {
         translate(appId, text, vars) {
             try {
                 if (typeof window !== 'undefined') {
+                    // Try OC.L10n.translate first (Nextcloud's standard method)
                     if (typeof OC !== 'undefined' && OC.L10n && typeof OC.L10n.translate === 'function') {
                         const translated = OC.L10n.translate(appId, text, vars || {})
                         if (translated && translated !== text) {
-                            return translated
+                            let result = translated
+                            if (vars && typeof vars === 'object') {
+                                for (const key in vars) {
+                                    result = result.replace(new RegExp(`\\{${key}\\}`, 'g'), vars[key])
+                                }
+                            }
+                            return result
                         }
                     }
+                    // Fallback to window.t
                     if (typeof window.t === 'function') {
                         const translated = window.t(appId, text, vars || {})
                         if (translated && translated !== text) {
-                            return translated
+                            let result = translated
+                            if (vars && typeof vars === 'object') {
+                                for (const key in vars) {
+                                    result = result.replace(new RegExp(`\\{${key}\\}`, 'g'), vars[key])
+                                }
+                            }
+                            return result
                         }
                     }
                 }
             } catch (e) {
                 console.warn('Translation error:', e)
             }
+            // If translation not found, return original text with variable replacement
             let result = text
             if (vars && typeof vars === 'object') {
                 for (const key in vars) {
