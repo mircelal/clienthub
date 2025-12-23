@@ -9,6 +9,7 @@
 			:search-query="searchQuery"
 			:clients="clients"
 			:open-popover="openPopover"
+			:selected-project="selectedProject"
 			@select="selectProject"
 			@add="showAddModal"
 			@edit="editProject"
@@ -26,12 +27,14 @@
 			:active-tab="activeTab"
 			:popover-open="detailPopoverOpen"
 			:can-start-timer="canStartTimer"
+			:current-running-entry="currentRunningEntry"
 			@back="backToList"
 			@edit="editProject(selectedProject)"
 			@delete="confirmDelete(selectedProject)"
 			@toggle-popover="toggleDetailPopover"
 			@close-popover="closeDetailPopover"
 			@start-timer="startTimer"
+			@stop-timer="stopTimer"
 			@tab-change="handleTabChange"
 		>
 			<div class="detail-content">
@@ -40,28 +43,24 @@
 					v-if="activeTab === 'overview' && selectedProject"
 					:project="selectedProject"
 					:clients="clients"
+					:total-time="totalTime"
+					:duration-by-user="durationByUser"
+					:available-users="availableUsers"
+					:activities="projectActivities"
+					:activities-loading="projectActivitiesLoading"
+					:get-user-display-name="getUserDisplayName"
+					:format-duration="formatDuration"
+					:format-date="formatDate"
 					@navigate-client="navigateToClient"
 				/>
 
-				<!-- Tasks Tab -->
-				<ProjectTasks
-					v-if="activeTab === 'tasks' && selectedProject"
+				<!-- Tasks & Time Tab -->
+				<ProjectTasksAndTime
+					v-if="activeTab === 'tasks-time' && selectedProject"
 					:tasks="projectTasks"
-					:loading="projectTasksLoading"
-					:get-priority-text="getPriorityText"
-					:get-task-status-text="getTaskStatusText"
-					:is-task-overdue="isTaskOverdue"
-					:format-date="formatDate"
-					@add-task="showAddTaskModal"
-					@navigate-task="navigateToTask"
-					@toggle-status="toggleTaskStatus"
-				/>
-
-				<!-- Time Tracking Tab -->
-				<ProjectTimeTracking
-					v-if="activeTab === 'time' && selectedProject"
+					:tasks-loading="projectTasksLoading"
 					:time-entries="timeEntries"
-					:loading="timeEntriesLoading"
+					:time-entries-loading="timeEntriesLoading"
 					:current-running-entry="currentRunningEntry"
 					:timer-elapsed="timerElapsed"
 					:timer-description="timerDescription"
@@ -70,10 +69,27 @@
 					:total-time="totalTime"
 					:duration-by-user="durationByUser"
 					:available-users="availableUsers"
+					:get-priority-text="getPriorityText"
+					:get-task-status-text="getTaskStatusText"
+					:is-task-overdue="isTaskOverdue"
+					:format-date="formatDate"
+					:format-timer-time="formatTimerTime"
+					:format-duration="formatDuration"
+					:format-time="formatTime"
+					:get-user-display-name="getUserDisplayName"
+					@add-task="showAddTaskModal"
+					@navigate-task="navigateToTask"
+					@toggle-status="toggleTaskStatus"
 					@start-timer="startTimer"
 					@stop-timer="stopTimer"
 					@update:timerDescription="timerDescription = $event"
 					@delete-entry="deleteTimeEntry"
+				/>
+
+				<!-- Documents Tab -->
+				<ProjectDocuments
+					v-if="activeTab === 'documents' && selectedProject"
+					:project-id="selectedProject.id"
 				/>
 
 				<!-- Financials Tab -->
@@ -88,68 +104,23 @@
 					@navigate-invoice="navigateToInvoice"
 				/>
 
-				<!-- Linked Items Tab -->
-				<ProjectLinkedItems
-					v-if="activeTab === 'linked' && selectedProject"
+				<!-- Linked & Sharing Tab -->
+				<ProjectLinkedAndSharing
+					v-if="activeTab === 'linked-sharing' && selectedProject"
 					:items="projectItems"
-					:loading="projectItemsLoading"
+					:items-loading="projectItemsLoading"
+					:shares="projectShares"
+					:shares-loading="projectSharesLoading"
+					:is-project-owner="isProjectOwner"
 					:domains="domains"
 					:hostings="hostings"
 					:websites="websites"
 					:services="services"
+					:available-users="availableUsers"
 					@link-item="showLinkItemModal = true"
 					@remove-item="removeProjectItem"
-				/>
-
-				<!-- Sharing Tab -->
-				<ProjectSharing
-					v-if="activeTab === 'sharing' && selectedProject && isProjectOwner"
-					:shares="projectShares"
-					:loading="projectSharesLoading"
-					:available-users="availableUsers"
 					@share="showShareProjectModal"
 					@unshare="unshareProject"
-				/>
-
-				<!-- Activity Tab -->
-				<ProjectActivity
-					v-if="activeTab === 'activity' && selectedProject"
-					:activities="projectActivities"
-					:loading="projectActivitiesLoading"
-					:available-users="availableUsers"
-				/>
-
-				<!-- Files Tab -->
-				<ProjectFiles
-					v-if="activeTab === 'files' && selectedProject"
-					:project-id="selectedProject.id"
-				/>
-
-				<!-- Notes Tab -->
-				<ProjectNotes
-					v-if="activeTab === 'notes' && selectedProject"
-					:project-id="selectedProject.id"
-				/>
-
-				<!-- Requirements Tab (Notes with category filter) -->
-				<ProjectNotes
-					v-if="activeTab === 'requirements' && selectedProject"
-					:project-id="selectedProject.id"
-					initial-category="requirements"
-				/>
-
-				<!-- Challenges Tab (Notes with category filter) -->
-				<ProjectNotes
-					v-if="activeTab === 'challenges' && selectedProject"
-					:project-id="selectedProject.id"
-					initial-category="challenges"
-				/>
-
-				<!-- Research Tab (Notes with category filter) -->
-				<ProjectNotes
-					v-if="activeTab === 'research' && selectedProject"
-					:project-id="selectedProject.id"
-					initial-category="research"
 				/>
 			</div>
 		</ProjectDetail>
@@ -200,13 +171,13 @@
 		<!-- Link Item Modal -->
 		<LinkItemModal
 			v-if="showLinkItemModal"
-			:show-modal="showLinkItemModal"
+			:open="showLinkItemModal"
 			:domains="domains"
 			:hostings="hostings"
 			:websites="websites"
 			:services="services"
 			@close="showLinkItemModal = false"
-			@link-item="handleLinkItem"
+			@link="handleLinkItem"
 		/>
 
 		<!-- Project Modal -->
@@ -236,14 +207,10 @@ import ProjectList from './projects/ProjectList.vue'
 import ProjectDetail from './projects/ProjectDetail.vue'
 import ProjectHeader from './projects/ProjectHeader.vue'
 import ProjectOverview from './projects/ProjectOverview.vue'
-import ProjectTasks from './projects/ProjectTasks.vue'
-import ProjectTimeTracking from './projects/ProjectTimeTracking.vue'
+import ProjectTasksAndTime from './projects/ProjectTasksAndTime.vue'
 import ProjectFinancials from './projects/ProjectFinancials.vue'
-import ProjectLinkedItems from './projects/ProjectLinkedItems.vue'
-import ProjectSharing from './projects/ProjectSharing.vue'
-import ProjectActivity from './projects/ProjectActivity.vue'
-import ProjectFiles from './projects/ProjectFiles.vue'
-import ProjectNotes from './projects/ProjectNotes.vue'
+import ProjectDocuments from './projects/ProjectDocuments.vue'
+import ProjectLinkedAndSharing from './projects/ProjectLinkedAndSharing.vue'
 import LinkItemModal from './projects/modals/LinkItemModal.vue'
 import ProjectModal from './ProjectModal.vue'
 import TaskModal from './TaskModal.vue'
@@ -257,14 +224,10 @@ export default {
 		ProjectDetail,
 		ProjectHeader,
 		ProjectOverview,
-		ProjectTasks,
-		ProjectTimeTracking,
+		ProjectTasksAndTime,
 		ProjectFinancials,
-		ProjectLinkedItems,
-		ProjectSharing,
-		ProjectActivity,
-		ProjectFiles,
-		ProjectNotes,
+		ProjectDocuments,
+		ProjectLinkedAndSharing,
 		LinkItemModal,
 		ProjectModal,
 		TaskModal,
@@ -743,6 +706,49 @@ export default {
 			today.setHours(0, 0, 0, 0)
 			return dueDate < today
 		},
+		getPriorityText(priority) {
+			const priorities = {
+				low: this.translate('domaincontrol', 'Low'),
+				medium: this.translate('domaincontrol', 'Medium'),
+				high: this.translate('domaincontrol', 'High'),
+			}
+			return priorities[priority] || priority
+		},
+		getTaskStatusText(status) {
+			const statusTexts = {
+				todo: this.translate('domaincontrol', 'To Do'),
+				in_progress: this.translate('domaincontrol', 'In Progress'),
+				done: this.translate('domaincontrol', 'Done'),
+				cancelled: this.translate('domaincontrol', 'Cancelled'),
+			}
+			return statusTexts[status] || status
+		},
+		formatTimerTime(seconds) {
+			const hours = Math.floor(seconds / 3600)
+			const minutes = Math.floor((seconds % 3600) / 60)
+			const secs = seconds % 60
+			return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
+		},
+		formatTime(dateTime) {
+			if (!dateTime) return ''
+			const d = new Date(dateTime)
+			return d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
+		},
+		formatDuration(seconds) {
+			const hours = Math.floor(seconds / 3600)
+			const minutes = Math.floor((seconds % 3600) / 60)
+			if (hours > 0) {
+				return `${hours}h ${minutes}m`
+			}
+			return `${minutes}m`
+		},
+		getUserDisplayName(userId) {
+			const user = this.availableUsers.find(u => u.userId === userId)
+			if (user) {
+				return user.displayName || userId
+			}
+			return userId
+		},
 		navigateToTask(taskId) {
 			if (typeof window.DomainControl !== 'undefined' && window.DomainControl.switchTab) {
 				window.DomainControl.switchTab('tasks')
@@ -907,13 +913,13 @@ export default {
 				this.projectItemsLoading = false
 			}
 		},
-		async handleLinkItem(itemType, itemId) {
+		async handleLinkItem(data) {
 			if (!this.selectedProject) return
 			
 			try {
 				await api.projects.addItem(this.selectedProject.id, {
-					itemType,
-					itemId,
+					itemType: data.itemType,
+					itemId: data.itemId,
 				})
 				await this.loadProjectItems(this.selectedProject.id)
 				this.showLinkItemModal = false
@@ -1011,12 +1017,135 @@ export default {
 </script>
 
 <style scoped>
+/* Nextcloud Files app content structure */
+/* Following Nextcloud Files app pattern */
+/* NcAppContent handles all padding and layout automatically */
 .projects-view {
 	width: 100%;
 	height: 100%;
 }
 
-.detail-content {
+/* Share Project Modal - Center on screen */
+.modal-overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: rgba(0, 0, 0, 0.5);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 10000;
+	overflow-y: auto;
 	padding: 20px;
+}
+
+.modal-content {
+	background-color: var(--color-main-background);
+	border-radius: var(--border-radius-large);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+	max-width: 500px;
+	width: 90%;
+	max-height: 90vh;
+	overflow-y: auto;
+	margin: auto;
+}
+
+.modal-content--medium {
+	max-width: 500px;
+}
+
+.modal-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 20px;
+	border-bottom: 1px solid var(--color-border);
+}
+
+.modal-title {
+	margin: 0;
+	font-size: 20px;
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+
+.modal-close {
+	background: transparent;
+	border: none;
+	cursor: pointer;
+	color: var(--color-text-maxcontrast);
+	padding: 4px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.modal-close:hover {
+	color: var(--color-main-text);
+}
+
+.modal-body {
+	padding: 20px;
+}
+
+.modal-footer {
+	display: flex;
+	justify-content: flex-end;
+	gap: 8px;
+	padding: 20px;
+	border-top: 1px solid var(--color-border);
+}
+
+.form-group {
+	margin-bottom: 16px;
+}
+
+.form-label {
+	display: block;
+	margin-bottom: 8px;
+	font-size: 14px;
+	font-weight: 500;
+	color: var(--color-main-text);
+}
+
+.form-control {
+	width: 100%;
+	padding: 8px 12px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius-element);
+	background-color: var(--color-main-background);
+	color: var(--color-main-text);
+	font-size: 14px;
+	box-sizing: border-box;
+}
+
+.user-select-list {
+	max-height: 200px;
+	overflow-y: auto;
+	margin-top: 8px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+}
+
+.user-select-item {
+	padding: 10px 12px;
+	cursor: pointer;
+	transition: background-color 0.2s;
+	border-bottom: 1px solid var(--color-border);
+}
+
+.user-select-item:last-child {
+	border-bottom: none;
+}
+
+.user-select-item:hover {
+	background-color: var(--color-background-hover);
+}
+
+.user-select-item--selected {
+	background-color: var(--color-primary-element-light);
+	color: var(--color-primary-element);
 }
 </style>

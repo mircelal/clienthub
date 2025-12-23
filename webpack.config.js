@@ -48,7 +48,10 @@ module.exports = {
 		new webpack.DefinePlugin({
 			__VUE_OPTIONS_API__: true,
 			__VUE_PROD_DEVTOOLS__: false,
-			__VUE_PROD_HYDRATION_MISMATCH_DETAILS__: false
+			__VUE_PROD_HYDRATION_MISMATCH_DETAILS__: false,
+			// Nextcloud Vue appName and appVersion (required by @nextcloud/vue)
+			appName: JSON.stringify('domaincontrol'),
+			appVersion: JSON.stringify('3.7.8533'),
 		}),
 	],
 	resolve: {

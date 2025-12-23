@@ -163,7 +163,9 @@ export default {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	z-index: 1000;
+	z-index: 10000;
+	overflow-y: auto;
+	padding: 20px;
 }
 
 .modal-content {
@@ -174,6 +176,7 @@ export default {
 	width: 90%;
 	max-height: 90vh;
 	overflow-y: auto;
+	margin: auto;
 }
 
 .modal-content--medium {

@@ -1,26 +1,51 @@
 <template>
-	<div class="app-navigation domaincontrol-navigation">
-		<Navigation :current-tab="currentTab" @switch-tab="handleTabSwitch" />
-	</div>
-	<main id="app-content-vue" class="app-content no-snapper">
-		<Dashboard v-if="currentTab === 'dashboard'" />
-		<Clients v-if="currentTab === 'clients'" />
-		<Domains v-if="currentTab === 'domains'" />
-		<Hostings v-if="currentTab === 'hostings'" />
-		<Websites v-if="currentTab === 'websites'" />
-		<Services v-if="currentTab === 'services'" />
-		<Invoices v-if="currentTab === 'invoices'" />
-		<Projects v-if="currentTab === 'projects'" />
-		<Tasks v-if="currentTab === 'tasks'" />
-		<Transactions v-if="currentTab === 'transactions'" />
-		<Debts v-if="currentTab === 'debts'" />
-		<Reports v-if="currentTab === 'reports'" />
-		<Settings v-if="currentTab === 'settings'" />
-	</main>
+	<NcContent app-name="domaincontrol">
+		<NcAppNavigation>
+			<NcAppNavigationItem
+				v-for="item in navigationItems"
+				:key="item.id"
+				:name="getNavigationLabel(item.label)"
+				href="#"
+				:active="currentTab === item.id"
+				@click.prevent="handleTabSwitch(item.id)"
+			>
+				<template #icon>
+					<component :is="item.icon" :size="20" />
+				</template>
+			</NcAppNavigationItem>
+			<NcAppNavigationSettings>
+				<NcAppNavigationItem
+					:name="getNavigationLabel('Settings')"
+					href="#"
+					:active="currentTab === 'settings'"
+					@click.prevent="handleTabSwitch('settings')"
+				>
+					<template #icon>
+						<Cog :size="20" />
+					</template>
+				</NcAppNavigationItem>
+			</NcAppNavigationSettings>
+		</NcAppNavigation>
+		<NcAppContent>
+			<Dashboard v-if="currentTab === 'dashboard'" />
+			<Clients v-if="currentTab === 'clients'" />
+			<Domains v-if="currentTab === 'domains'" />
+			<Hostings v-if="currentTab === 'hostings'" />
+			<Websites v-if="currentTab === 'websites'" />
+			<Services v-if="currentTab === 'services'" />
+			<Invoices v-if="currentTab === 'invoices'" />
+			<Projects v-if="currentTab === 'projects'" />
+			<Tasks v-if="currentTab === 'tasks'" />
+			<Transactions v-if="currentTab === 'transactions'" />
+			<Debts v-if="currentTab === 'debts'" />
+			<Reports v-if="currentTab === 'reports'" />
+			<Settings v-if="currentTab === 'settings'" />
+		</NcAppContent>
+	</NcContent>
 </template>
 
 <script>
-import Navigation from './components/Navigation.vue'
+import { NcContent, NcAppNavigation, NcAppContent, NcAppNavigationItem, NcAppNavigationSettings } from '@nextcloud/vue'
 import Dashboard from './components/Dashboard.vue'
 import Clients from './components/Clients.vue'
 import Domains from './components/Domains.vue'
@@ -34,11 +59,29 @@ import Transactions from './components/Transactions.vue'
 import Debts from './components/Debts.vue'
 import Reports from './components/Reports.vue'
 import Settings from './components/Settings.vue'
+import api from './services/api'
+// vue-material-design-icons
+import ViewDashboard from 'vue-material-design-icons/ViewDashboard.vue'
+import AccountMultiple from 'vue-material-design-icons/AccountMultiple.vue'
+import Web from 'vue-material-design-icons/Web.vue'
+import Server from 'vue-material-design-icons/Server.vue'
+import Laptop from 'vue-material-design-icons/Laptop.vue'
+import Cog from 'vue-material-design-icons/Cog.vue'
+import FileDocumentOutline from 'vue-material-design-icons/FileDocumentOutline.vue'
+import FolderOutline from 'vue-material-design-icons/FolderOutline.vue'
+import ClipboardCheck from 'vue-material-design-icons/ClipboardCheck.vue'
+import CurrencyUsd from 'vue-material-design-icons/CurrencyUsd.vue'
+import Wallet from 'vue-material-design-icons/Wallet.vue'
+import ChartPie from 'vue-material-design-icons/ChartPie.vue'
 
 export default {
 	name: 'App',
 	components: {
-		Navigation,
+		NcContent,
+		NcAppNavigation,
+		NcAppContent,
+		NcAppNavigationItem,
+		NcAppNavigationSettings,
 		Dashboard,
 		Clients,
 		Domains,
@@ -52,13 +95,54 @@ export default {
 		Debts,
 		Reports,
 		Settings,
+		ViewDashboard,
+		AccountMultiple,
+		Web,
+		Server,
+		Laptop,
+		Cog,
+		FileDocumentOutline,
+		FolderOutline,
+		ClipboardCheck,
+		CurrencyUsd,
+		Wallet,
+		ChartPie,
 	},
 	data() {
 		return {
 			currentTab: 'dashboard',
+			activeModules: [],
+			allNavigationItems: [
+				{ id: 'dashboard', label: 'Dashboard', icon: 'ViewDashboard' },
+				{ id: 'clients', label: 'Clients', icon: 'AccountMultiple' },
+				{ id: 'domains', label: 'Domains', icon: 'Web' },
+				{ id: 'hostings', label: 'Hosting', icon: 'Server' },
+				{ id: 'websites', label: 'Websites', icon: 'Laptop' },
+				{ id: 'services', label: 'Services', icon: 'Cog' },
+				{ id: 'invoices', label: 'Invoices', icon: 'FileDocumentOutline' },
+				{ id: 'projects', label: 'Projects', icon: 'FolderOutline' },
+				{ id: 'tasks', label: 'Tasks', icon: 'ClipboardCheck' },
+				{ id: 'transactions', label: 'Income/Expense', icon: 'CurrencyUsd' },
+				{ id: 'debts', label: 'Debts/Receivables', icon: 'Wallet' },
+				{ id: 'reports', label: 'Reports', icon: 'ChartPie' },
+			],
 		}
 	},
+	computed: {
+		navigationItems() {
+			if (this.activeModules.length === 0) {
+				return this.allNavigationItems
+			}
+			return this.allNavigationItems.filter(item => this.activeModules.includes(item.id))
+		},
+	},
 	mounted() {
+		// Load active modules
+		this.loadActiveModules()
+		
+		// Listen for settings updates
+		window.addEventListener('settings-updated', this.handleSettingsUpdate)
+
 		// Get initial tab from URL or default
 		const urlParams = new URLSearchParams(window.location.search)
 		const tabFromUrl = urlParams.get('tab')
@@ -77,62 +161,119 @@ export default {
 			}
 		}
 	},
+	beforeUnmount() {
+		window.removeEventListener('settings-updated', this.handleSettingsUpdate)
+	},
 	methods: {
+		async loadActiveModules() {
+			try {
+				const response = await api.settings.get()
+				const settings = response.data || {}
+				
+				if (settings.active_modules) {
+					try {
+						this.activeModules = JSON.parse(settings.active_modules)
+					} catch (e) {
+						this.activeModules = settings.active_modules.split(',').filter(Boolean)
+					}
+				} else {
+					// Default: all modules active
+					this.activeModules = this.allNavigationItems.map(m => m.id)
+				}
+			} catch (error) {
+				console.error('Error loading active modules:', error)
+				// Default: all modules active
+				this.activeModules = this.allNavigationItems.map(m => m.id)
+			}
+		},
+		handleSettingsUpdate(event) {
+			if (event.detail && event.detail.activeModules) {
+				this.activeModules = event.detail.activeModules
+				// If current tab is not active anymore, switch to dashboard
+				if (!this.activeModules.includes(this.currentTab)) {
+					this.currentTab = 'dashboard'
+				}
+			}
+		},
 		handleTabSwitch(tabName) {
 			this.currentTab = tabName
+		},
+		getNavigationLabel(label) {
+			try {
+				if (typeof window !== 'undefined') {
+					if (typeof OC !== 'undefined' && OC.L10n && typeof OC.L10n.translate === 'function') {
+						const translated = OC.L10n.translate('domaincontrol', label, {})
+						if (translated && translated !== label) {
+							return translated
+						}
+					}
+					if (typeof window.t === 'function') {
+						const translated = window.t('domaincontrol', label, {})
+						if (translated && translated !== label) {
+							return translated
+						}
+					}
+				}
+			} catch (e) {
+				console.warn('Translation error:', e)
+			}
+			const translations = {
+				'Dashboard': 'Dashboards',
+				'Clients': 'Müşteriler',
+				'Domains': 'Domainler',
+				'Hosting': 'Hosting',
+				'Websites': 'Websiteler',
+				'Services': 'Hizmetler',
+				'Invoices': 'Faturalar',
+				'Projects': 'Projeler',
+				'Tasks': 'Görevler',
+				'Income/Expense': 'Gelir/Gider',
+				'Debts/Receivables': 'Borç/Alacak',
+				'Reports': 'Raporlar',
+				'Settings': 'Ayarlar',
+			}
+			return translations[label] || label
 		},
 	},
 }
 </script>
 
 <style>
-/* Nextcloud native app layout */
-/* Vue 3 allows multiple root elements, but we need to ensure proper layout */
-/* Reference: https://docs.nextcloud.com/server/latest/developer_manual/html_css_design/navigation.html */
-.app-navigation.domaincontrol-navigation {
-	width: 300px;
-	flex-shrink: 0;
-	background-color: var(--color-main-background);
-	border-right: 1px solid var(--color-border);
-	display: flex;
-	flex-direction: column;
-	height: calc(100vh - var(--header-height, 50px));
-	overflow: hidden;
-	position: fixed;
-	left: 0;
-	top: var(--header-height, 50px);
-	z-index: 100;
-}
-
-#app-content-vue {
-	flex: 1;
-	min-height: 100vh;
-	overflow-y: auto;
-	background-color: var(--color-main-background);
-	position: relative;
-	width: 100%;
-	box-sizing: border-box;
-	margin-left: 300px;
-	padding-bottom: 40px;
-}
-
-/* Hide old tab-content system - but only for old PHP-based tabs */
-/* Vue project components use .tab-content class, so we must be specific */
-/* Old system is in #app-content, Vue is in #app-content-vue */
+/* Hide old PHP-based tab system */
 #app-content .tab-content {
 	display: none !important;
 }
 
-/* Ensure Vue component tab-content is visible */
-#app-content-vue .tab-content {
-	display: block !important;
+/* Navigation spacing from top */
+.app-navigation__content {
+	padding-top: 20px;
 }
 
-/* Ensure vue-app-root is a flex container */
-#vue-app-root {
+/* Ensure settings are at the bottom */
+.app-navigation__body {
+	flex: 1;
 	display: flex;
-	width: 100%;
-	min-height: 100vh;
+	flex-direction: column;
+}
+
+.app-navigation-entry__settings {
+	margin-top: auto;
+	flex-shrink: 0;
+}
+
+/* Content spacing from navigation toggle button */
+.app-content-wrapper {
+	padding-left: 0;
+}
+
+/* Action buttons spacing from navigation toggle */
+.domaincontrol-actions {
+	margin-left: 44px; /* Space for navigation toggle button */
+}
+
+/* App content header spacing */
+.app-content-header {
+	margin-left: 44px; /* Space for navigation toggle button */
 }
 </style>
 

@@ -1,60 +1,44 @@
 <template>
-	<nav id="app-navigation-vue" class="app-navigation__content" aria-label="ClientHub">
-		<div class="app-navigation__body">
-			<ul class="app-navigation-list">
-				<li
-					v-for="item in menuItems"
-					:key="item.id"
-					class="app-navigation-entry-wrapper"
-					:class="{ 'app-navigation-entry--opened': $props.currentTab === item.id }"
-				>
-					<div class="app-navigation-entry" :class="{ active: $props.currentTab === item.id }">
-						<a
-							href="#"
-							class="app-navigation-entry-link"
-							:aria-current="$props.currentTab === item.id ? 'page' : undefined"
-							@click.prevent="handleTabClick(item.id)"
-						>
-							<div class="app-navigation-entry-icon">
-								<MaterialIcon :name="item.icon" :size="20" />
-							</div>
-							<span class="app-navigation-entry__name">
-								{{ translate('domaincontrol', item.label) }}
-							</span>
-						</a>
-					</div>
-				</li>
-			</ul>
-		</div>
-		<ul class="app-navigation-entry__settings">
-			<li class="app-navigation-entry-wrapper">
-				<div class="app-navigation-entry" :class="{ active: $props.currentTab === 'settings' }">
-					<a
-						href="#"
-						class="app-navigation-entry-link"
-						:aria-current="$props.currentTab === 'settings' ? 'page' : undefined"
-						@click.prevent="handleTabClick('settings')"
-					>
-						<div class="app-navigation-entry-icon">
-							<MaterialIcon name="settings" :size="20" />
-						</div>
-						<span class="app-navigation-entry__name">
-							{{ translate('domaincontrol', 'Settings') }}
-						</span>
-					</a>
-				</div>
-			</li>
+	<div>
+		<ul>
+			<NcAppNavigationItem
+				v-for="item in menuItems"
+				:key="item.id"
+				:name="translate('domaincontrol', item.label)"
+				:to="`#${item.id}`"
+				:active="$props.currentTab === item.id"
+				@click.prevent="handleTabClick(item.id)"
+			>
+				<template #icon>
+					<MaterialIcon :name="item.icon" :size="20" />
+				</template>
+			</NcAppNavigationItem>
 		</ul>
-	</nav>
+		<NcAppNavigationSettings>
+			<NcAppNavigationItem
+				:name="translate('domaincontrol', 'Settings')"
+				:to="'#settings'"
+				:active="$props.currentTab === 'settings'"
+				@click.prevent="handleTabClick('settings')"
+			>
+				<template #icon>
+					<MaterialIcon name="settings" :size="20" />
+				</template>
+			</NcAppNavigationItem>
+		</NcAppNavigationSettings>
+	</div>
 </template>
 
 <script>
+import { NcAppNavigationItem, NcAppNavigationSettings } from '@nextcloud/vue'
 import MaterialIcon from './MaterialIcon.vue'
 import api from '../services/api'
 
 export default {
 	name: 'Navigation',
 	components: {
+		NcAppNavigationItem,
+		NcAppNavigationSettings,
 		MaterialIcon,
 	},
 	props: {
@@ -244,106 +228,7 @@ export default {
 </script>
 
 <style scoped>
-/* Nextcloud native navigation structure - Following official guidelines */
-/* Reference: https://docs.nextcloud.com/server/latest/developer_manual/html_css_design/index.html */
-
-.app-navigation__content {
-	display: flex;
-	flex-direction: column;
-	height: 100%;
-}
-
-.app-navigation__body {
-	flex: 1;
-	overflow-y: auto;
-	overflow-x: hidden;
-}
-
-.app-navigation-list {
-	list-style: none;
-	padding: 0;
-	margin: 0;
-}
-
-.app-navigation-entry-wrapper {
-	margin: 0;
-}
-
-.app-navigation-entry {
-	position: relative;
-}
-
-.app-navigation-entry-link {
-	display: flex;
-	align-items: center;
-	padding: 0 12px;
-	color: var(--color-main-text);
-	text-decoration: none;
-	border-radius: var(--border-radius-large);
-	transition: background-color 0.2s, color 0.2s;
-	cursor: pointer;
-	min-height: 44px;
-	width: 100%;
-	box-sizing: border-box;
-	gap: 12px;
-}
-
-.app-navigation-entry-link:hover,
-.app-navigation-entry-link:focus {
-	background-color: var(--color-background-hover);
-}
-
-.app-navigation-entry.active .app-navigation-entry-link,
-.app-navigation-entry-link[aria-current='page'] {
-	background-color: var(--color-primary-element);
-	color: var(--color-primary-element-text);
-}
-
-/* Icon styling - Nextcloud standard with Material Design icons */
-/* Following Nextcloud's official navigation structure */
-/* Reference: https://docs.nextcloud.com/server/latest/developer_manual/html_css_design/navigation.html */
-.app-navigation-entry-icon {
-	width: 20px;
-	height: 20px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	flex-shrink: 0;
-	margin-right: 0;
-}
-
-.app-navigation-entry-icon .material-icon {
-	width: 20px;
-	height: 20px;
-	color: var(--color-main-text);
-	transition: color 0.2s;
-	opacity: 0.7;
-}
-
-.app-navigation-entry-link:hover .app-navigation-entry-icon .material-icon {
-	opacity: 1;
-}
-
-.app-navigation-entry.active .app-navigation-entry-icon .material-icon,
-.app-navigation-entry-link[aria-current='page'] .app-navigation-entry-icon .material-icon {
-	color: var(--color-primary-element-text);
-	opacity: 1;
-}
-
-.app-navigation-entry__name {
-	flex: 1;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	font-size: var(--default-font-size);
-	line-height: var(--default-line-height);
-}
-
-.app-navigation-entry__settings {
-	list-style: none;
-	padding: 0;
-	margin: 0;
-	border-top: 1px solid var(--color-border);
-}
+/* Nextcloud Files app navigation structure */
+/* NcAppNavigationItem and NcAppNavigationSettings handle all styling automatically */
 </style>
 

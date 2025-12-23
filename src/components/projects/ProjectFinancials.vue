@@ -6,10 +6,12 @@
 					<MaterialIcon name="accounting" :size="24" />
 					{{ translate('domaincontrol', 'Financials') }}
 				</h3>
-				<button class="button-vue button-vue--primary" @click="$emit('create-invoice')">
-					<MaterialIcon name="add" :size="18" />
+				<NcButton type="primary" @click="$emit('create-invoice')">
+					<template #icon>
+						<MaterialIcon name="add" :size="18" />
+					</template>
 					{{ translate('domaincontrol', 'Create Invoice') }}
-				</button>
+				</NcButton>
 			</div>
 			<div class="section-content">
 				<div class="financial-summary">
@@ -69,11 +71,13 @@
 
 <script>
 import MaterialIcon from '../MaterialIcon.vue'
+import { NcButton } from '@nextcloud/vue'
 
 export default {
 	name: 'ProjectFinancials',
 	components: {
 		MaterialIcon,
+		NcButton,
 	},
 	props: {
 		project: {
@@ -143,6 +147,10 @@ export default {
 </script>
 
 <style scoped>
+.tab-content {
+	padding: 0;
+}
+
 .detail-section {
 	margin-bottom: 24px;
 }
@@ -152,6 +160,8 @@ export default {
 	align-items: center;
 	justify-content: space-between;
 	margin-bottom: 16px;
+	padding-bottom: 12px;
+	border-bottom: 1px solid var(--color-border);
 }
 
 .section-title {
@@ -159,9 +169,10 @@ export default {
 	align-items: center;
 	gap: 8px;
 	margin: 0;
-	font-size: 18px;
+	font-size: 16px;
 	font-weight: 600;
 	color: var(--color-main-text);
+	line-height: 1.4;
 }
 
 .financial-summary {
@@ -169,10 +180,10 @@ export default {
 	flex-direction: column;
 	gap: 12px;
 	margin-bottom: 24px;
-	padding: 16px;
+	padding: 20px;
 	background-color: var(--color-main-background);
 	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius-element);
+	border-radius: var(--border-radius-large);
 }
 
 .financial-item {
@@ -223,13 +234,14 @@ export default {
 	padding: 12px;
 	background-color: var(--color-main-background);
 	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius-element);
+	border-radius: var(--border-radius);
 	cursor: pointer;
-	transition: background-color 0.2s;
+	transition: all 0.2s ease;
 }
 
 .invoice-item:hover {
 	background-color: var(--color-background-hover);
+	border-color: var(--color-primary-element);
 }
 
 .invoice-info {

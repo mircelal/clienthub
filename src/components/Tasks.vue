@@ -15,7 +15,7 @@
 		<div v-if="!selectedTask" class="tasks-list-view">
 			<div class="domaincontrol-actions">
 				<button class="button-vue button-vue--primary" @click="showAddModal">
-					<MaterialIcon name="add" :size="20" />
+					<Plus :size="20" />
 					{{ translate('domaincontrol', 'Add Task') }}
 				</button>
 				<div class="filter-buttons">
@@ -68,7 +68,7 @@
 
 			<!-- Empty State -->
 			<div v-if="filteredTasks.length === 0 && !loading" class="empty-content">
-				<MaterialIcon name="checkmark" :size="48" color="var(--color-text-maxcontrast)" class="empty-content__icon" />
+				<Check :size="48" class="empty-content__icon" />
 				<p class="empty-content__text">
 					{{ searchQuery ? translate('domaincontrol', 'No tasks found') : translate('domaincontrol', 'No tasks yet') }}
 				</p>
@@ -79,7 +79,7 @@
 
 			<!-- Loading State -->
 			<div v-if="loading" class="loading-content">
-				<MaterialIcon name="loading" :size="32" class="loading-icon" />
+				<Refresh :size="32" class="loading-icon spin-animation" />
 				<p>{{ translate('domaincontrol', 'Loading tasks...') }}</p>
 			</div>
 
@@ -151,7 +151,7 @@
 								@click.stop="togglePopover(task.id)"
 								:title="translate('domaincontrol', 'More options')"
 							>
-								<MaterialIcon name="more-vertical" :size="18" />
+								<DotsVertical :size="18" />
 							</button>
 							<div
 								v-if="openPopover === task.id"
@@ -162,7 +162,7 @@
 									class="popover-menu-item"
 									@click="editTask(task); closePopover()"
 								>
-									<MaterialIcon name="edit" :size="16" />
+									<Pencil :size="16" />
 									{{ translate('domaincontrol', 'Edit') }}
 								</button>
 								<button
@@ -170,7 +170,7 @@
 									class="popover-menu-item"
 									@click="toggleTaskStatus(task); closePopover()"
 								>
-									<MaterialIcon name="checkmark" :size="16" />
+									<Check :size="16" />
 									{{ translate('domaincontrol', 'Mark as Done') }}
 								</button>
 								<button
@@ -185,7 +185,7 @@
 									class="popover-menu-item popover-menu-item--danger"
 									@click="confirmDelete(task); closePopover()"
 								>
-									<MaterialIcon name="delete" :size="16" />
+									<Delete :size="16" />
 									{{ translate('domaincontrol', 'Delete') }}
 								</button>
 							</div>
@@ -199,7 +199,7 @@
 		<div v-else class="task-detail-view">
 			<div class="detail-header">
 				<button class="button-vue button-vue--tertiary" @click="backToList">
-					<MaterialIcon name="arrow-left" :size="20" />
+					<ArrowLeft :size="20" />
 					{{ translate('domaincontrol', 'Back') }}
 				</button>
 				<h2 class="detail-title">{{ selectedTask.title }}</h2>
@@ -209,7 +209,7 @@
 						class="button-vue button-vue--primary"
 						@click="toggleTaskStatus(selectedTask)"
 					>
-						<MaterialIcon name="checkmark" :size="20" />
+						<Check :size="20" />
 						{{ translate('domaincontrol', 'Mark as Done') }}
 					</button>
 					<button
@@ -225,7 +225,7 @@
 							@click.stop="toggleDetailPopover()"
 							:title="translate('domaincontrol', 'More options')"
 						>
-							<MaterialIcon name="more-vertical" :size="20" />
+							<DotsVertical :size="20" />
 						</button>
 						<div
 							v-if="detailPopoverOpen"
@@ -236,7 +236,7 @@
 								class="popover-menu-item"
 								@click="editTask(selectedTask); closeDetailPopover()"
 							>
-								<MaterialIcon name="edit" :size="16" />
+								<Pencil :size="16" />
 								{{ translate('domaincontrol', 'Edit') }}
 							</button>
 							<div class="popover-menu-separator"></div>
@@ -244,7 +244,7 @@
 								class="popover-menu-item popover-menu-item--danger"
 								@click="confirmDelete(selectedTask); closeDetailPopover()"
 							>
-								<MaterialIcon name="delete" :size="16" />
+								<Delete :size="16" />
 								{{ translate('domaincontrol', 'Delete') }}
 							</button>
 						</div>
@@ -257,7 +257,7 @@
 				<div class="detail-stats">
 					<div class="stat-card">
 						<div class="stat-card__icon">
-							<MaterialIcon name="folder" :size="24" />
+							<Folder :size="24" />
 						</div>
 						<div class="stat-card__content">
 							<div class="stat-card__label">{{ translate('domaincontrol', 'Project') }}</div>
@@ -276,7 +276,7 @@
 					</div>
 					<div class="stat-card">
 						<div class="stat-card__icon" :class="getTaskStatusClass(selectedTask)">
-							<MaterialIcon name="checkmark" :size="24" />
+							<Check :size="24" />
 						</div>
 						<div class="stat-card__content">
 							<div class="stat-card__label">{{ translate('domaincontrol', 'Status') }}</div>
@@ -289,7 +289,7 @@
 					</div>
 					<div class="stat-card">
 						<div class="stat-card__icon" :class="`priority-${selectedTask.priority || 'medium'}`">
-							<MaterialIcon name="settings" :size="24" />
+							<Cog :size="24" />
 						</div>
 						<div class="stat-card__content">
 							<div class="stat-card__label">{{ translate('domaincontrol', 'Priority') }}</div>
@@ -302,7 +302,7 @@
 					</div>
 					<div class="stat-card">
 						<div class="stat-card__icon" :class="getDueDateClass(selectedTask)">
-							<MaterialIcon name="calendar" :size="24" />
+							<Calendar :size="24" />
 						</div>
 						<div class="stat-card__content">
 							<div class="stat-card__label">{{ translate('domaincontrol', 'Due Date') }}</div>
@@ -333,7 +333,7 @@
 					<div class="section-header">
 						<h3 class="info-card-title">{{ translate('domaincontrol', 'Subtasks') }}</h3>
 						<button class="button-vue button-vue--primary" @click="showAddSubtaskModal">
-							<MaterialIcon name="add" :size="18" />
+							<Plus :size="18" />
 							{{ translate('domaincontrol', 'Add Subtask') }}
 						</button>
 					</div>
@@ -363,7 +363,7 @@
 								@click="confirmDeleteSubtask(subtask)"
 								:title="translate('domaincontrol', 'Delete')"
 							>
-								<MaterialIcon name="delete" :size="16" />
+								<Delete :size="16" />
 							</button>
 						</div>
 					</div>
@@ -375,14 +375,33 @@
 
 <script>
 import api from '../services/api'
-import MaterialIcon from './MaterialIcon.vue'
 import TaskModal from './TaskModal.vue'
+// vue-material-design-icons
+import Plus from 'vue-material-design-icons/Plus.vue'
+import Check from 'vue-material-design-icons/Check.vue'
+import Refresh from 'vue-material-design-icons/Refresh.vue'
+import DotsVertical from 'vue-material-design-icons/DotsVertical.vue'
+import Pencil from 'vue-material-design-icons/Pencil.vue'
+import Delete from 'vue-material-design-icons/Delete.vue'
+import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue'
+import Folder from 'vue-material-design-icons/Folder.vue'
+import Cog from 'vue-material-design-icons/Cog.vue'
+import Calendar from 'vue-material-design-icons/Calendar.vue'
 
 export default {
 	name: 'Tasks',
 	components: {
-		MaterialIcon,
 		TaskModal,
+		Plus,
+		Check,
+		Refresh,
+		DotsVertical,
+		Pencil,
+		Delete,
+		ArrowLeft,
+		Folder,
+		Cog,
+		Calendar,
 	},
 	data() {
 		return {
@@ -1222,5 +1241,13 @@ export default {
 
 .action-button--more:hover {
 	opacity: 1;
+}
+
+.spin-animation {
+	animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+	100% { transform: rotate(360deg); }
 }
 </style>
