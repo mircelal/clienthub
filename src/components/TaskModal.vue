@@ -11,7 +11,8 @@
 			</div>
 
 			<form @submit.prevent="saveTask" class="modal-body">
-				<div class="form-row">
+				<!-- Proje ve Müşteri seçimi - sadece projectId prop'u yoksa göster -->
+				<div class="form-row" v-if="!hasProjectId">
 					<div class="form-group">
 						<label for="task-project-id" class="form-label">
 							{{ translate('domaincontrol', 'Project') }}
@@ -221,6 +222,14 @@ export default {
 			type: [Number, String],
 			default: null,
 		},
+		projectId: {
+			type: [Number, String],
+			default: null,
+		},
+		clientId: {
+			type: [Number, String],
+			default: null,
+		},
 	},
 	emits: ['close', 'saved'],
 	data() {
@@ -243,6 +252,9 @@ export default {
 	computed: {
 		isOpen() {
 			return this.open
+		},
+		hasProjectId() {
+			return this.projectId !== null && this.projectId !== undefined && this.projectId !== ''
 		},
 		availableParentTasks() {
 			// Filter out the current task and its subtasks
@@ -277,8 +289,20 @@ export default {
 						notes: '',
 					}
 				} else {
-					// Set preset client ID if provided
-					if (this.presetClientId) {
+					// Eğer projectId prop'u varsa, otomatik set et
+					if (this.projectId) {
+						this.formData.projectId = this.projectId
+					}
+					// Eğer clientId prop'u varsa, otomatik set et
+					if (this.clientId) {
+						this.formData.clientId = this.clientId
+					}
+					// Eğer sadece projectId varsa ama clientId yoksa, presetClientId'yi kullan
+					if (this.projectId && !this.clientId && this.presetClientId) {
+						this.formData.clientId = this.presetClientId
+					}
+					// Set preset client ID if provided (fallback)
+					if (!this.projectId && this.presetClientId) {
 						this.formData.clientId = this.presetClientId
 					}
 				}
@@ -336,6 +360,14 @@ export default {
 					notes: this.formData.notes || '',
 				}
 
+				// Eğer projectId prop'u varsa, bunu kullan (proje içinden ekleme)
+				if (this.projectId) {
+					data.projectId = this.projectId
+				}
+				// Eğer clientId prop'u varsa, bunu kullan
+				if (this.clientId) {
+					data.clientId = this.clientId
+				}
 				// Convert empty strings to null for optional fields
 				if (!data.projectId) data.projectId = null
 				if (!data.clientId) data.clientId = null

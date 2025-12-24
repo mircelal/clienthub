@@ -155,7 +155,7 @@
                     </div>
                     
                     <div v-else class="nc-list">
-                        <div v-for="client in recentClients" :key="client.id" class="nc-list-item">
+                        <div v-for="client in recentClients" :key="client.id" class="nc-list-item" @click="navigateToClient(client)" style="cursor: pointer;">
                             <div class="nc-avatar" :style="{ backgroundColor: getAvatarColor(client.name) }">
                                 {{ getInitials(client.name) }}
                             </div>
@@ -604,15 +604,27 @@ export default {
         },
         quickAdd(type) {
             if (typeof window.DomainControl !== 'undefined') {
-                window.DomainControl.switchTab(type + 's')
-                if (type === 'client') window.DomainControl.showClientModal()
-                else if (type === 'project') window.DomainControl.showProjectModal()
-                else if (type === 'task') window.DomainControl.showTaskModal()
-                else if (type === 'invoice') window.DomainControl.showInvoiceModal()
+                const tabName = type + 's'
+                // Switch tab first
+                if (typeof window.DomainControl.switchTab === 'function') {
+                    window.DomainControl.switchTab(tabName)
+                }
+                // Then show modal after a short delay to ensure component is mounted
+                this.$nextTick(() => {
+                    if (type === 'client' && typeof window.DomainControl.showClientModal === 'function') {
+                        window.DomainControl.showClientModal()
+                    } else if (type === 'project' && typeof window.DomainControl.showProjectModal === 'function') {
+                        window.DomainControl.showProjectModal()
+                    } else if (type === 'task' && typeof window.DomainControl.showTaskModal === 'function') {
+                        window.DomainControl.showTaskModal()
+                    } else if (type === 'invoice' && typeof window.DomainControl.showInvoiceModal === 'function') {
+                        window.DomainControl.showInvoiceModal()
+                    }
+                })
             }
         },
         switchToTab(tab) {
-            if (typeof window.DomainControl !== 'undefined') {
+            if (typeof window.DomainControl !== 'undefined' && typeof window.DomainControl.switchTab === 'function') {
                 window.DomainControl.switchTab(tab)
             }
         },
@@ -626,6 +638,11 @@ export default {
             let hash = 0
             for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash)
             return `hsl(${hash % 360}, 60%, 45%)`
+        },
+        navigateToClient(client) {
+            if (typeof window.DomainControl !== 'undefined' && window.DomainControl.selectClient) {
+                window.DomainControl.selectClient(client.id)
+            }
         },
     },
 }

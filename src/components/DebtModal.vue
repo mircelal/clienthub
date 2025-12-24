@@ -342,6 +342,29 @@ export default {
 		loadDebtData() {
 			if (!this.debt || !this.debt.id) return
 
+			// Helper function to format date for input field (YYYY-MM-DD)
+			const formatDateForInput = (dateString) => {
+				if (!dateString) return ''
+				// If it's already in YYYY-MM-DD format, return as is
+				if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+					return dateString
+				}
+				// If it's a datetime string, extract date part
+				if (dateString.includes(' ')) {
+					return dateString.split(' ')[0]
+				}
+				// Try to parse and format
+				try {
+					const date = new Date(dateString)
+					if (!isNaN(date.getTime())) {
+						return date.toISOString().split('T')[0]
+					}
+				} catch (e) {
+					console.warn('Date parsing error:', e)
+				}
+				return ''
+			}
+
 			this.formData = {
 				type: this.debt.type || '',
 				debtType: this.debt.debtType || '',
@@ -351,9 +374,9 @@ export default {
 				paidAmount: this.debt.paidAmount || '',
 				currency: this.debt.currency || 'USD',
 				interestRate: this.debt.interestRate || '',
-				startDate: this.debt.startDate ? this.debt.startDate.split(' ')[0] : '',
-				dueDate: this.debt.dueDate ? this.debt.dueDate.split(' ')[0] : '',
-				nextPaymentDate: this.debt.nextPaymentDate ? this.debt.nextPaymentDate.split(' ')[0] : '',
+				startDate: formatDateForInput(this.debt.startDate),
+				dueDate: formatDateForInput(this.debt.dueDate),
+				nextPaymentDate: formatDateForInput(this.debt.nextPaymentDate),
 				paymentFrequency: this.debt.paymentFrequency || '',
 				paymentAmount: this.debt.paymentAmount || '',
 				description: this.debt.description || '',
@@ -387,6 +410,11 @@ export default {
 				if (!data.clientId) data.clientId = null
 				if (!data.interestRate) data.interestRate = null
 				if (!data.paymentAmount) data.paymentAmount = null
+				if (!data.startDate) data.startDate = null
+				if (!data.dueDate) data.dueDate = null
+				if (!data.nextPaymentDate) data.nextPaymentDate = null
+				if (!data.paymentFrequency) data.paymentFrequency = null
+				if (!data.description) data.description = null
 
 				if (this.debt && this.debt.id) {
 					await api.debts.update(this.debt.id, data)

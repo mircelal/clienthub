@@ -123,6 +123,10 @@ export default {
             type: Number,
             default: null,
         },
+        clientId: {
+            type: [Number, String],
+            default: null,
+        },
         currency: {
             type: String,
             default: 'USD',
@@ -231,6 +235,7 @@ export default {
                     currency: this.formData.currency,
                     transactionDate: this.formData.transactionDate,
                     categoryId: this.formData.categoryId || null,
+                    clientId: this.clientId || null,
                     paymentMethod: this.formData.paymentMethod || '',
                     reference: this.formData.reference || '',
                     notes: this.formData.notes || '',

@@ -64,7 +64,7 @@
             </div>
 
             <!-- Empty State -->
-            <div v-else-if="filteredTasks.length === 0" class="nc-empty-state">
+            <div v-else-if="groupedTasks.active.length === 0 && groupedTasks.completed.length === 0" class="nc-empty-state">
                 <CheckboxBlankOutline :size="64" class="nc-state-icon" />
                 <h3>{{ searchQuery ? translate('domaincontrol', 'No tasks found') : translate('domaincontrol', 'No tasks yet') }}</h3>
                 <NcButton v-if="!searchQuery" type="primary" @click="showAddModal" class="mt-4">
@@ -72,81 +72,160 @@
                 </NcButton>
             </div>
 
-            <!-- Tasks List -->
+            <!-- Tasks List Container -->
             <div v-else class="nc-list-container">
-                <div 
-                    v-for="task in filteredTasks" 
-                    :key="task.id" 
-                    class="nc-list-item task-row"
-                    :class="[
-                        getPriorityClass(task.priority),
-                        { 'is-completed': task.status === 'done', 'is-cancelled': task.status === 'cancelled' }
-                    ]"
-                    @click="selectTask(task)"
-                >
-                    <!-- Checkbox Area -->
-                    <div class="task-checkbox-area" @click.stop>
-                        <div class="custom-checkbox" :class="{ checked: task.status === 'done' }" @click="toggleTaskStatus(task)">
-                            <Check v-if="task.status === 'done'" :size="14" />
+                
+                <!-- ACTIVE TASKS SECTION -->
+                <div v-if="groupedTasks.active.length > 0" class="tasks-section active-section">
+                    <div 
+                        v-for="task in groupedTasks.active" 
+                        :key="task.id" 
+                        class="nc-list-item task-row"
+                        :class="[
+                            getPriorityClass(task.priority),
+                            { 'is-cancelled': task.status === 'cancelled' }
+                        ]"
+                        @click="selectTask(task)"
+                    >
+                        <!-- Checkbox Area -->
+                        <div class="task-checkbox-area" @click.stop>
+                            <div 
+                                class="custom-checkbox" 
+                                :class="{ 
+                                    'checkbox-blocked': getIncompleteSubtasksCount(task) > 0
+                                }" 
+                                @click="toggleTaskStatus(task)"
+                            >
+                                <Lock v-if="getIncompleteSubtasksCount(task) > 0" :size="12" class="lock-icon" />
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Main Content -->
-                    <div class="item-content">
-                        <div class="task-header">
-                            <span class="task-title">{{ task.title }}</span>
-                            <span v-if="isToday(task.dueDate)" class="today-badge">{{ translate('domaincontrol', 'TODAY') }}</span>
+                        <!-- Main Content -->
+                        <div class="item-content">
+                            <div class="task-header">
+                                <span class="task-title">{{ task.title }}</span>
+                                <span v-if="isToday(task.dueDate)" class="today-badge">{{ translate('domaincontrol', 'TODAY') }}</span>
+                            </div>
+                            <div class="task-meta">
+                                <span v-if="getProjectName(task.projectId)" class="meta-tag project-tag">
+                                    <Folder :size="12" class="inline-icon" /> {{ getProjectName(task.projectId) }}
+                                </span>
+                                
+                                <span v-if="task.dueDate" class="meta-tag" :class="getDueDateClass(task)">
+                                    <Calendar :size="12" class="inline-icon" /> {{ formatDate(task.dueDate) }}
+                                </span>
+
+                                <span v-if="task.priority === 'high'" class="meta-tag text-error">
+                                    <Flag :size="12" class="inline-icon" /> {{ translate('domaincontrol', 'High Priority') }}
+                                </span>
+                                
+                                <span 
+                                    v-if="getSubtasksCount(task) > 0" 
+                                    class="meta-tag"
+                                    :class="{ 'meta-warning': getIncompleteSubtasksCount(task) > 0 }"
+                                    :title="getIncompleteSubtasksCount(task) > 0 ? translate('domaincontrol', 'Complete subtasks first') : ''"
+                                >
+                                    <component 
+                                        :is="getIncompleteSubtasksCount(task) > 0 ? 'AlertCircleOutline' : 'FormatListBulleted'" 
+                                        :size="12" 
+                                        class="inline-icon" 
+                                    /> 
+                                    {{ getSubtasksCount(task) }}
+                                    <span v-if="getIncompleteSubtasksCount(task) > 0" style="margin-left: 3px; font-weight: 600;">
+                                        ({{ getIncompleteSubtasksCount(task) }})
+                                    </span>
+                                </span>
+                            </div>
                         </div>
-                        <div class="task-meta">
-                            <span v-if="getProjectName(task.projectId)" class="meta-tag project-tag">
-                                <Folder :size="12" class="inline-icon" /> {{ getProjectName(task.projectId) }}
-                            </span>
-                            <span v-else class="meta-tag">
-                                {{ translate('domaincontrol', 'General') }}
-                            </span>
-                            
-                            <span v-if="task.dueDate" class="meta-tag" :class="getDueDateClass(task)">
-                                <Calendar :size="12" class="inline-icon" /> {{ formatDate(task.dueDate) }}
-                            </span>
-                            
-                            <span v-if="getSubtasksCount(task) > 0" class="meta-tag">
-                                <FormatListBulleted :size="12" class="inline-icon" /> {{ getSubtasksCount(task) }}
+
+                        <div class="item-status desktop-only">
+                            <span class="nc-badge" :class="getStatusBadgeClass(task.status)">
+                                {{ getTaskStatusText(task.status) }}
                             </span>
                         </div>
-                    </div>
 
-                    <!-- Status Badge (Desktop) -->
-                    <div class="item-status desktop-only">
-                        <span class="nc-badge" :class="getStatusBadgeClass(task.status)">
-                            {{ getTaskStatusText(task.status) }}
-                        </span>
-                    </div>
-
-                    <!-- Actions -->
-                    <div class="item-actions">
-                        <div class="popover-wrapper" @click.stop>
-                            <button class="action-btn" @click="togglePopover(task.id)">
-                                <DotsVertical :size="18" />
-                            </button>
-                            <!-- Dropdown Menu -->
-                            <div v-if="openPopover === task.id" class="nc-popover-menu">
-                                <div class="popover-item" @click="editTask(task); closePopover()">
-                                    <Pencil :size="16" /> {{ translate('domaincontrol', 'Edit') }}
-                                </div>
-                                <div v-if="task.status !== 'done'" class="popover-item" @click="toggleTaskStatus(task); closePopover()">
-                                    <Check :size="16" /> {{ translate('domaincontrol', 'Mark as Done') }}
-                                </div>
-                                <div v-else class="popover-item" @click="toggleTaskStatus(task); closePopover()">
-                                    <Refresh :size="16" /> {{ translate('domaincontrol', 'Mark as To Do') }}
-                                </div>
-                                <div class="popover-separator"></div>
-                                <div class="popover-item danger" @click="confirmDelete(task); closePopover()">
-                                    <Delete :size="16" /> {{ translate('domaincontrol', 'Delete') }}
+                        <div class="item-actions">
+                            <div class="popover-wrapper" @click.stop>
+                                <button class="action-btn" @click="togglePopover(task.id)">
+                                    <DotsVertical :size="18" />
+                                </button>
+                                <div v-if="openPopover === task.id" class="nc-popover-menu">
+                                    <div class="popover-item" @click="editTask(task); closePopover()">
+                                        <Pencil :size="16" /> {{ translate('domaincontrol', 'Edit') }}
+                                    </div>
+                                    <div class="popover-item" @click="toggleTaskStatus(task); closePopover()">
+                                        <Check :size="16" /> {{ translate('domaincontrol', 'Mark as Done') }}
+                                    </div>
+                                    <div class="popover-separator"></div>
+                                    <div class="popover-item danger" @click="confirmDelete(task); closePopover()">
+                                        <Delete :size="16" /> {{ translate('domaincontrol', 'Delete') }}
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
+                <!-- COMPLETED TASKS SECTION -->
+                <div v-if="groupedTasks.completed.length > 0" class="completed-section-wrapper">
+                    <!-- Section Header (Toggle) -->
+                    <!-- Only show toggle header if we are NOT in the 'done' or 'cancelled' filter view -->
+                    <div 
+                        v-if="currentFilter !== 'done' && currentFilter !== 'cancelled'"
+                        class="completed-header" 
+                        @click="toggleCompletedVisibility"
+                    >
+                        <component :is="showCompletedTasks ? 'ChevronDown' : 'ChevronRight'" :size="20" class="toggle-icon" />
+                        <span class="completed-title">{{ translate('domaincontrol', 'Completed') }}</span>
+                        <span class="completed-count">{{ groupedTasks.completed.length }}</span>
+                    </div>
+
+                    <!-- Completed List -->
+                    <div v-if="showCompletedTasks || currentFilter === 'done' || currentFilter === 'cancelled'" class="tasks-section completed-list">
+                        <div 
+                            v-for="task in groupedTasks.completed" 
+                            :key="task.id" 
+                            class="nc-list-item task-row is-completed"
+                            @click="selectTask(task)"
+                        >
+                             <div class="task-checkbox-area" @click.stop>
+                                <div class="custom-checkbox checked" @click="toggleTaskStatus(task)">
+                                    <Check :size="14" />
+                                </div>
+                            </div>
+
+                            <div class="item-content">
+                                <div class="task-header">
+                                    <span class="task-title">{{ task.title }}</span>
+                                </div>
+                                <div class="task-meta">
+                                     <span v-if="getProjectName(task.projectId)" class="meta-tag">
+                                        {{ getProjectName(task.projectId) }}
+                                    </span>
+                                    <span class="meta-tag">{{ translate('domaincontrol', 'Completed') }}</span>
+                                </div>
+                            </div>
+
+                            <div class="item-actions">
+                                <div class="popover-wrapper" @click.stop>
+                                    <button class="action-btn" @click="togglePopover(task.id)">
+                                        <DotsVertical :size="18" />
+                                    </button>
+                                    <div v-if="openPopover === task.id" class="nc-popover-menu">
+                                        <div class="popover-item" @click="toggleTaskStatus(task); closePopover()">
+                                            <Refresh :size="16" /> {{ translate('domaincontrol', 'Mark as To Do') }}
+                                        </div>
+                                        <div class="popover-separator"></div>
+                                        <div class="popover-item danger" @click="confirmDelete(task); closePopover()">
+                                            <Delete :size="16" /> {{ translate('domaincontrol', 'Delete') }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
 
@@ -163,8 +242,16 @@
                     </NcButton>
                     <div class="detail-title-wrapper">
                          <!-- Large Checkbox in Header -->
-                        <div class="custom-checkbox large" :class="{ checked: selectedTask.status === 'done' }" @click="toggleTaskStatus(selectedTask)">
+                        <div 
+                            class="custom-checkbox large" 
+                            :class="{ 
+                                checked: selectedTask.status === 'done',
+                                'checkbox-blocked': getIncompleteSubtasksCount(selectedTask) > 0 && selectedTask.status !== 'done'
+                            }" 
+                            @click="toggleTaskStatus(selectedTask)"
+                        >
                             <Check v-if="selectedTask.status === 'done'" :size="18" />
+                            <Lock v-else-if="getIncompleteSubtasksCount(selectedTask) > 0" :size="14" class="lock-icon" />
                         </div>
                         <h2 class="detail-title" :class="{ 'text-strike': selectedTask.status === 'done' }">{{ selectedTask.title }}</h2>
                     </div>
@@ -289,7 +376,10 @@
                                 <div class="custom-checkbox small" :class="{ checked: subtask.status === 'done' }" @click="toggleSubtaskStatus(subtask)">
                                     <Check v-if="subtask.status === 'done'" :size="12" />
                                 </div>
-                                <span class="subtask-text">{{ subtask.title }}</span>
+                                <div class="subtask-content">
+                                    <span class="subtask-text">{{ subtask.title }}</span>
+                                    <span v-if="subtask.description" class="subtask-desc">{{ subtask.description }}</span>
+                                </div>
                                 <button class="delete-icon-btn" @click="confirmDeleteSubtask(subtask)">
                                     <Close :size="16" />
                                 </button>
@@ -328,6 +418,10 @@ import TextBox from 'vue-material-design-icons/TextBox.vue'
 import StickerTextOutline from 'vue-material-design-icons/StickerTextOutline.vue'
 import FormatListChecks from 'vue-material-design-icons/FormatListChecks.vue'
 import Close from 'vue-material-design-icons/Close.vue'
+import AlertCircleOutline from 'vue-material-design-icons/AlertCircleOutline.vue'
+import Lock from 'vue-material-design-icons/Lock.vue'
+import ChevronDown from 'vue-material-design-icons/ChevronDown.vue'
+import ChevronRight from 'vue-material-design-icons/ChevronRight.vue'
 
 export default {
     name: 'Tasks',
@@ -337,7 +431,8 @@ export default {
         // Icons
         CheckboxMarkedCircleOutline, CheckboxBlankOutline, Plus, Magnify, Refresh,
         Check, Folder, Calendar, FormatListBulleted, DotsVertical, Pencil, Delete,
-        ArrowLeft, ListStatus, Flag, TextBox, StickerTextOutline, FormatListChecks, Close
+        ArrowLeft, ListStatus, Flag, TextBox, StickerTextOutline, FormatListChecks, Close,
+        AlertCircleOutline, Lock, ChevronDown, ChevronRight
     },
     data() {
         return {
@@ -353,16 +448,15 @@ export default {
             searchQuery: '',
             openPopover: null,
             detailPopoverOpen: false,
+            showCompletedTasks: false // Default to collapsed
         }
     },
     computed: {
-        filteredTasks() {
-            let filtered = this.tasks.filter(t => !t.parentId) // Only top-level
+        // Replaces filteredTasks with a grouped and sorted structure
+        groupedTasks() {
+            let filtered = this.tasks.filter(t => !t.parentId)
 
-            if (this.currentFilter !== 'all') {
-                filtered = filtered.filter(t => t.status === this.currentFilter)
-            }
-
+            // 1. Search & Project Filtering (Common for all)
             if (this.searchQuery) {
                 const query = this.searchQuery.toLowerCase()
                 filtered = filtered.filter(task => {
@@ -371,7 +465,53 @@ export default {
                     return title.includes(query) || projectName.toLowerCase().includes(query)
                 })
             }
-            return filtered
+
+            // 2. Split into Active vs Completed based on current Filter logic
+            let active = []
+            let completed = []
+
+            if (this.currentFilter === 'done' || this.currentFilter === 'cancelled') {
+                 // If specific status selected, everything goes into 'completed' bucket technically, 
+                 // but we render them based on the loop logic. 
+                 // For the 'Completed' section logic to work nicely, if filter is 'done', we put all in completed.
+                 completed = filtered.filter(t => t.status === this.currentFilter)
+                 // Active empty
+            } else if (this.currentFilter === 'all') {
+                 active = filtered.filter(t => t.status !== 'done' && t.status !== 'cancelled')
+                 completed = filtered.filter(t => t.status === 'done' || t.status === 'cancelled')
+            } else {
+                 // specific active filters (todo, in_progress)
+                 active = filtered.filter(t => t.status === this.currentFilter)
+                 // completed empty
+            }
+
+            // 3. Sorting Logic
+            const sortActiveFn = (a, b) => {
+                // Priority: High(3) > Medium(2) > Low(1) > Undefined(1)
+                const pMap = { high: 3, medium: 2, low: 1 }
+                const pA = pMap[a.priority] || 1
+                const pB = pMap[b.priority] || 1
+                if (pA !== pB) return pB - pA // Higher priority first
+
+                // Due Date: Overdue/Earlier > Later > No Date
+                if (a.dueDate && b.dueDate) return new Date(a.dueDate) - new Date(b.dueDate)
+                if (a.dueDate) return -1 // Has date comes before no date
+                if (b.dueDate) return 1
+
+                // Title fallback
+                return (a.title || '').localeCompare(b.title || '')
+            }
+
+            const sortCompletedFn = (a, b) => {
+                // Sort by date finished? We don't have that field in mock, so sort by dueDate or ID
+                if (a.dueDate && b.dueDate) return new Date(b.dueDate) - new Date(a.dueDate) // Newest due date first
+                return (a.title || '').localeCompare(b.title || '')
+            }
+
+            return {
+                active: active.sort(sortActiveFn),
+                completed: completed.sort(sortCompletedFn)
+            }
         },
     },
     watch: {
@@ -405,10 +545,9 @@ export default {
                 }
             } catch (e) { console.warn('Translation error:', e) }
             
-            // Fallback dictionary for demo
             const dict = {
                 'All': 'Tümü', 'To Do': 'Yapılacak', 'In Progress': 'Devam Ediyor', 'Done': 'Tamamlandı', 'Cancelled': 'İptal',
-                'General': 'Genel', 'TODAY': 'BUGÜN'
+                'General': 'Genel', 'TODAY': 'BUGÜN', 'High Priority': 'Yüksek Öncelik', 'Completed': 'Tamamlananlar'
             }
             return dict[text] || text
         },
@@ -487,26 +626,35 @@ export default {
         async handleTaskSaved() {
             await this.loadTasks()
             if (this.selectedTask) {
-                // Refresh selected task if it was edited
                 const response = await api.tasks.get(this.selectedTask.id).catch(() => ({ data: this.selectedTask }))
                 this.selectedTask = response.data
-                // Also refresh subtasks
                 this.loadSubtasks(this.selectedTask.id)
             }
             this.closeModal()
         },
+        getIncompleteSubtasksCount(task) {
+            return this.tasks.filter(t => t.parentId === task.id && t.status !== 'done' && t.status !== 'cancelled').length;
+        },
         async toggleTaskStatus(task) {
-            // Optimistic update
+            const incompleteSubtasks = this.getIncompleteSubtasksCount(task);
+            if (task.status !== 'done' && incompleteSubtasks > 0) {
+                 if (typeof OC !== 'undefined' && OC.Notification) {
+                    OC.Notification.showTemporary(this.translate('domaincontrol', `Cannot complete task: ${incompleteSubtasks} subtasks are still pending.`));
+                 } else {
+                    alert(`Cannot complete task: ${incompleteSubtasks} subtasks are still pending.`);
+                 }
+                 return;
+            }
+
             const oldStatus = task.status
             const newStatus = oldStatus === 'done' ? 'todo' : 'done'
             task.status = newStatus
             
             try {
                 const response = await api.tasks.toggleStatus(task.id)
-                // Sync with server response
                 Object.assign(task, response.data)
             } catch (error) {
-                task.status = oldStatus // Revert
+                task.status = oldStatus 
                 console.error(error)
             }
         },
@@ -514,6 +662,7 @@ export default {
             try {
                 await api.tasks.toggleStatus(subtask.id)
                 await this.loadSubtasks(this.selectedTask.id)
+                this.loadTasks(); 
             } catch (error) { console.error(error) }
         },
         async confirmDelete(task) {
@@ -531,10 +680,12 @@ export default {
              try {
                 await api.tasks.delete(subtask.id)
                 await this.loadSubtasks(this.selectedTask.id)
+                this.loadTasks();
              } catch(e) { alert('Error') }
         },
-        
-        // Helpers
+        toggleCompletedVisibility() {
+            this.showCompletedTasks = !this.showCompletedTasks
+        },
         getProjectName(id) { return this.projects.find(p => p.id === id)?.name || '' },
         navigateToProject(id) {
             if (window.DomainControl?.switchTab) {
@@ -543,10 +694,11 @@ export default {
             }
         },
         getSubtasksCount(task) { return this.tasks.filter(t => t.parentId === task.id).length },
-        
-        // CSS Class Helpers
         getPriorityClass(priority) { return `priority-${priority || 'medium'}` },
-        getPriorityText(p) { return p ? p.charAt(0).toUpperCase() + p.slice(1) : 'Medium' },
+        getPriorityText(p) { 
+             const map = { high: 'Yüksek', medium: 'Orta', low: 'Düşük' }
+             return this.translate('domaincontrol', map[p] || p) 
+        },
         getTaskStatusText(s) { 
             const map = { todo: 'To Do', in_progress: 'In Progress', done: 'Done', cancelled: 'Cancelled' }
             return this.translate('domaincontrol', map[s] || s)
@@ -574,8 +726,6 @@ export default {
              return ''
         },
         formatDate(d) { return d ? new Date(d).toLocaleDateString() : '' },
-        
-        // Popover
         togglePopover(id) { this.openPopover = this.openPopover === id ? null : id },
         closePopover() { this.openPopover = null },
         toggleDetailPopover() { this.detailPopoverOpen = !this.detailPopoverOpen },
@@ -620,13 +770,13 @@ export default {
     font-size: 13px;
 }
 .filter-tab:hover { background: var(--color-background-dark); color: var(--color-main-text); }
-.filter-tab.active { background: var(--color-main-background); color: var(--color-primary); box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+.filter-tab.active { background: var(--color-main-background); color: var(--color-primary-element); box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
 
 /* SEARCH */
 .search-wrapper { position: relative; width: 200px; }
 .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--color-text-maxcontrast); opacity: 0.7; }
 .search-input { width: 100%; padding: 6px 12px 6px 32px; border-radius: var(--border-radius-pill); border: 1px solid transparent; background: var(--color-main-background); color: var(--color-main-text); font-size: 13px; }
-.search-input:focus { border-color: var(--color-primary); outline: none; }
+.search-input:focus { border-color: var(--color-primary-element); outline: none; }
 
 /* TASK LIST */
 .nc-list-container {
@@ -653,8 +803,10 @@ export default {
     display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;
     color: #fff;
 }
-.custom-checkbox:hover { border-color: var(--color-primary); }
-.custom-checkbox.checked { background-color: var(--color-primary); border-color: var(--color-primary); }
+.custom-checkbox:hover { border-color: var(--color-primary-element); }
+.custom-checkbox.checked { background-color: var(--color-primary-element); border-color: var(--color-primary-element); }
+.custom-checkbox.checkbox-blocked { border-color: var(--color-text-maxcontrast); background: var(--color-background-dark); cursor: not-allowed; opacity: 0.7; }
+.lock-icon { color: var(--color-text-maxcontrast); }
 
 .item-content { flex: 1; display: flex; flex-direction: column; gap: 4px; }
 .task-header { display: flex; align-items: center; gap: 8px; }
@@ -668,16 +820,29 @@ export default {
 
 .task-meta { display: flex; gap: 12px; font-size: 12px; color: var(--color-text-maxcontrast); align-items: center; }
 .meta-tag { display: flex; align-items: center; gap: 4px; }
+.meta-warning { color: var(--color-warning-element); font-weight: bold; }
 .inline-icon { opacity: 0.7; }
 .text-error { color: var(--color-error-element); font-weight: bold; }
 
 .item-status { margin-right: 16px; }
 .nc-badge { font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 600; text-transform: uppercase; }
-.badge-primary { background: rgba(0, 130, 201, 0.15); color: var(--color-primary); }
+.badge-primary { background: rgba(0, 130, 201, 0.15); color: var(--color-primary-element); }
 .badge-success { background: rgba(70, 186, 97, 0.15); color: var(--color-success-element); }
 .badge-neutral { background: var(--color-background-dark); color: var(--color-text-maxcontrast); }
 .badge-priority-high { color: var(--color-error-element); background: rgba(233, 50, 45, 0.1); }
 .badge-priority-medium { color: var(--color-warning-element); background: rgba(233, 144, 2, 0.1); }
+
+/* Completed Section */
+.completed-section-wrapper { border-top: 1px solid var(--color-border); }
+.completed-header {
+    display: flex; align-items: center; gap: 8px; padding: 12px 16px; background: var(--color-background-hover);
+    cursor: pointer; color: var(--color-text-maxcontrast); font-weight: 600; font-size: 14px; user-select: none;
+}
+.completed-header:hover { color: var(--color-main-text); }
+.completed-title { flex: 1; }
+.completed-count { background: var(--color-background-dark); padding: 2px 8px; border-radius: 10px; font-size: 12px; }
+.completed-list .nc-list-item { opacity: 0.7; background: rgba(0,0,0,0.02); }
+.completed-list .nc-list-item:hover { opacity: 1; background: var(--color-background-hover); }
 
 /* POPOVER ACTIONS */
 .action-btn { background: none; border: none; padding: 6px; color: var(--color-text-maxcontrast); cursor: pointer; border-radius: 4px; }
@@ -721,7 +886,7 @@ export default {
 .widget-info { display: flex; flex-direction: column; }
 .widget-info .label { font-size: 11px; color: var(--color-text-maxcontrast); }
 .widget-info .value { font-size: 14px; font-weight: 600; color: var(--color-main-text); }
-.widget-info .value.link { color: var(--color-primary); cursor: pointer; }
+.widget-info .value.link { color: var(--color-primary-element); cursor: pointer; }
 .widget-info .value.link:hover { text-decoration: underline; }
 
 /* Panels */
@@ -738,15 +903,18 @@ export default {
 .empty-mini { padding: 16px; text-align: center; color: var(--color-text-maxcontrast); font-style: italic; font-size: 13px; }
 .nc-subtask-list { display: flex; flex-direction: column; }
 .subtask-row {
-    display: flex; align-items: center; padding: 10px 16px; border-bottom: 1px solid var(--color-border);
+    display: flex; align-items: flex-start; /* Changed for multiline */
+    padding: 10px 16px; border-bottom: 1px solid var(--color-border);
     gap: 12px; transition: background 0.1s;
 }
 .subtask-row:last-child { border-bottom: none; }
 .subtask-row.is-completed .subtask-text { text-decoration: line-through; opacity: 0.6; }
-.subtask-text { flex: 1; font-size: 14px; }
-.custom-checkbox.small { width: 16px; height: 16px; }
+.subtask-content { flex: 1; display: flex; flex-direction: column; }
+.subtask-text { font-size: 14px; }
+.subtask-desc { font-size: 12px; color: var(--color-text-maxcontrast); margin-top: 2px; }
+.custom-checkbox.small { width: 16px; height: 16px; margin-top: 3px; }
 .delete-icon-btn {
-    background: none; border: none; color: var(--color-text-maxcontrast); cursor: pointer; opacity: 0.5;
+    background: none; border: none; color: var(--color-text-maxcontrast); cursor: pointer; opacity: 0.5; margin-top: 2px;
 }
 .delete-icon-btn:hover { color: var(--color-error-element); opacity: 1; }
 

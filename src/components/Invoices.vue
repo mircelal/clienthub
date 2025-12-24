@@ -694,6 +694,26 @@ export default {
                 this.loadInvoiceDetails(invoice.id)
             }
         },
+        selectInvoice(invoiceId) {
+            // Find invoice by ID and view it
+            const invoice = this.invoices.find(inv => inv.id == invoiceId)
+            if (invoice) {
+                this.viewInvoice(invoice)
+            } else {
+                // If invoice not found in current list, try to load it
+                this.loadInvoiceById(invoiceId)
+            }
+        },
+        async loadInvoiceById(invoiceId) {
+            try {
+                const response = await api.invoices.get(invoiceId)
+                if (response.data) {
+                    this.viewInvoice(response.data)
+                }
+            } catch (error) {
+                console.error('Error loading invoice:', error)
+            }
+        },
         backToList() {
             this.selectedInvoice = null
             this.invoiceDetails = {}

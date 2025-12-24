@@ -27,15 +27,15 @@
 			</NcAppNavigationSettings>
 		</NcAppNavigation>
 		<NcAppContent>
-			<Dashboard v-if="currentTab === 'dashboard'" />
-			<Clients v-if="currentTab === 'clients'" />
-			<Domains v-if="currentTab === 'domains'" />
-			<Hostings v-if="currentTab === 'hostings'" />
-			<Websites v-if="currentTab === 'websites'" />
-			<Services v-if="currentTab === 'services'" />
-			<Invoices ref="invoicesComponent" v-if="currentTab === 'invoices'" />
-			<Projects ref="projectsComponent" v-if="currentTab === 'projects'" />
-			<Tasks v-if="currentTab === 'tasks'" />
+		<Dashboard v-if="currentTab === 'dashboard'" />
+		<Clients ref="clientsComponent" v-if="currentTab === 'clients'" />
+		<Domains v-if="currentTab === 'domains'" />
+		<Hostings v-if="currentTab === 'hostings'" />
+		<Websites v-if="currentTab === 'websites'" />
+		<Services v-if="currentTab === 'services'" />
+		<Invoices ref="invoicesComponent" v-if="currentTab === 'invoices'" />
+		<Projects ref="projectsComponent" v-if="currentTab === 'projects'" />
+		<Tasks ref="tasksComponent" v-if="currentTab === 'tasks'" />
 			<Transactions v-if="currentTab === 'transactions'" />
 			<Debts v-if="currentTab === 'debts'" />
 			<Reports v-if="currentTab === 'reports'" />
@@ -150,19 +150,86 @@ export default {
 			this.currentTab = tabFromUrl
 		}
 
+		// Initialize window.DomainControl if not exists
+		if (typeof window.DomainControl === 'undefined') {
+			window.DomainControl = {}
+		}
+
 		// Integrate with existing DomainControl.switchTab
-		if (typeof window.DomainControl !== 'undefined') {
-			const originalSwitchTab = window.DomainControl.switchTab
-			window.DomainControl.switchTab = (tabName) => {
-				this.currentTab = tabName
-				if (originalSwitchTab) {
-					originalSwitchTab.call(window.DomainControl, tabName)
-				}
+		const originalSwitchTab = window.DomainControl.switchTab
+		window.DomainControl.switchTab = (tabName) => {
+			this.currentTab = tabName
+			if (originalSwitchTab && typeof originalSwitchTab === 'function') {
+				originalSwitchTab.call(window.DomainControl, tabName)
 			}
 		}
 
 		// Listen for navigate-to-invoice event from Projects component
 		window.addEventListener('navigate-to-invoice', this.handleNavigateToInvoice)
+
+		// Define window.DomainControl methods for Dashboard quick actions
+		window.DomainControl.showClientModal = () => {
+			this.currentTab = 'clients'
+			this.$nextTick(() => {
+				if (this.$refs.clientsComponent && typeof this.$refs.clientsComponent.showAddModal === 'function') {
+					this.$refs.clientsComponent.showAddModal()
+				}
+			})
+		}
+
+		window.DomainControl.showProjectModal = () => {
+			this.currentTab = 'projects'
+			this.$nextTick(() => {
+				if (this.$refs.projectsComponent && typeof this.$refs.projectsComponent.showAddModal === 'function') {
+					this.$refs.projectsComponent.showAddModal()
+				}
+			})
+		}
+
+		window.DomainControl.showTaskModal = () => {
+			this.currentTab = 'tasks'
+			this.$nextTick(() => {
+				if (this.$refs.tasksComponent && typeof this.$refs.tasksComponent.showAddModal === 'function') {
+					this.$refs.tasksComponent.showAddModal()
+				}
+			})
+		}
+
+		window.DomainControl.showInvoiceModal = () => {
+			this.currentTab = 'invoices'
+			this.$nextTick(() => {
+				if (this.$refs.invoicesComponent && typeof this.$refs.invoicesComponent.showAddModal === 'function') {
+					this.$refs.invoicesComponent.showAddModal()
+				}
+			})
+		}
+
+		window.DomainControl.selectClient = (clientId) => {
+			this.currentTab = 'clients'
+			this.$nextTick(() => {
+				if (this.$refs.clientsComponent && typeof this.$refs.clientsComponent.selectClient === 'function') {
+					// selectClient can now handle both ID and client object
+					this.$refs.clientsComponent.selectClient(clientId)
+				}
+			})
+		}
+
+		window.DomainControl.selectInvoice = (invoiceId) => {
+			this.currentTab = 'invoices'
+			this.$nextTick(() => {
+				if (this.$refs.invoicesComponent) {
+					if (typeof this.$refs.invoicesComponent.selectInvoice === 'function') {
+						this.$refs.invoicesComponent.selectInvoice(invoiceId)
+					} else if (typeof this.$refs.invoicesComponent.viewInvoice === 'function') {
+						// Fallback: try to find invoice and view it
+						const invoice = this.$refs.invoicesComponent.invoices.find(inv => inv.id == invoiceId)
+						if (invoice) {
+							this.$refs.invoicesComponent.viewInvoice(invoice)
+						}
+					}
+				}
+			})
+		}
 	},
 	beforeUnmount() {
 		window.removeEventListener('settings-updated', this.handleSettingsUpdate)

@@ -801,11 +801,32 @@ export default {
             // Handled by computed
         },
         async selectClient(client) {
+            // If client is an ID, find the client object
+            if (typeof client === 'number' || typeof client === 'string') {
+                const foundClient = this.clients.find(c => c.id == client)
+                if (foundClient) {
+                    client = foundClient
+                } else {
+                    // If client not found in list, try to load it
+                    await this.loadClientById(client)
+                    return
+                }
+            }
             this.selectedClient = client
             this.showAllPayments = false
             // Load client-specific notes
             if (client && client.id) {
                 await this.loadClientNotes(client.id)
+            }
+        },
+        async loadClientById(clientId) {
+            try {
+                const response = await api.clients.get(clientId)
+                if (response.data) {
+                    await this.selectClient(response.data)
+                }
+            } catch (error) {
+                console.error('Error loading client:', error)
             }
         },
         backToList() {

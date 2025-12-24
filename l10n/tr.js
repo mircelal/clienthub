@@ -400,7 +400,9 @@
         "Manage your customers and their services here.": "Müşterilerinizi ve hizmetlerini buradan yönetin.",
         "Add Package": "Paket Ekle",
         "Packages": "Paketler",
-        "Search hostings...": "Hostinglerde ara..."
+        "Search hostings...": "Hostinglerde ara...",
+        "Add Hosting": "Hosting Ekle"
+
 
     };
     var pluralForm = "nplurals=2; plural=(n > 1);";

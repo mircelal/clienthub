@@ -692,7 +692,7 @@ export default {
 .search-wrapper { position: relative; width: 250px; }
 .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--color-text-maxcontrast); opacity: 0.7; }
 .search-input { width: 100%; padding: 8px 12px 8px 36px; border-radius: var(--border-radius-pill); border: 1px solid var(--color-border); background: var(--color-main-background); color: var(--color-main-text); }
-.search-input:focus { border-color: var(--color-primary); outline: none; }
+.search-input:focus { border-color: var(--color-primary-element); outline: none; }
 
 /* --- Lists --- */
 .nc-list-container {
@@ -789,7 +789,7 @@ export default {
 .info-row:last-child { border-bottom: none; }
 .row-label { width: 120px; color: var(--color-text-maxcontrast); }
 .row-value { color: var(--color-main-text); font-weight: 500; }
-.row-value.link { color: var(--color-primary); cursor: pointer; text-decoration: none; }
+.row-value.link { color: var(--color-primary-element); cursor: pointer; text-decoration: none; }
 .row-value.link:hover { text-decoration: underline; }
 .font-mono { font-family: monospace; }
 .notes-box { padding: 16px; background: var(--color-background-dark); font-size: 13px; color: var(--color-text-maxcontrast); white-space: pre-wrap; word-break: break-all; }
@@ -824,7 +824,7 @@ export default {
 }
 .nc-state-icon { opacity: 0.5; margin-bottom: 16px; }
 .spin-animation { animation: spin 1s linear infinite; }
-.count-badge { background: var(--color-primary); color: #fff; padding: 1px 8px; border-radius: 10px; font-size: 11px; font-weight: bold; }
+.count-badge { background: var(--color-primary-element); color: #fff; padding: 1px 8px; border-radius: 10px; font-size: 11px; font-weight: bold; }
 .mt-4 { margin-top: 16px; }
 
 /* Responsive */

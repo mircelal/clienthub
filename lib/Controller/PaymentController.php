@@ -13,7 +13,9 @@ use OCA\DomainControl\Db\InvoiceItemMapper;
 use OCA\DomainControl\Db\DomainMapper;
 use OCA\DomainControl\Db\HostingMapper;
 use OCA\DomainControl\Db\ServiceMapper;
+use OCA\DomainControl\Db\TransactionMapper;
 use OCA\DomainControl\Db\Payment;
+use OCA\DomainControl\Db\Transaction;
 
 class PaymentController extends Controller {
 	private $userId;
@@ -23,6 +25,7 @@ class PaymentController extends Controller {
 	private DomainMapper $domainMapper;
 	private HostingMapper $hostingMapper;
 	private ServiceMapper $serviceMapper;
+	private TransactionMapper $transactionMapper;
 
 	public function __construct(IRequest $request,
 	                            PaymentMapper $mapper,
@@ -31,6 +34,7 @@ class PaymentController extends Controller {
 	                            DomainMapper $domainMapper,
 	                            HostingMapper $hostingMapper,
 	                            ServiceMapper $serviceMapper,
+	                            TransactionMapper $transactionMapper,
 	                            $userId) {
 		parent::__construct(Application::APP_ID, $request);
 		$this->mapper = $mapper;
@@ -39,6 +43,7 @@ class PaymentController extends Controller {
 		$this->domainMapper = $domainMapper;
 		$this->hostingMapper = $hostingMapper;
 		$this->serviceMapper = $serviceMapper;
+		$this->transactionMapper = $transactionMapper;
 		$this->userId = $userId;
 	}
 
@@ -141,8 +146,49 @@ class PaymentController extends Controller {
 			
 			$payment = $this->mapper->insert($payment);
 			
-			// Update invoice if linked
+			// Get invoice and project info if linked
 			$invoiceId = $payment->getInvoiceId();
+			$projectId = null;
+			if ($invoiceId) {
+				try {
+					$invoice = $this->invoiceMapper->find($invoiceId, $this->userId);
+					// Check invoice items for project link
+					$items = $this->invoiceItemMapper->findByInvoice($invoiceId);
+					foreach ($items as $item) {
+						if ($item->getItemType() === 'project') {
+							$projectId = $item->getItemId();
+							break;
+						}
+					}
+				} catch (\Exception $e) {
+					// Invoice not found or error, continue without projectId
+				}
+			}
+			
+			// Create income transaction for the payment
+			$transaction = new Transaction();
+			$transaction->setType('income');
+			$transaction->setClientId($payment->getClientId());
+			$transaction->setProjectId($projectId);
+			$transaction->setAmount($payment->getAmount());
+			$transaction->setCurrency($payment->getCurrency());
+			$transaction->setTransactionDate($payment->getPaymentDate());
+			$transaction->setDescription('Fatura Ödemesi - ' . ($payment->getReference() ?: 'Ödeme #' . $payment->getId()));
+			$transaction->setPaymentMethod($payment->getPaymentMethod());
+			$transaction->setReference($payment->getReference());
+			// Store invoiceId in notes for frontend to identify invoice-related transactions
+			$notes = 'Fatura ödemesi: ' . ($payment->getNotes() ?: '');
+			if ($invoiceId) {
+				$notes .= ' [INVOICE_ID:' . $invoiceId . ']';
+			}
+			$transaction->setNotes($notes);
+			$transaction->setUserId($this->userId);
+			$now = date('Y-m-d H:i:s');
+			$transaction->setCreatedAt($now);
+			$transaction->setUpdatedAt($now);
+			$this->transactionMapper->insert($transaction);
+			
+			// Update invoice if linked
 			if ($invoiceId) {
 				$this->updateInvoicePayment($invoiceId);
 				

@@ -89,6 +89,32 @@
                     </span>
                 </div>
             </div>
+
+            <!-- Net Profit -->
+            <div class="nc-stat-widget">
+                <div class="widget-icon" :class="getNetProfitClass()">
+                    <CashMultiple :size="24" />
+                </div>
+                <div class="widget-content">
+                    <span class="widget-label">{{ translate('domaincontrol', 'Net Profit') }}</span>
+                    <span class="widget-value font-mono" :class="getNetProfitTextClass()">
+                        {{ formatCurrency(getNetProfit(), project.currency) }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Remaining Receivable -->
+            <div class="nc-stat-widget">
+                <div class="widget-icon warning-bg">
+                    <TimerSand :size="24" />
+                </div>
+                <div class="widget-content">
+                    <span class="widget-label">{{ translate('domaincontrol', 'Remaining Receivable') }}</span>
+                    <span class="widget-value font-mono text-warning">
+                        {{ formatCurrency(totalPending, project.currency) }}
+                    </span>
+                </div>
+            </div>
         </div>
 
         <!-- ========================================== -->
@@ -198,6 +224,14 @@
                                     <div class="detail-item" v-if="expense.notes" style="grid-column: 1 / -1;">
                                         <span class="detail-label">{{ translate('domaincontrol', 'Notes') }}</span>
                                         <span class="detail-value">{{ expense.notes }}</span>
+                                    </div>
+                                    <div class="detail-item" v-if="expense.projectId" style="grid-column: 1 / -1;">
+                                        <span class="detail-label">{{ translate('domaincontrol', 'Project') }}</span>
+                                        <span class="detail-value">
+                                            <a href="#" @click.stop="$emit('navigate-project', expense.projectId)" class="link-primary">
+                                                {{ project.name }}
+                                            </a>
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -464,7 +498,7 @@ export default {
             default: () => [],
         },
     },
-    emits: ['create-invoice', 'navigate-invoice', 'add-expense'],
+    emits: ['create-invoice', 'navigate-invoice', 'add-expense', 'navigate-project'],
     data() {
         return {
             expandedInvoices: {},
@@ -576,6 +610,12 @@ export default {
         showAddExpenseModal() {
             this.$emit('add-expense')
         },
+        toggleExpenseDetails(expenseId) {
+            this.expandedExpenses = {
+                ...this.expandedExpenses,
+                [expenseId]: !this.expandedExpenses[expenseId]
+            }
+        },
         async deleteExpense(expenseId) {
             if (!confirm(this.translate('domaincontrol', 'Are you sure you want to delete this expense?'))) {
                 return
@@ -591,6 +631,23 @@ export default {
                 console.error('Error deleting expense:', error)
                 alert(this.translate('domaincontrol', 'Error deleting expense'))
             }
+        },
+        getNetProfit() {
+            const budget = parseFloat(this.project.budget || 0)
+            const expenses = parseFloat(this.totalExpenses || 0)
+            return budget - expenses
+        },
+        getNetProfitClass() {
+            const profit = this.getNetProfit()
+            if (profit > 0) return 'success-bg'
+            if (profit < 0) return 'error-bg'
+            return 'neutral-bg'
+        },
+        getNetProfitTextClass() {
+            const profit = this.getNetProfit()
+            if (profit > 0) return 'text-success'
+            if (profit < 0) return 'text-error'
+            return ''
         },
     },
 }
@@ -654,6 +711,9 @@ export default {
 .warning-bg { background-color: var(--color-element-warning); color: var(--color-element-warning-text); }
 .info-bg { background-color: var(--color-info); color: var(--color-info-text); }
 .error-bg { background-color: var(--color-element-error); color: var(--color-element-error-text); }
+.neutral-bg { background-color: var(--color-background-dark); color: var(--color-text-maxcontrast); }
+.link-primary { color: var(--color-primary); text-decoration: none; cursor: pointer; }
+.link-primary:hover { text-decoration: underline; }
 
 .widget-content { display: flex; flex-direction: column; min-width: 0; }
 .widget-label { font-size: 13px; color: var(--color-text-maxcontrast); margin-bottom: 4px; }

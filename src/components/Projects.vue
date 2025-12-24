@@ -93,9 +93,10 @@
 					:project-id="selectedProject.id"
 				/>
 
-				<!-- Financials Tab -->
-				<ProjectFinancials
-					v-if="activeTab === 'financials' && selectedProject"
+			<!-- Financials Tab -->
+			<ProjectFinancials
+				v-if="activeTab === 'financials' && selectedProject"
+				@navigate-project="(projectId) => {}"
 					:project="selectedProject"
 					:invoices="projectInvoices"
 					:total-invoiced="totalInvoiced"
@@ -199,6 +200,7 @@
 			:open="taskModalOpen"
 			:task="editingTask"
 			:project-id="selectedProject ? selectedProject.id : null"
+			:client-id="selectedProject ? (selectedProject.clientId || selectedProject.client_id) : null"
 			:clients="clients"
 			@close="closeTaskModal"
 			@saved="handleTaskSaved"
@@ -208,6 +210,7 @@
 		<ExpenseModal
 			:open="expenseModalOpen"
 			:project-id="selectedProject ? selectedProject.id : null"
+			:client-id="selectedProject ? (selectedProject.clientId || selectedProject.client_id) : null"
 			:currency="selectedProject ? (selectedProject.currency || 'USD') : 'USD'"
 			@close="closeExpenseModal"
 			@saved="handleExpenseSaved"
