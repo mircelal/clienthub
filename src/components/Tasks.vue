@@ -792,7 +792,7 @@ export default {
 .nc-list-item:hover { background-color: var(--color-background-hover); }
 
 /* Priority Colors (Left Border) */
-.priority-high { border-left-color: var(--color-error-element); }
+.priority-high { border-left-color: var(--color-text-error); }
 .priority-medium { border-left-color: var(--color-warning-element); }
 .priority-low { border-left-color: var(--color-success-element); }
 
@@ -815,21 +815,21 @@ export default {
 .is-cancelled { opacity: 0.5; }
 
 .today-badge {
-    font-size: 10px; background: var(--color-error-element); color: #fff; padding: 1px 6px; border-radius: 4px; font-weight: bold;
+    font-size: 10px; background: var(--color-text-error); color: #fff; padding: 1px 6px; border-radius: 4px; font-weight: bold;
 }
 
 .task-meta { display: flex; gap: 12px; font-size: 12px; color: var(--color-text-maxcontrast); align-items: center; }
 .meta-tag { display: flex; align-items: center; gap: 4px; }
 .meta-warning { color: var(--color-warning-element); font-weight: bold; }
 .inline-icon { opacity: 0.7; }
-.text-error { color: var(--color-error-element); font-weight: bold; }
+.text-error { color: var(--color-text-error); font-weight: bold; }
 
 .item-status { margin-right: 16px; }
 .nc-badge { font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 600; text-transform: uppercase; }
 .badge-primary { background: rgba(0, 130, 201, 0.15); color: var(--color-primary-element); }
 .badge-success { background: rgba(70, 186, 97, 0.15); color: var(--color-success-element); }
 .badge-neutral { background: var(--color-background-dark); color: var(--color-text-maxcontrast); }
-.badge-priority-high { color: var(--color-error-element); background: rgba(233, 50, 45, 0.1); }
+.badge-priority-high { color: var(--color-text-error); background: rgba(233, 50, 45, 0.1); }
 .badge-priority-medium { color: var(--color-warning-element); background: rgba(233, 144, 2, 0.1); }
 
 /* Completed Section */
@@ -857,7 +857,7 @@ export default {
     padding: 8px 16px; display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; color: var(--color-main-text);
 }
 .popover-item:hover { background: var(--color-background-hover); }
-.popover-item.danger { color: var(--color-error-element); }
+.popover-item.danger { color: var(--color-text-error); }
 .popover-item.danger:hover { background: rgba(233, 50, 45, 0.05); }
 .popover-separator { height: 1px; background: var(--color-border); margin: 4px 0; }
 
@@ -916,7 +916,7 @@ export default {
 .delete-icon-btn {
     background: none; border: none; color: var(--color-text-maxcontrast); cursor: pointer; opacity: 0.5; margin-top: 2px;
 }
-.delete-icon-btn:hover { color: var(--color-error-element); opacity: 1; }
+.delete-icon-btn:hover { color: var(--color-text-error); opacity: 1; }
 
 /* Responsive */
 @media (max-width: 900px) {

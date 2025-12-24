@@ -76,17 +76,6 @@
 							/>
 						</div>
 						<div class="form-group">
-							<label for="invoice-currency">{{ translate('domaincontrol', 'Currency') }}</label>
-							<select id="invoice-currency" v-model="formData.currency" class="form-control">
-								<option value="USD">$ USD</option>
-								<option value="EUR">€ EUR</option>
-								<option value="TRY">₺ TRY</option>
-								<option value="AZN">₼ AZN</option>
-								<option value="GBP">£ GBP</option>
-								<option value="RUB">₽ RUB</option>
-							</select>
-						</div>
-						<div class="form-group">
 							<label for="invoice-status">{{ translate('domaincontrol', 'Status') }}</label>
 							<select id="invoice-status" v-model="formData.status" class="form-control">
 								<option value="draft">{{ translate('domaincontrol', 'Draft') }}</option>
@@ -151,6 +140,7 @@ export default {
 		return {
 			isOpen: false,
 			saving: false,
+			defaultCurrency: 'USD',
 			formData: {
 				id: null,
 				clientId: '',
@@ -163,6 +153,13 @@ export default {
 				notes: '',
 			},
 		}
+	},
+	mounted() {
+		this.loadSettings()
+		window.addEventListener('settings-updated', this.handleSettingsUpdate)
+	},
+	beforeUnmount() {
+		window.removeEventListener('settings-updated', this.handleSettingsUpdate)
 	},
 	watch: {
 		open(newVal) {
@@ -183,6 +180,20 @@ export default {
 		},
 	},
 	methods: {
+		async loadSettings() {
+			try {
+				const response = await api.settings.get()
+				const settings = response.data || {}
+				this.defaultCurrency = settings.default_currency || 'USD'
+				this.formData.currency = this.defaultCurrency
+			} catch (error) {
+				console.error('Error loading settings:', error)
+				this.defaultCurrency = 'USD'
+			}
+		},
+		handleSettingsUpdate(event) {
+			this.loadSettings()
+		},
 		resetForm() {
 			this.formData = {
 				id: null,
@@ -191,7 +202,7 @@ export default {
 				issueDate: '',
 				dueDate: '',
 				totalAmount: '',
-				currency: 'USD',
+				currency: this.defaultCurrency,
 				status: 'draft',
 				notes: '',
 			}
@@ -205,7 +216,7 @@ export default {
 				issueDate: this.invoice.issueDate || '',
 				dueDate: this.invoice.dueDate || '',
 				totalAmount: this.invoice.totalAmount || '',
-				currency: this.invoice.currency || 'USD',
+				currency: this.invoice.currency || this.defaultCurrency,
 				status: this.invoice.status || 'draft',
 				notes: this.invoice.notes || '',
 			}
@@ -220,7 +231,7 @@ export default {
 					issueDate: this.formData.issueDate || '',
 					dueDate: this.formData.dueDate || '',
 					totalAmount: this.formData.totalAmount || '0',
-					currency: this.formData.currency || 'USD',
+					currency: this.formData.currency || this.defaultCurrency,
 					status: this.formData.status || 'draft',
 					notes: this.formData.notes || '',
 				}

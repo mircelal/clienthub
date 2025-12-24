@@ -330,6 +330,8 @@ export default {
             currentUserName: OC.getCurrentUser().uid || 'User',
             currentDate: '',
             activeModules: [],
+            defaultCurrency: 'USD',
+            currencies: [],
             stats: {
                 clients: 0,
                 domains: 0,
@@ -366,6 +368,7 @@ export default {
     mounted() {
         this.updateDate()
         this.loadActiveModules()
+        this.loadSettings()
         this.loadDashboardData()
         window.addEventListener('settings-updated', this.handleSettingsUpdate)
     },
@@ -437,6 +440,33 @@ export default {
             if (event.detail && event.detail.activeModules) {
                 this.activeModules = event.detail.activeModules
             }
+            // Reload settings when they are updated
+            this.loadSettings()
+        },
+        async loadSettings() {
+            try {
+                const response = await api.settings.get()
+                const settings = response.data || {}
+                
+                this.defaultCurrency = settings.default_currency || 'USD'
+                
+                // Load currencies to get symbol
+                if (settings.currencies) {
+                    try {
+                        this.currencies = JSON.parse(settings.currencies)
+                    } catch (e) {
+                        this.currencies = []
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading settings:', error)
+                this.defaultCurrency = 'USD'
+            }
+        },
+        getCurrencySymbol(currencyCode) {
+            if (!currencyCode) return ''
+            const currency = this.currencies.find(c => c.code === currencyCode)
+            return currency ? currency.symbol : ''
         },
         isModuleActive(moduleId) {
             return this.activeModules.length === 0 || this.activeModules.includes(moduleId)
@@ -504,8 +534,11 @@ export default {
 
             this.stats.monthlyExpense = (this.allData.transactions || []).reduce((sum, t) => {
                 if (t.type !== 'expense') return sum
-                if (!t.date) return sum
-                const date = new Date(t.date)
+                // Check multiple possible date field names
+                const transactionDate = t.transactionDate || t.transaction_date || t.date
+                if (!transactionDate) return sum
+                const date = new Date(transactionDate)
+                if (isNaN(date.getTime())) return sum
                 if (date.getMonth() === currentMonth && date.getFullYear() === currentYear) {
                     return sum + (parseFloat(t.amount) || 0)
                 }
@@ -593,8 +626,23 @@ export default {
                 }))
         },
         formatCurrency(amount) {
-            if (typeof amount !== 'number') return '0 ₼'
-            return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'AZN' }).format(amount)
+            if (typeof amount !== 'number' && typeof amount !== 'string') return '0'
+            const val = parseFloat(amount)
+            if (isNaN(val)) return '0'
+            
+            const symbol = this.getCurrencySymbol(this.defaultCurrency)
+            if (symbol) {
+                // Use symbol instead of currency name
+                return new Intl.NumberFormat('tr-TR', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                }).format(val) + ' ' + symbol
+            }
+            // Fallback to standard currency format
+            return new Intl.NumberFormat('tr-TR', { 
+                style: 'currency', 
+                currency: this.defaultCurrency 
+            }).format(val)
         },
         formatDate(dateString) {
             if (!dateString) return '-'

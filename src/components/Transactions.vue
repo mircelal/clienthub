@@ -695,12 +695,12 @@ export default {
 
 .type-income {
     background-color: rgba(76, 175, 80, 0.1); /* Light green */
-    color: var(--color-success, #4caf50);
+    color: var(--color-success-element, #4caf50);
 }
 
 .type-expense {
     background-color: rgba(244, 67, 54, 0.1); /* Light red */
-    color: var(--color-error, #f44336);
+    color: var(--color-text-error, #f44336);
 }
 
 .nc-list-item__content {
@@ -746,8 +746,8 @@ export default {
     white-space: nowrap;
 }
 
-.amount-income { color: var(--color-success, #4caf50); }
-.amount-expense { color: var(--color-error, #f44336); }
+.amount-income { color: var(--color-success-element, #4caf50); }
+.amount-expense { color: var(--color-text-error, #f44336); }
 
 /* Action Menu */
 .icon-action {
@@ -806,7 +806,7 @@ export default {
 }
 
 .nc-popover-item.danger {
-    color: var(--color-error, #f44336);
+    color: var(--color-text-error, #f44336);
 }
 
 /* DETAILS VIEW */
@@ -875,8 +875,8 @@ export default {
     color: #fff;
 }
 
-.hero-icon.type-income { background-color: var(--color-success, #4caf50); }
-.hero-icon.type-expense { background-color: var(--color-error, #f44336); }
+.hero-icon.type-income { background-color: var(--color-success-element, #4caf50); }
+.hero-icon.type-expense { background-color: var(--color-text-error, #f44336); }
 
 .amount-value {
     font-size: 32px;

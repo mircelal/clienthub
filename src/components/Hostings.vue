@@ -708,7 +708,7 @@ export default {
 .nc-list-item:hover { background-color: var(--color-background-hover); }
 
 /* Status Indicators Border */
-.status-critical { border-left: 4px solid var(--color-error-element); }
+.status-critical { border-left: 4px solid var(--color-text-error); }
 .status-warning { border-left: 4px solid var(--color-warning-element); }
 .status-ok { border-left: 4px solid transparent; } /* Default alignment */
 
@@ -735,7 +735,7 @@ export default {
 .nc-badge { font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 600; text-transform: uppercase; }
 .badge-success { background: rgba(70, 186, 97, 0.15); color: var(--color-success-element); }
 .badge-warning { background: rgba(233, 144, 2, 0.15); color: var(--color-warning-element); }
-.badge-error { background: rgba(233, 50, 45, 0.15); color: var(--color-error-element); }
+.badge-error { background: rgba(233, 50, 45, 0.15); color: var(--color-text-error); }
 .badge-neutral { background: var(--color-background-dark); color: var(--color-text-maxcontrast); }
 
 .item-actions { display: flex; gap: 4px; opacity: 0.6; transition: opacity 0.2s; }
@@ -744,7 +744,7 @@ export default {
     background: none; border: none; padding: 6px; color: var(--color-text-maxcontrast); cursor: pointer; border-radius: 4px;
 }
 .action-btn:hover { background: var(--color-background-dark); color: var(--color-main-text); }
-.delete-hover:hover { color: var(--color-error-element); background: rgba(233, 50, 45, 0.1); }
+.delete-hover:hover { color: var(--color-text-error); background: rgba(233, 50, 45, 0.1); }
 
 /* --- Detail View --- */
 .nc-detail-header {
@@ -771,7 +771,7 @@ export default {
     width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
     color: var(--color-text-maxcontrast); background: var(--color-background-hover);
 }
-.status-critical-bg .widget-icon { color: var(--color-error-element); background: rgba(233, 50, 45, 0.1); }
+.status-critical-bg .widget-icon { color: var(--color-text-error); background: rgba(233, 50, 45, 0.1); }
 .status-warning-bg .widget-icon { color: var(--color-warning-element); background: rgba(233, 144, 2, 0.1); }
 .widget-info { display: flex; flex-direction: column; }
 .widget-info .label { font-size: 12px; color: var(--color-text-maxcontrast); }

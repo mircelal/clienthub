@@ -13,7 +13,8 @@
 					<component :is="item.icon" :size="20" />
 				</template>
 			</NcAppNavigationItem>
-			<NcAppNavigationSettings>
+			<!-- Settings at the bottom, but not in NcAppNavigationSettings to avoid Nextcloud's default behavior -->
+			<div class="settings-navigation-item">
 				<NcAppNavigationItem
 					:name="getNavigationLabel('Settings')"
 					href="#"
@@ -24,7 +25,7 @@
 						<Cog :size="20" />
 					</template>
 				</NcAppNavigationItem>
-			</NcAppNavigationSettings>
+			</div>
 		</NcAppNavigation>
 		<NcAppContent>
 		<Dashboard v-if="currentTab === 'dashboard'" />
@@ -45,7 +46,7 @@
 </template>
 
 <script>
-import { NcContent, NcAppNavigation, NcAppContent, NcAppNavigationItem, NcAppNavigationSettings } from '@nextcloud/vue'
+import { NcContent, NcAppNavigation, NcAppContent, NcAppNavigationItem } from '@nextcloud/vue'
 import Dashboard from './components/Dashboard.vue'
 import Clients from './components/Clients.vue'
 import Domains from './components/Domains.vue'
@@ -81,7 +82,6 @@ export default {
 		NcAppNavigation,
 		NcAppContent,
 		NcAppNavigationItem,
-		NcAppNavigationSettings,
 		Dashboard,
 		Clients,
 		Domains,
@@ -251,6 +251,10 @@ export default {
 					// Default: all modules active
 					this.activeModules = this.allNavigationItems.map(m => m.id)
 				}
+				// Always include settings in active modules
+				if (!this.activeModules.includes('settings')) {
+					this.activeModules.push('settings')
+				}
 			} catch (error) {
 				console.error('Error loading active modules:', error)
 				// Default: all modules active
@@ -260,8 +264,13 @@ export default {
 		handleSettingsUpdate(event) {
 			if (event.detail && event.detail.activeModules) {
 				this.activeModules = event.detail.activeModules
+				// Always include settings in active modules
+				if (!this.activeModules.includes('settings')) {
+					this.activeModules.push('settings')
+				}
 				// If current tab is not active anymore, switch to dashboard
-				if (!this.activeModules.includes(this.currentTab)) {
+				// But don't switch if we're on settings page
+				if (this.currentTab !== 'settings' && !this.activeModules.includes(this.currentTab)) {
 					this.currentTab = 'dashboard'
 				}
 			}
@@ -326,7 +335,7 @@ export default {
 	flex-direction: column;
 }
 
-.app-navigation-entry__settings {
+.settings-navigation-item {
 	margin-top: auto;
 	flex-shrink: 0;
 }

@@ -199,16 +199,16 @@
                 <div class="financial-summary">
                     <div class="summary-row">
                         <span class="summary-label">{{ translate('domaincontrol', 'Total Amount') }}</span>
-                        <span class="summary-value font-mono">{{ formatCurrency(selectedInvoice.total || selectedInvoice.totalAmount, selectedInvoice.currency) }}</span>
+                        <span class="summary-value font-mono">{{ formatCurrency(selectedInvoice.total || selectedInvoice.totalAmount) }}</span>
                     </div>
                     <div class="summary-row">
                         <span class="summary-label">{{ translate('domaincontrol', 'Paid Amount') }}</span>
-                        <span class="summary-value font-mono text-success">{{ formatCurrency(selectedInvoice.paidAmount || 0, selectedInvoice.currency) }}</span>
+                        <span class="summary-value font-mono text-success">{{ formatCurrency(selectedInvoice.paidAmount || 0) }}</span>
                     </div>
                     <div class="summary-row summary-total">
                         <span class="summary-label">{{ translate('domaincontrol', 'Balance Due') }}</span>
                         <span class="summary-value font-mono" :class="getBalanceClass(selectedInvoice)">
-                            {{ formatCurrency(selectedInvoice.balance || (selectedInvoice.totalAmount - selectedInvoice.paidAmount), selectedInvoice.currency) }}
+                            {{ formatCurrency(selectedInvoice.balance || (selectedInvoice.totalAmount - selectedInvoice.paidAmount)) }}
                         </span>
                     </div>
                 </div>
@@ -250,8 +250,8 @@
                                     </div>
                                 </td>
                                 <td class="text-right">{{ item.quantity || 1 }}</td>
-                                <td class="text-right font-mono">{{ formatCurrency(item.unitPrice || 0, selectedInvoice.currency) }}</td>
-                                <td class="text-right font-mono font-bold">{{ formatCurrency(item.totalPrice || 0, selectedInvoice.currency) }}</td>
+                                <td class="text-right font-mono">{{ formatCurrency(item.unitPrice || 0) }}</td>
+                                <td class="text-right font-mono font-bold">{{ formatCurrency(item.totalPrice || 0) }}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -289,7 +289,7 @@
                             <div class="payment-method">{{ payment.paymentMethod || '-' }}</div>
                             <div class="payment-note">{{ payment.notes || '-' }}</div>
                             <div class="payment-amount font-mono text-success">
-                                +{{ formatCurrency(payment.amount || 0, selectedInvoice.currency) }}
+                                +{{ formatCurrency(payment.amount || 0) }}
                             </div>
                         </div>
                     </div>
@@ -388,14 +388,14 @@
                             <!-- Amount -->
                             <td class="text-right">
                                 <div class="cell-primary font-mono">
-                                    {{ formatCurrency(invoice.total, invoice.currency) }}
+                                    {{ formatCurrency(invoice.total) }}
                                 </div>
                             </td>
 
                             <!-- Balance Due -->
                             <td class="text-right">
                                 <div class="cell-primary font-mono" :class="getBalanceClass(invoice)">
-                                    {{ formatCurrency(invoice.balance, invoice.currency) }}
+                                    {{ formatCurrency(invoice.balance) }}
                                 </div>
                             </td>
 
@@ -546,6 +546,8 @@ export default {
             loadingInvoiceDetails: {}, // { invoiceId: boolean }
             itemModalOpen: false, // For add invoice item modal
             paymentModalOpen: false, // For add payment modal
+            defaultCurrency: 'USD',
+            currencies: [],
             // Mock Stats
             stats: {
                 totalRevenue: 0,
@@ -585,8 +587,13 @@ export default {
         }
     },
     mounted() {
+        this.loadSettings()
         this.loadData()
         document.addEventListener('click', this.closeMenus)
+        window.addEventListener('settings-updated', this.handleSettingsUpdate)
+    },
+    beforeUnmount() {
+        window.removeEventListener('settings-updated', this.handleSettingsUpdate)
     },
     beforeUnmount() {
         document.removeEventListener('click', this.closeMenus)
@@ -633,9 +640,55 @@ export default {
                 .filter(i => i.status !== 'paid' && i.status !== 'draft' && i.status !== 'cancelled' && new Date(i.dueDate) < now)
                 .reduce((acc, curr) => acc + parseFloat(curr.balance), 0)
         },
-        formatCurrency(amount, currency = 'USD') {
+        async loadSettings() {
+            try {
+                const response = await api.settings.get()
+                const settings = response.data || {}
+                
+                this.defaultCurrency = settings.default_currency || 'USD'
+                
+                // Load currencies to get symbol
+                if (settings.currencies) {
+                    try {
+                        this.currencies = JSON.parse(settings.currencies)
+                    } catch (e) {
+                        this.currencies = []
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading settings:', error)
+                this.defaultCurrency = 'USD'
+            }
+        },
+        handleSettingsUpdate(event) {
+            // Reload settings when they are updated
+            this.loadSettings()
+        },
+        getCurrencySymbol(currencyCode) {
+            if (!currencyCode) currencyCode = this.defaultCurrency
+            const currency = this.currencies.find(c => c.code === currencyCode)
+            return currency ? currency.symbol : ''
+        },
+        formatCurrency(amount, currency = null) {
             if (amount === undefined || amount === null) return '-'
-            return new Intl.NumberFormat('tr-TR', { style: 'currency', currency }).format(amount)
+            // Use default currency from settings if not provided
+            const currencyCode = currency || this.defaultCurrency
+            const symbol = this.getCurrencySymbol(currencyCode)
+            
+            if (symbol) {
+                // Use symbol instead of currency name
+                const val = parseFloat(amount)
+                if (isNaN(val)) return '-'
+                return new Intl.NumberFormat('tr-TR', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                }).format(val) + ' ' + symbol
+            }
+            // Fallback to standard currency format
+            return new Intl.NumberFormat('tr-TR', { 
+                style: 'currency', 
+                currency: currencyCode 
+            }).format(amount)
         },
         formatDate(date) {
             if (!date) return '-'

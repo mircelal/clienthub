@@ -28,30 +28,17 @@
 							</option>
 						</select>
 					</div>
-					<div class="form-row">
-						<div class="form-group">
-							<label for="payment-amount">{{ translate('domaincontrol', 'Amount') }} *</label>
-							<input
-								type="number"
-								id="payment-amount"
-								v-model="formData.amount"
-								step="0.01"
-								required
-								class="form-control"
-								placeholder="0.00"
-							/>
-						</div>
-						<div class="form-group">
-							<label for="payment-currency">{{ translate('domaincontrol', 'Currency') }}</label>
-							<select id="payment-currency" v-model="formData.currency" class="form-control">
-								<option value="USD">$ USD</option>
-								<option value="EUR">€ EUR</option>
-								<option value="TRY">₺ TRY</option>
-								<option value="AZN">₼ AZN</option>
-								<option value="GBP">£ GBP</option>
-								<option value="RUB">₽ RUB</option>
-							</select>
-						</div>
+					<div class="form-group">
+						<label for="payment-amount">{{ translate('domaincontrol', 'Amount') }} *</label>
+						<input
+							type="number"
+							id="payment-amount"
+							v-model="formData.amount"
+							step="0.01"
+							required
+							class="form-control"
+							placeholder="0.00"
+						/>
 					</div>
 					<div class="form-row">
 						<div class="form-group">
@@ -134,6 +121,7 @@ export default {
 	data() {
 		return {
 			saving: false,
+			defaultCurrency: 'USD',
 			formData: {
 				invoiceId: null,
 				clientId: '',
@@ -146,6 +134,13 @@ export default {
 			},
 		}
 	},
+	mounted() {
+		this.loadSettings()
+		window.addEventListener('settings-updated', this.handleSettingsUpdate)
+	},
+	beforeUnmount() {
+		window.removeEventListener('settings-updated', this.handleSettingsUpdate)
+	},
 	watch: {
 		open(newVal) {
 			if (newVal) {
@@ -157,13 +152,27 @@ export default {
 		},
 	},
 	methods: {
+		async loadSettings() {
+			try {
+				const response = await api.settings.get()
+				const settings = response.data || {}
+				this.defaultCurrency = settings.default_currency || 'USD'
+				this.formData.currency = this.defaultCurrency
+			} catch (error) {
+				console.error('Error loading settings:', error)
+				this.defaultCurrency = 'USD'
+			}
+		},
+		handleSettingsUpdate(event) {
+			this.loadSettings()
+		},
 		resetForm() {
 			const today = new Date().toISOString().split('T')[0]
 			this.formData = {
 				invoiceId: null,
 				clientId: '',
 				amount: '',
-				currency: 'USD',
+				currency: this.defaultCurrency,
 				paymentDate: today,
 				paymentMethod: 'cash',
 				reference: '',
@@ -174,7 +183,7 @@ export default {
 			if (!this.invoice) return
 			this.formData.invoiceId = this.invoice.id
 			this.formData.clientId = this.invoice.clientId || ''
-			this.formData.currency = this.invoice.currency || 'USD'
+			this.formData.currency = this.invoice.currency || this.defaultCurrency
 		},
 		async savePayment() {
 			this.saving = true
@@ -184,7 +193,7 @@ export default {
 					invoiceId: this.formData.invoiceId || '',
 					clientId: this.formData.clientId || '',
 					amount: this.formData.amount || '0',
-					currency: this.formData.currency || 'USD',
+					currency: this.formData.currency || this.defaultCurrency,
 					paymentDate: this.formData.paymentDate || '',
 					paymentMethod: this.formData.paymentMethod || 'cash',
 					reference: this.formData.reference || '',

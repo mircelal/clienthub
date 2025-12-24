@@ -804,7 +804,7 @@ export default {
 
 /* Overdue Marking on List Item */
 .nc-list-item.item-overdue {
-    background-color: var(--color-error-element, rgba(233, 50, 45, 0.1));
+    background-color: var(--color-text-error, rgba(233, 50, 45, 0.1));
 }
 
 /* Icon Styles using Elements */
@@ -820,13 +820,13 @@ export default {
 }
 
 .type-debt {
-    background-color: var(--color-error-element, #ffebee);
-    color: var(--color-error, #d93025);
+    background-color: var(--color-text-error, #ffebee);
+    color: var(--color-text-error, #d93025);
 }
 
 .type-credit {
     background-color: var(--color-success-element, #e6f4ea);
-    color: var(--color-success, #188038);
+    color: var(--color-success-element, #188038);
 }
 
 .nc-list-item__content {
@@ -896,7 +896,7 @@ export default {
 }
 
 .icon-action:hover { background-color: var(--color-background-dark); }
-.icon-action.danger-hover:hover { color: var(--color-error); background-color: var(--color-error-element); }
+.icon-action.danger-hover:hover { color: var(--color-error); background-color: var(--color-text-error); }
 
 .nc-popover-menu {
     position: absolute;
@@ -927,7 +927,7 @@ export default {
 
 .nc-popover-item:hover { background-color: var(--color-background-hover); }
 .nc-popover-item.danger { color: var(--color-error); }
-.nc-popover-item.danger:hover { background-color: var(--color-error-element); }
+.nc-popover-item.danger:hover { background-color: var(--color-text-error); }
 
 
 /* --- DETAILS VIEW --- */
@@ -989,14 +989,14 @@ export default {
     justify-content: center;
 }
 /* Reusing type classes defined above for bg/color */
-.type-debt { background-color: var(--color-error-element); color: var(--color-error); }
-.type-credit { background-color: var(--color-success-element); color: var(--color-success); }
+.type-debt { background-color: var(--color-text-error); color: var(--color-error); }
+.type-credit { background-color: var(--color-success-element); color: var(--color-success-element); }
 
 .hero-info { flex: 1; }
 .hero-label { font-size: 14px; color: var(--color-text-maxcontrast); margin-bottom: 4px; }
 .hero-amount { font-size: 32px; font-weight: 800; }
 .type-debt-text { color: var(--color-error); }
-.type-credit-text { color: var(--color-success); }
+.type-credit-text { color: var(--color-success-element); }
 
 /* Progress Bar */
 .progress-labels {
@@ -1017,7 +1017,7 @@ export default {
 
 .nc-progress-fill {
     height: 100%;
-    background-color: var(--color-success);
+    background-color: var(--color-success-element);
     transition: width 0.3s ease;
 }
 
@@ -1065,14 +1065,14 @@ export default {
     border-radius: 12px;
     font-size: 12px;
 }
-.badge-success { background-color: var(--color-success-element); color: var(--color-success); }
-.badge-error { background-color: var(--color-error-element); color: var(--color-error); }
+.badge-success { background-color: var(--color-success-element); color: var(--color-success-element); }
+.badge-error { background-color: var(--color-text-error); color: var(--color-error); }
 .badge-warning { background-color: var(--color-warning-element); color: var(--color-warning); }
 .badge-primary { background-color: var(--color-primary-element); color: var(--color-primary); }
 .badge-neutral { background-color: var(--color-border); color: var(--color-text-maxcontrast); }
 
-.badge-debt { background-color: var(--color-error-element); color: var(--color-error); }
-.badge-credit { background-color: var(--color-success-element); color: var(--color-success); }
+.badge-debt { background-color: var(--color-text-error); color: var(--color-error); }
+.badge-credit { background-color: var(--color-success-element); color: var(--color-success-element); }
 
 /* Payment History List */
 .payment-history-item {
@@ -1095,7 +1095,7 @@ export default {
 
 /* Text Utilities using CSS Vars */
 .text-error { color: var(--color-error); }
-.text-success { color: var(--color-success); }
+.text-success { color: var(--color-success-element); }
 .text-warning { color: var(--color-warning); }
 .text-bold { font-weight: bold; }
 
