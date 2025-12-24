@@ -261,7 +261,7 @@ export default {
 .timer-time {
 	font-size: 32px;
 	font-weight: 600;
-	color: var(--color-primary-element);
+	color: var(--color-primary-element-element-element);
 	margin-bottom: 4px;
 }
 
@@ -349,7 +349,7 @@ export default {
 .user-time-duration {
 	font-size: 16px;
 	font-weight: 600;
-	color: var(--color-primary-element);
+	color: var(--color-primary-element-element-element);
 }
 
 .time-entries-list {
@@ -387,14 +387,14 @@ export default {
 }
 
 .time-entry-running {
-	color: var(--color-success);
+	color: var(--color-element-success);
 	font-weight: 500;
 }
 
 .time-entry-duration {
 	font-size: 14px;
 	font-weight: 600;
-	color: var(--color-primary-element);
+	color: var(--color-primary-element-element-element);
 }
 </style>
 

@@ -207,6 +207,10 @@ export default {
 			type: Array,
 			default: () => [],
 		},
+		presetClientId: {
+			type: [Number, String],
+			default: null,
+		},
 	},
 	emits: ['close', 'saved'],
 	data() {
@@ -240,6 +244,10 @@ export default {
 				} else {
 					// Set default start date to today
 					this.formData.startDate = new Date().toISOString().split('T')[0]
+					// Set preset client ID if provided
+					if (this.presetClientId) {
+						this.formData.clientId = this.presetClientId
+					}
 				}
 			}
 		},
@@ -474,7 +482,7 @@ export default {
 
 .form-control:focus {
 	outline: none;
-	border-color: var(--color-primary-element);
+	border-color: var(--color-primary-element-element-element);
 }
 
 .form-control::placeholder {

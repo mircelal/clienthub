@@ -291,7 +291,7 @@ export default {
 .linked-item:hover,
 .project-share-item:hover {
 	background-color: var(--color-background-hover);
-	border-color: var(--color-primary-element);
+	border-color: var(--color-primary-element-element-element);
 }
 
 .linked-item-content,
@@ -336,8 +336,8 @@ export default {
 }
 
 .action-button--delete:hover {
-	background-color: var(--color-error-background);
-	color: var(--color-error);
+	background-color: var(--color-element-error-background);
+	color: var(--color-element-error);
 }
 
 .empty-content {

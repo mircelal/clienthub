@@ -10,6 +10,8 @@ use OCP\AppFramework\Db\Entity;
  * @method void setClientId(int $clientId)
  * @method string getInvoiceNumber()
  * @method void setInvoiceNumber(string $invoiceNumber)
+ * @method string getTitle()
+ * @method void setTitle(string $title)
  * @method string getIssueDate()
  * @method void setIssueDate(string $issueDate)
  * @method string getDueDate()
@@ -34,6 +36,7 @@ use OCP\AppFramework\Db\Entity;
 class Invoice extends Entity implements \JsonSerializable {
 	protected $clientId;
 	protected $invoiceNumber;
+	protected $title;
 	protected $issueDate;
 	protected $dueDate;
 	protected $totalAmount;
@@ -48,6 +51,7 @@ class Invoice extends Entity implements \JsonSerializable {
 	public function __construct() {
 		$this->addType('clientId', 'integer');
 		$this->addType('invoiceNumber', 'string');
+		$this->addType('title', 'string');
 		$this->addType('issueDate', 'string');
 		$this->addType('dueDate', 'string');
 		$this->addType('totalAmount', 'float');
@@ -61,14 +65,19 @@ class Invoice extends Entity implements \JsonSerializable {
 	}
 
 	public function jsonSerialize(): array {
+		$balance = max(0, ($this->totalAmount ?? 0) - ($this->paidAmount ?? 0));
+		
 		return [
 			'id' => $this->id,
 			'clientId' => $this->clientId,
 			'invoiceNumber' => $this->invoiceNumber,
+			'title' => $this->title,
 			'issueDate' => $this->issueDate,
 			'dueDate' => $this->dueDate,
 			'totalAmount' => $this->totalAmount,
+			'total' => $this->totalAmount, // Alias for frontend compatibility
 			'paidAmount' => $this->paidAmount,
+			'balance' => $balance, // Calculated field
 			'currency' => $this->currency,
 			'status' => $this->status,
 			'notes' => $this->notes,

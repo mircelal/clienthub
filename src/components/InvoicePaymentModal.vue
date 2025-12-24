@@ -1,10 +1,10 @@
 <template>
-	<div v-if="isOpen" class="modal-overlay" @click.self="closeModal">
+	<div v-if="open" class="modal-overlay" @click.self="$emit('close')">
 		<div class="modal-content">
 			<div class="modal-header">
 				<h3 class="modal-title">{{ translate('domaincontrol', 'Add Payment') }}</h3>
-				<button class="modal-close" @click="closeModal">
-					<MaterialIcon name="close" :size="24" />
+				<button class="modal-close" @click="$emit('close')">
+					<Close :size="24" />
 				</button>
 			</div>
 			<div class="modal-body">
@@ -109,12 +109,12 @@
 
 <script>
 import api from '../services/api'
-import MaterialIcon from './MaterialIcon.vue'
+import Close from 'vue-material-design-icons/Close.vue'
 
 export default {
 	name: 'InvoicePaymentModal',
 	components: {
-		MaterialIcon,
+		Close,
 	},
 	props: {
 		open: {
@@ -133,7 +133,6 @@ export default {
 	emits: ['close', 'paid'],
 	data() {
 		return {
-			isOpen: false,
 			saving: false,
 			formData: {
 				invoiceId: null,
@@ -149,7 +148,6 @@ export default {
 	},
 	watch: {
 		open(newVal) {
-			this.isOpen = newVal
 			if (newVal) {
 				this.resetForm()
 				if (this.invoice) {
@@ -195,17 +193,13 @@ export default {
 
 				await api.payments.create(data)
 				this.$emit('paid')
-				this.closeModal()
+				this.$emit('close')
 			} catch (error) {
 				console.error('Error saving payment:', error)
 				alert(this.translate('domaincontrol', 'Error saving payment'))
 			} finally {
 				this.saving = false
 			}
-		},
-		closeModal() {
-			this.isOpen = false
-			this.$emit('close')
 		},
 		translate(appId, text, vars) {
 			try {
@@ -354,7 +348,7 @@ export default {
 
 .form-control:focus {
 	outline: none;
-	border-color: var(--color-primary);
+	border-color: var(--color-primary-element-element);
 }
 
 .form-control::placeholder {
@@ -395,8 +389,8 @@ export default {
 }
 
 .button-vue--success {
-	background-color: var(--color-success);
-	color: var(--color-success-text);
+	background-color: var(--color-element-success);
+	color: var(--color-element-success-text);
 }
 
 .button-vue--success:hover:not(:disabled) {

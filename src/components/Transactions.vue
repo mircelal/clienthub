@@ -680,7 +680,7 @@ export default {
 
 .transaction-search-input:focus {
 	outline: none;
-	border-color: var(--color-primary-element);
+	border-color: var(--color-primary-element-element-element);
 }
 
 .transactions-list {
@@ -715,13 +715,13 @@ export default {
 }
 
 .transaction-type--income {
-	background-color: var(--color-success);
-	color: var(--color-success-text);
+	background-color: var(--color-element-success);
+	color: var(--color-element-success-text);
 }
 
 .transaction-type--expense {
-	background-color: var(--color-error);
-	color: var(--color-error-text);
+	background-color: var(--color-element-error);
+	color: var(--color-element-error-text);
 }
 
 .transaction-item .list-item__content {
@@ -770,11 +770,11 @@ export default {
 }
 
 .transaction-amount--income {
-	color: var(--color-success);
+	color: var(--color-element-success);
 }
 
 .transaction-amount--expense {
-	color: var(--color-error);
+	color: var(--color-element-error);
 }
 
 .transaction-item .list-item__actions {
@@ -838,11 +838,11 @@ export default {
 	width: 48px;
 	height: 48px;
 	border-radius: 50%;
-	background-color: var(--color-primary-element);
+	background-color: var(--color-primary-element-element-element);
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	color: var(--color-primary-element-text);
+	color: var(--color-primary-element-element-element-text);
 	flex-shrink: 0;
 }
 
@@ -899,7 +899,7 @@ export default {
 }
 
 .link-primary {
-	color: var(--color-primary-element);
+	color: var(--color-primary-element-element-element);
 	text-decoration: none;
 }
 
@@ -959,8 +959,8 @@ export default {
 }
 
 .popover-menu-item--danger:hover {
-	background-color: var(--color-error);
-	color: var(--color-error-text);
+	background-color: var(--color-element-error);
+	color: var(--color-element-error-text);
 }
 
 .popover-menu-separator {

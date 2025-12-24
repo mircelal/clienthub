@@ -506,7 +506,7 @@ export default {
 
 .form-control:focus {
 	outline: none;
-	border-color: var(--color-primary-element);
+	border-color: var(--color-primary-element-element-element);
 }
 
 .form-control::placeholder {

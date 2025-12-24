@@ -59,25 +59,25 @@ export default {
 }
 
 .stat-card--primary {
-	background: var(--color-primary-light);
+	background: var(--color-primary-element-element-light);
 }
 
 .stat-card--success {
-	background: var(--color-success);
+	background: var(--color-element-success);
 }
 
 .stat-card--warning {
-	background: var(--color-warning);
+	background: var(--color-element-warning);
 }
 
 .stat-card--danger {
-	background: var(--color-error);
+	background: var(--color-element-error);
 }
 
 .stat-card__icon {
 	font-size: 2.5em;
 	margin-right: 15px;
-	color: var(--color-primary);
+	color: var(--color-primary-element-element);
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -86,19 +86,19 @@ export default {
 }
 
 .stat-card--primary .stat-card__icon {
-	color: var(--color-primary-text);
+	color: var(--color-primary-element-element-text);
 }
 
 .stat-card--success .stat-card__icon {
-	color: var(--color-success-text);
+	color: var(--color-element-success-text);
 }
 
 .stat-card--warning .stat-card__icon {
-	color: var(--color-warning-text);
+	color: var(--color-element-warning-text);
 }
 
 .stat-card--danger .stat-card__icon {
-	color: var(--color-error-text);
+	color: var(--color-element-error-text);
 }
 
 .stat-card__info {

@@ -1052,7 +1052,7 @@
 			const hosting = (this.hostings || []).find(h => h.id == domain.hostingId);
 			const hostingEl = document.getElementById('domain-detail-hosting');
 			if (hosting) {
-				hostingEl.innerHTML = `<a href="#" onclick="DomainControl.switchTab('hostings'); setTimeout(() => DomainControl.showHostingDetail(${hosting.id}), 100); return false;" style="color: var(--color-primary-element); text-decoration: none;">${this.escapeHtml(hosting.provider)}${hosting.plan ? ' - ' + this.escapeHtml(hosting.plan) : ''}</a>`;
+				hostingEl.innerHTML = `<a href="#" onclick="DomainControl.switchTab('hostings'); setTimeout(() => DomainControl.showHostingDetail(${hosting.id}), 100); return false;" style="color: var(--color-primary-element-element-element); text-decoration: none;">${this.escapeHtml(hosting.provider)}${hosting.plan ? ' - ' + this.escapeHtml(hosting.plan) : ''}</a>`;
 			} else {
 				hostingEl.textContent = '-';
 			}
@@ -1142,7 +1142,7 @@
 			const emailEl = document.getElementById('client-detail-email');
 			if (emailEl) {
 				if (client.email) {
-					emailEl.innerHTML = `<a href="mailto:${this.escapeHtml(client.email)}" style="color: var(--color-primary-element); text-decoration: none;">${this.escapeHtml(client.email)}</a>`;
+					emailEl.innerHTML = `<a href="mailto:${this.escapeHtml(client.email)}" style="color: var(--color-primary-element-element-element); text-decoration: none;">${this.escapeHtml(client.email)}</a>`;
 				} else {
 					emailEl.textContent = '-';
 				}
@@ -1151,7 +1151,7 @@
 			const phoneEl = document.getElementById('client-detail-phone');
 			if (phoneEl) {
 				if (client.phone) {
-					phoneEl.innerHTML = `<a href="tel:${this.escapeHtml(client.phone)}" style="color: var(--color-primary-element); text-decoration: none;">${this.escapeHtml(client.phone)}</a>`;
+					phoneEl.innerHTML = `<a href="tel:${this.escapeHtml(client.phone)}" style="color: var(--color-primary-element-element-element); text-decoration: none;">${this.escapeHtml(client.phone)}</a>`;
 				} else {
 					phoneEl.textContent = '-';
 				}
@@ -1803,7 +1803,7 @@
 			const domainInfoEl = document.getElementById('website-domain-info');
 			if (domain) {
 				domainInfoEl.innerHTML = `<div class="mini-item">
-					<a href="#" onclick="DomainControl.switchTab('domains'); setTimeout(() => DomainControl.showDomainDetail(${domain.id}), 100); return false;" style="color: var(--color-primary-element); text-decoration: none; font-weight: 500;">${this.escapeHtml(domain.domainName)}</a>
+					<a href="#" onclick="DomainControl.switchTab('domains'); setTimeout(() => DomainControl.showDomainDetail(${domain.id}), 100); return false;" style="color: var(--color-primary-element-element-element); text-decoration: none; font-weight: 500;">${this.escapeHtml(domain.domainName)}</a>
 					<div style="font-size: 12px; color: var(--color-text-maxcontrast); margin-top: 4px;">
 						${domain.registrar ? 'Registrar: ' + this.escapeHtml(domain.registrar) : ''}
 						${domain.expirationDate ? ' | Bitiş: ' + domain.expirationDate : ''}
@@ -1817,7 +1817,7 @@
 			const hostingInfoEl = document.getElementById('website-hosting-info');
 			if (hosting) {
 				hostingInfoEl.innerHTML = `<div class="mini-item">
-					<a href="#" onclick="DomainControl.switchTab('hostings'); setTimeout(() => DomainControl.showHostingDetail(${hosting.id}), 100); return false;" style="color: var(--color-primary-element); text-decoration: none; font-weight: 500;">${this.escapeHtml(hosting.provider)}${hosting.plan ? ' - ' + this.escapeHtml(hosting.plan) : ''}</a>
+					<a href="#" onclick="DomainControl.switchTab('hostings'); setTimeout(() => DomainControl.showHostingDetail(${hosting.id}), 100); return false;" style="color: var(--color-primary-element-element-element); text-decoration: none; font-weight: 500;">${this.escapeHtml(hosting.provider)}${hosting.plan ? ' - ' + this.escapeHtml(hosting.plan) : ''}</a>
 					<div style="font-size: 12px; color: var(--color-text-maxcontrast); margin-top: 4px;">
 						${hosting.serverIp ? 'IP: ' + this.escapeHtml(hosting.serverIp) : ''}
 						${hosting.expirationDate ? ' | Bitiş: ' + hosting.expirationDate : ''}
@@ -4520,8 +4520,8 @@
 			// Payment progress bar
 			const progressEl = document.getElementById('invoice-payment-progress');
 			if (progressEl) {
-				const progressColor = paymentPercent === 100 ? 'var(--color-success)' :
-					(paymentPercent >= 50 ? 'var(--color-warning)' : 'var(--color-primary-element)');
+				const progressColor = paymentPercent === 100 ? 'var(--color-element-success)' :
+					(paymentPercent >= 50 ? 'var(--color-element-warning)' : 'var(--color-primary-element-element-element)');
 				progressEl.innerHTML = `
 				<div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
 					<span><strong>Ödeme Durumu:</strong></span>
@@ -5256,7 +5256,7 @@
 					<div class="project-progress-mini" style="flex-shrink: 0; margin: 0 40px; text-align: right;">
 						<div style="font-size: 11px; margin-bottom: 4px; color: var(--color-text-maxcontrast);">İlerleme: ${doneTasks}/${totalActive}</div>
 						<div class="progress-bar" style="width: 120px; height: 8px; background: var(--color-background-dark); border-radius: 4px; overflow: hidden;">
-							<div style="width: ${progress}%; height: 100%; background: ${progress === 100 ? 'var(--color-success)' : 'var(--color-primary-element)'}; transition: width 0.3s;"></div>
+							<div style="width: ${progress}%; height: 100%; background: ${progress === 100 ? 'var(--color-element-success)' : 'var(--color-primary-element-element-element)'}; transition: width 0.3s;"></div>
 						</div>
 					</div>
 
@@ -5627,7 +5627,7 @@
 						<span><strong>${progress}%</strong></span>
 					</div>
 				<div class="progress-bar" style="height: 12px; background: var(--color-background-dark); border-radius: 6px; overflow: hidden;">
-					<div style="width: ${progress}%; height: 100%; background: ${progress === 100 ? 'var(--color-success)' : 'var(--color-primary-element)'}; transition: width 0.3s;"></div>
+					<div style="width: ${progress}%; height: 100%; background: ${progress === 100 ? 'var(--color-element-success)' : 'var(--color-primary-element-element-element)'}; transition: width 0.3s;"></div>
 				</div>
 			</div>
 			<button class="btn btn-primary btn-sm add-project-task-btn" style="margin-bottom: 16px;">+ Görev Ekle</button>
@@ -5641,7 +5641,7 @@
 						}
 						let completedInfo = '';
 						if (task.status === 'done' && task.completedByUserId) {
-							completedInfo = `<span style="margin-left: 8px; color: var(--color-success);">✓ ${this.escapeHtml(task.completedByUserId)} tarafından tamamlandı</span>`;
+							completedInfo = `<span style="margin-left: 8px; color: var(--color-element-success);">✓ ${this.escapeHtml(task.completedByUserId)} tarafından tamamlandı</span>`;
 						}
 						html += `
 					<div class="task-list-item ${overdue ? 'status-critical' : ''} ${task.status === 'cancelled' ? 'task--cancelled' : ''}" data-task-id="${task.id}">
@@ -6059,7 +6059,7 @@
 									${isToday ? '<span class="status-badge status-badge--draft" style="margin-left: 8px; font-size: 10px;">BUGÜN</span>' : ''}
 								</div>
 								<div class="list-item__meta">
-									<span style="color: var(--color-primary-element); font-weight: 500;">${project ? project.name : 'Genel'}</span>
+									<span style="color: var(--color-primary-element-element-element); font-weight: 500;">${project ? project.name : 'Genel'}</span>
 									 • ${task.dueDate || 'Tarih yok'}
 									${subtasks.length > 0 ? ` • <span class="subtask-count">📋 ${completedSubtasks}/${subtasks.length} alt görev</span>` : ''}
 								</div>

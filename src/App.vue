@@ -33,8 +33,8 @@
 			<Hostings v-if="currentTab === 'hostings'" />
 			<Websites v-if="currentTab === 'websites'" />
 			<Services v-if="currentTab === 'services'" />
-			<Invoices v-if="currentTab === 'invoices'" />
-			<Projects v-if="currentTab === 'projects'" />
+			<Invoices ref="invoicesComponent" v-if="currentTab === 'invoices'" />
+			<Projects ref="projectsComponent" v-if="currentTab === 'projects'" />
 			<Tasks v-if="currentTab === 'tasks'" />
 			<Transactions v-if="currentTab === 'transactions'" />
 			<Debts v-if="currentTab === 'debts'" />
@@ -160,9 +160,13 @@ export default {
 				}
 			}
 		}
+
+		// Listen for navigate-to-invoice event from Projects component
+		window.addEventListener('navigate-to-invoice', this.handleNavigateToInvoice)
 	},
 	beforeUnmount() {
 		window.removeEventListener('settings-updated', this.handleSettingsUpdate)
+		window.removeEventListener('navigate-to-invoice', this.handleNavigateToInvoice)
 	},
 	methods: {
 		async loadActiveModules() {
@@ -197,6 +201,17 @@ export default {
 		},
 		handleTabSwitch(tabName) {
 			this.currentTab = tabName
+		},
+		handleNavigateToInvoice(event) {
+			const invoiceId = event.detail || event
+			// Switch to invoices tab
+			this.currentTab = 'invoices'
+			// Wait for Invoices component to mount, then select the invoice
+			this.$nextTick(() => {
+				if (this.$refs.invoicesComponent && typeof this.$refs.invoicesComponent.selectInvoice === 'function') {
+					this.$refs.invoicesComponent.selectInvoice(invoiceId)
+				}
+			})
 		},
 		getNavigationLabel(label) {
 			try {

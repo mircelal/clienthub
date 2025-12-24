@@ -623,7 +623,7 @@ export default {
 
 .website-search-input:focus {
 	outline: none;
-	border-color: var(--color-primary-element);
+	border-color: var(--color-primary-element-element-element);
 }
 
 .websites-list {
@@ -768,11 +768,11 @@ export default {
 	width: 48px;
 	height: 48px;
 	border-radius: 50%;
-	background-color: var(--color-primary-element);
+	background-color: var(--color-primary-element-element-element);
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	color: var(--color-primary-element-text);
+	color: var(--color-primary-element-element-element-text);
 	flex-shrink: 0;
 }
 
@@ -860,7 +860,7 @@ export default {
 }
 
 .link-primary {
-	color: var(--color-primary-element);
+	color: var(--color-primary-element-element-element);
 	text-decoration: none;
 }
 
@@ -879,18 +879,18 @@ export default {
 }
 
 .status-active {
-	background-color: var(--color-success);
-	color: var(--color-success-text);
+	background-color: var(--color-element-success);
+	color: var(--color-element-success-text);
 }
 
 .status-maintenance {
-	background-color: var(--color-warning);
-	color: var(--color-warning-text);
+	background-color: var(--color-element-warning);
+	color: var(--color-element-warning-text);
 }
 
 .status-development {
-	background-color: var(--color-primary-element-light);
-	color: var(--color-primary-element-light-text);
+	background-color: var(--color-primary-element-element-element-light);
+	color: var(--color-primary-element-element-element-light-text);
 }
 
 .status-inactive {
@@ -942,8 +942,8 @@ export default {
 }
 
 .popover-menu-item--danger:hover {
-	background-color: var(--color-error);
-	color: var(--color-error-text);
+	background-color: var(--color-element-error);
+	color: var(--color-element-error-text);
 }
 
 .popover-menu-separator {

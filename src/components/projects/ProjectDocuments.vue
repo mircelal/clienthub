@@ -573,9 +573,9 @@ export default {
 }
 
 .nc-pill.active {
-    background-color: var(--color-primary-element);
-    color: var(--color-primary-element-text);
-    border-color: var(--color-primary-element);
+    background-color: var(--color-primary-element-element-element);
+    color: var(--color-primary-element-element-element-text);
+    border-color: var(--color-primary-element-element-element);
 }
 
 /* --- Empty States --- */
@@ -623,7 +623,7 @@ export default {
 
 .nc-list-item:hover {
     background-color: var(--color-background-hover);
-    border-color: var(--color-primary-element);
+    border-color: var(--color-primary-element-element-element);
 }
 
 .nc-list-item--clickable {
@@ -753,8 +753,8 @@ export default {
 .note-category-badge {
     font-size: 11px;
     padding: 2px 8px;
-    background-color: var(--color-primary-element);
-    color: var(--color-primary-element-text);
+    background-color: var(--color-primary-element-element-element);
+    color: var(--color-primary-element-element-element-text);
     border-radius: 12px;
     font-weight: 500;
     white-space: nowrap;
@@ -823,7 +823,7 @@ export default {
     box-sizing: border-box;
 }
 .nc-input:focus, .nc-select:focus, .nc-textarea:focus {
-    border-color: var(--color-primary);
+    border-color: var(--color-primary-element-element);
     outline: none;
 }
 .nc-textarea { min-height: 150px; resize: vertical; }

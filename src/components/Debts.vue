@@ -917,7 +917,7 @@ export default {
 
 .debt-search-input:focus {
 	outline: none;
-	border-color: var(--color-primary-element);
+	border-color: var(--color-primary-element-element-element);
 }
 
 .debts-list {
@@ -942,7 +942,7 @@ export default {
 }
 
 .debt-item--overdue {
-	border-left: 4px solid var(--color-error);
+	border-left: 4px solid var(--color-element-error);
 }
 
 .debt-item .list-item__avatar {
@@ -956,13 +956,13 @@ export default {
 }
 
 .debt-type--debt {
-	background-color: var(--color-error);
-	color: var(--color-error-text);
+	background-color: var(--color-element-error);
+	color: var(--color-element-error-text);
 }
 
 .debt-type--credit {
-	background-color: var(--color-success);
-	color: var(--color-success-text);
+	background-color: var(--color-element-success);
+	color: var(--color-element-success-text);
 }
 
 .debt-item .list-item__content {
@@ -1071,11 +1071,11 @@ export default {
 	width: 48px;
 	height: 48px;
 	border-radius: 50%;
-	background-color: var(--color-primary-element);
+	background-color: var(--color-primary-element-element-element);
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	color: var(--color-primary-element-text);
+	color: var(--color-primary-element-element-element-text);
 	flex-shrink: 0;
 }
 
@@ -1146,7 +1146,7 @@ export default {
 
 .payment-progress-fill {
 	height: 100%;
-	background-color: var(--color-success);
+	background-color: var(--color-element-success);
 	transition: width 0.3s ease;
 }
 
@@ -1240,12 +1240,12 @@ export default {
 }
 
 .payment-item__delete:hover {
-	background-color: var(--color-error);
-	color: var(--color-error-text);
+	background-color: var(--color-element-error);
+	color: var(--color-element-error-text);
 }
 
 .link-primary {
-	color: var(--color-primary-element);
+	color: var(--color-primary-element-element-element);
 	text-decoration: none;
 }
 
@@ -1264,18 +1264,18 @@ export default {
 }
 
 .status-active {
-	background-color: var(--color-primary-element);
-	color: var(--color-primary-element-text);
+	background-color: var(--color-primary-element-element-element);
+	color: var(--color-primary-element-element-element-text);
 }
 
 .status-paid {
-	background-color: var(--color-success);
-	color: var(--color-success-text);
+	background-color: var(--color-element-success);
+	color: var(--color-element-success-text);
 }
 
 .status-overdue {
-	background-color: var(--color-error);
-	color: var(--color-error-text);
+	background-color: var(--color-element-error);
+	color: var(--color-element-error-text);
 }
 
 .status-cancelled {
@@ -1338,8 +1338,8 @@ export default {
 }
 
 .popover-menu-item--danger:hover {
-	background-color: var(--color-error);
-	color: var(--color-error-text);
+	background-color: var(--color-element-error);
+	color: var(--color-element-error-text);
 }
 
 .popover-menu-separator {

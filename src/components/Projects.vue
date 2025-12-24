@@ -36,6 +36,7 @@
 			@start-timer="startTimer"
 			@stop-timer="stopTimer"
 			@tab-change="handleTabChange"
+			@change-status="changeProjectStatus"
 		>
 			<div class="detail-content">
 				<!-- Overview Tab -->
@@ -100,8 +101,12 @@
 					:total-invoiced="totalInvoiced"
 					:total-paid="totalPaid"
 					:total-pending="totalPending"
+					:total-expenses="totalExpenses"
+					:expenses="projectExpenses"
 					@create-invoice="createInvoiceFromProject"
 					@navigate-invoice="navigateToInvoice"
+					@add-expense="showAddExpenseModal"
+					@expense-deleted="handleExpenseDeleted"
 				/>
 
 				<!-- Linked & Sharing Tab -->
@@ -198,6 +203,15 @@
 			@close="closeTaskModal"
 			@saved="handleTaskSaved"
 		/>
+
+		<!-- Expense Modal -->
+		<ExpenseModal
+			:open="expenseModalOpen"
+			:project-id="selectedProject ? selectedProject.id : null"
+			:currency="selectedProject ? (selectedProject.currency || 'USD') : 'USD'"
+			@close="closeExpenseModal"
+			@saved="handleExpenseSaved"
+		/>
 	</div>
 </template>
 
@@ -212,6 +226,7 @@ import ProjectFinancials from './projects/ProjectFinancials.vue'
 import ProjectDocuments from './projects/ProjectDocuments.vue'
 import ProjectLinkedAndSharing from './projects/ProjectLinkedAndSharing.vue'
 import LinkItemModal from './projects/modals/LinkItemModal.vue'
+import ExpenseModal from './projects/modals/ExpenseModal.vue'
 import ProjectModal from './ProjectModal.vue'
 import TaskModal from './TaskModal.vue'
 import api from '../services/api'
@@ -223,6 +238,7 @@ export default {
 		ProjectList,
 		ProjectDetail,
 		ProjectHeader,
+		ExpenseModal,
 		ProjectOverview,
 		ProjectTasksAndTime,
 		ProjectFinancials,
@@ -265,12 +281,15 @@ export default {
 			totalInvoiced: 0,
 			totalPaid: 0,
 			totalPending: 0,
+			projectExpenses: [],
+			totalExpenses: 0,
 			projectItems: [],
 			projectItemsLoading: false,
 			projectShares: [],
 			projectSharesLoading: false,
 			projectActivities: [],
 			projectActivitiesLoading: false,
+			expenseModalOpen: false,
 			availableUsers: [],
 			// Modals
 			showShareModal: false,
@@ -476,6 +495,22 @@ export default {
 				await this.loadProjectDetails(this.selectedProject.id)
 			}
 			this.closeModal()
+		},
+		async changeProjectStatus(newStatus) {
+			if (!this.selectedProject) return
+			
+			try {
+				await api.projects.update(this.selectedProject.id, { status: newStatus })
+				// Update local project object
+				this.selectedProject.status = newStatus
+				// Reload project details to get fresh data
+				await this.loadProjectDetails(this.selectedProject.id)
+				// Reload projects list to update status in list view
+				await this.loadProjects()
+			} catch (error) {
+				console.error('Error changing project status:', error)
+				alert(this.translate('domaincontrol', 'Error changing project status'))
+			}
 		},
 		async loadProjectDetails(projectId) {
 			// Load all data when project is selected
@@ -761,6 +796,12 @@ export default {
 		// Time Tracking
 		async loadTimeTracking(projectId) {
 			this.timeEntriesLoading = true
+			// Clear existing timer interval before loading new data
+			if (this.timerInterval) {
+				clearInterval(this.timerInterval)
+				this.timerInterval = null
+			}
+			
 			try {
 				const response = await api.timeEntries.byProject(projectId)
 				this.timeEntries = response.data.entries || []
@@ -772,7 +813,14 @@ export default {
 				this.currentRunningEntry = runningResponse.data
 				
 				if (this.currentRunningEntry) {
+					// Calculate elapsed time immediately
+					const startTime = new Date(this.currentRunningEntry.startTime).getTime()
+					const now = Date.now()
+					this.timerElapsed = Math.floor((now - startTime) / 1000)
+					// Start timer interval
 					this.startTimerInterval()
+				} else {
+					this.timerElapsed = 0
 				}
 			} catch (error) {
 				console.error('Error loading time tracking:', error)
@@ -780,6 +828,7 @@ export default {
 				this.totalTime = 0
 				this.durationByUser = []
 				this.currentRunningEntry = null
+				this.timerElapsed = 0
 			} finally {
 				this.timeEntriesLoading = false
 			}
@@ -872,33 +921,99 @@ export default {
 					.filter(inv => inv.status === 'paid')
 					.reduce((sum, inv) => sum + (parseFloat(inv.paidAmount || inv.total || 0) || 0), 0)
 				this.totalPending = this.totalInvoiced - this.totalPaid
+
+				// Load expenses (transactions with type='expense' and projectId)
+				await this.loadProjectExpenses(projectId)
 			} catch (error) {
 				console.error('Error loading project financials:', error)
 				this.projectInvoices = []
 				this.totalInvoiced = 0
 				this.totalPaid = 0
 				this.totalPending = 0
+				this.projectExpenses = []
+				this.totalExpenses = 0
 			}
 		},
-		createInvoiceFromProject() {
-			if (typeof window.DomainControl !== 'undefined' && window.DomainControl.switchTab) {
-				window.DomainControl.switchTab('invoices')
-				setTimeout(() => {
-					const event = new CustomEvent('create-invoice-from-project', {
-						detail: { projectId: this.selectedProject.id },
-					})
-					window.dispatchEvent(event)
-				}, 100)
+		async loadProjectExpenses(projectId) {
+			try {
+				const response = await api.transactions.byProject(projectId)
+				const allTransactions = response.data || []
+				// Filter only expense transactions (type='expense')
+				const expenses = allTransactions.filter(t => t.type === 'expense')
+				
+				// Load categories to get category names
+				const categoriesResponse = await api.transactionCategories.getAll()
+				const categories = categoriesResponse.data || []
+				const categoryMap = {}
+				categories.forEach(cat => {
+					categoryMap[cat.id] = cat.name
+				})
+				
+				// Add category name to each expense
+				this.projectExpenses = expenses.map(exp => ({
+					...exp,
+					categoryName: exp.categoryId ? (categoryMap[exp.categoryId] || '-') : '-'
+				}))
+				
+				// Calculate total expenses
+				this.totalExpenses = this.projectExpenses.reduce((sum, exp) => {
+					return sum + (parseFloat(exp.amount || 0) || 0)
+				}, 0)
+			} catch (error) {
+				console.error('Error loading project expenses:', error)
+				this.projectExpenses = []
+				this.totalExpenses = 0
+			}
+		},
+		showAddExpenseModal() {
+			this.expenseModalOpen = true
+		},
+		closeExpenseModal() {
+			this.expenseModalOpen = false
+		},
+		async handleExpenseSaved() {
+			if (this.selectedProject) {
+				await this.loadProjectExpenses(this.selectedProject.id)
+			}
+			this.closeExpenseModal()
+		},
+		async handleExpenseDeleted() {
+			if (this.selectedProject) {
+				await this.loadProjectExpenses(this.selectedProject.id)
+			}
+		},
+		async createInvoiceFromProject() {
+			if (!this.selectedProject || !this.selectedProject.clientId) {
+				alert(this.translate('domaincontrol', 'Project must have a client assigned'))
+				return
+			}
+
+			try {
+				const invoiceData = {
+					clientId: this.selectedProject.clientId,
+					currency: this.selectedProject.currency || 'USD',
+					status: 'draft',
+					notes: `${this.translate('domaincontrol', 'Project')}: ${this.selectedProject.name}`,
+				}
+
+				const response = await api.invoices.create(invoiceData)
+				if (response.data && response.data.id) {
+					// Reload project financials to show the new invoice
+					await this.loadProjectFinancials(this.selectedProject.id)
+					// Show success message
+					alert(this.translate('domaincontrol', 'Invoice created successfully'))
+				} else {
+					throw new Error('Invalid response from server')
+				}
+			} catch (error) {
+				console.error('Error creating invoice:', error)
+				alert(this.translate('domaincontrol', 'Error creating invoice') + ': ' + (error.response?.data?.error || error.message))
 			}
 		},
 		navigateToInvoice(invoiceId) {
-			if (typeof window.DomainControl !== 'undefined' && window.DomainControl.switchTab) {
-				window.DomainControl.switchTab('invoices')
-				setTimeout(() => {
-					const event = new CustomEvent('select-invoice', { detail: { invoiceId } })
-					window.dispatchEvent(event)
-				}, 100)
-			}
+			// Dispatch event to App.vue to switch tab and select invoice
+			const event = new CustomEvent('navigate-to-invoice', { detail: invoiceId })
+			window.dispatchEvent(event)
 		},
 		// Linked Items
 		async loadProjectItems(projectId) {
@@ -1145,7 +1260,7 @@ export default {
 }
 
 .user-select-item--selected {
-	background-color: var(--color-primary-element-light);
-	color: var(--color-primary-element);
+	background-color: var(--color-primary-element-element-element-light);
+	color: var(--color-primary-element-element-element);
 }
 </style>

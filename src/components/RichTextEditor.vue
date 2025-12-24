@@ -209,13 +209,13 @@ export default {
 
 .toolbar-btn:hover {
 	background: var(--color-background-hover);
-	border-color: var(--color-primary-element);
+	border-color: var(--color-primary-element-element-element);
 }
 
 .toolbar-btn.active {
-	background: var(--color-primary-element-light);
-	border-color: var(--color-primary-element);
-	color: var(--color-primary-element);
+	background: var(--color-primary-element-element-element-light);
+	border-color: var(--color-primary-element-element-element);
+	color: var(--color-primary-element-element-element);
 }
 
 .toolbar-separator {
@@ -315,12 +315,12 @@ export default {
 }
 
 .rich-text-editor a {
-	color: var(--color-primary-element);
+	color: var(--color-primary-element-element-element);
 	text-decoration: underline;
 }
 
 .rich-text-editor a:hover {
-	color: var(--color-primary-element-text);
+	color: var(--color-primary-element-element-element-text);
 }
 
 .toolbar-btn strong,

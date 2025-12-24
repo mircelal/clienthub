@@ -50,8 +50,8 @@ nav#app-navigation-vue {
 
 .client-search-input:focus {
 	outline: none;
-	border-color: var(--color-primary-element);
-	box-shadow: 0 0 0 3px rgba(var(--color-primary-element-rgb), 0.15);
+	border-color: var(--color-primary-element-element-element);
+	box-shadow: 0 0 0 3px rgba(var(--color-primary-element-element-element-rgb), 0.15);
 	background: var(--color-main-background);
 }
 
@@ -98,13 +98,13 @@ nav#app-navigation-vue {
 }
 
 .button-vue--primary {
-	background-color: var(--color-primary-element);
-	color: var(--color-primary-element-text);
+	background-color: var(--color-primary-element-element-element);
+	color: var(--color-primary-element-element-element-text);
 }
 
 .button-vue--primary:hover,
 .button-vue--primary:focus {
-	background-color: var(--color-primary-element-hover);
+	background-color: var(--color-primary-element-element-element-hover);
 }
 
 .button-vue--secondary {
@@ -130,13 +130,13 @@ nav#app-navigation-vue {
 }
 
 .button-vue--danger {
-	background-color: var(--color-error);
-	color: var(--color-error-text);
+	background-color: var(--color-element-error);
+	color: var(--color-element-error-text);
 }
 
 .button-vue--danger:hover,
 .button-vue--danger:focus {
-	background-color: var(--color-error-hover);
+	background-color: var(--color-element-error-hover);
 }
 
 /* Legacy button classes for backward compatibility */
@@ -158,13 +158,13 @@ nav#app-navigation-vue {
 }
 
 .btn-primary {
-	background-color: var(--color-primary-element);
-	color: var(--color-primary-element-text);
+	background-color: var(--color-primary-element-element-element);
+	color: var(--color-primary-element-element-element-text);
 }
 
 .btn-primary:hover,
 .btn-primary:focus {
-	background-color: var(--color-primary-element-hover);
+	background-color: var(--color-primary-element-element-element-hover);
 }
 
 .btn-secondary {
@@ -228,7 +228,7 @@ nav#app-navigation-vue {
 	width: 40px;
 	height: 40px;
 	border-radius: 6px;
-	background: var(--color-primary-element);
+	background: var(--color-primary-element-element-element);
 	color: white;
 	display: flex;
 	align-items: center;
@@ -242,13 +242,13 @@ nav#app-navigation-vue {
 	width: 44px;
 	height: 44px;
 	border-radius: 6px;
-	background: var(--color-primary-element);
+	background: var(--color-primary-element-element-element);
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	font-size: 18px;
 	font-weight: 500;
-	color: var(--color-primary-element-text);
+	color: var(--color-primary-element-element-element-text);
 	flex-shrink: 0;
 }
 
@@ -342,13 +342,13 @@ nav#app-navigation-vue {
 
 /* Action button hover effects - specific colors for edit and delete */
 .list-item__actions .action-button--edit:hover {
-	color: var(--color-primary-element);
-	background-color: rgba(var(--color-primary-element-rgb), 0.1);
+	color: var(--color-primary-element-element-element);
+	background-color: rgba(var(--color-primary-element-element-element-rgb), 0.1);
 }
 
 .list-item__actions .action-button--delete:hover {
-	color: var(--color-error);
-	background-color: rgba(var(--color-error-rgb), 0.1);
+	color: var(--color-element-error);
+	background-color: rgba(var(--color-element-error-rgb), 0.1);
 }
 
 /* Generic button hover - only for non-action buttons */
@@ -359,17 +359,17 @@ nav#app-navigation-vue {
 
 /* Domain Status Colors */
 .list-item.status-critical {
-	border-left: 4px solid var(--color-error);
+	border-left: 4px solid var(--color-element-error);
 	background: rgba(224, 27, 36, 0.05);
 }
 
 .list-item.status-warning {
-	border-left: 4px solid var(--color-warning);
+	border-left: 4px solid var(--color-element-warning);
 	background: rgba(237, 129, 40, 0.05);
 }
 
 .list-item.status-ok {
-	border-left: 4px solid var(--color-success);
+	border-left: 4px solid var(--color-element-success);
 }
 
 .status-badge {
@@ -380,23 +380,23 @@ nav#app-navigation-vue {
 }
 
 .status-badge.status-critical {
-	background: var(--color-error);
-	color: white;
+	background: var(--color-element-error);
+	color: var(--color-element-error-text);
 }
 
 .status-badge.status-warning {
-	background: var(--color-warning);
-	color: white;
+	background: var(--color-element-warning);
+	color: var(--color-element-warning-text);
 }
 
 .status-badge.status-ok {
-	background: var(--color-success);
-	color: white;
+	background: var(--color-element-success);
+	color: var(--color-element-success-text);
 }
 
 /* Domain Extend Button */
 .btn-extend {
-	background: var(--color-success);
+	background: var(--color-element-success);
 	color: white;
 	border: none;
 	border-radius: 4px;
@@ -408,7 +408,7 @@ nav#app-navigation-vue {
 }
 
 .btn-extend:hover {
-	background: var(--color-success);
+	background: var(--color-element-success);
 	opacity: 0.9;
 	transform: scale(1.05);
 }
@@ -426,7 +426,7 @@ nav#app-navigation-vue {
 }
 
 .domain-extend-info .text-success {
-	color: var(--color-success);
+	color: var(--color-element-success);
 	font-weight: 600;
 	font-size: 16px;
 }
@@ -440,13 +440,13 @@ nav#app-navigation-vue {
 }
 
 .btn-success {
-	background: var(--color-success) !important;
+	background: var(--color-element-success) !important;
 	color: white !important;
 }
 
 /* Danger button */
 .btn-danger {
-	background: var(--color-error) !important;
+	background: var(--color-element-error) !important;
 	color: white !important;
 }
 
@@ -691,7 +691,7 @@ nav#app-navigation-vue {
 .history-content strong {
 	display: block;
 	margin-bottom: 4px;
-	color: var(--color-success);
+	color: var(--color-element-success);
 }
 
 .history-detail {
@@ -726,7 +726,7 @@ nav#app-navigation-vue {
 }
 
 .detail-service-card:hover {
-	border-color: var(--color-primary-element);
+	border-color: var(--color-primary-element-element-element);
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
@@ -753,7 +753,7 @@ nav#app-navigation-vue {
 }
 
 .client-stat-card:hover {
-	border-color: var(--color-primary-element);
+	border-color: var(--color-primary-element-element-element);
 	background: var(--color-background-hover);
 }
 
@@ -802,7 +802,7 @@ nav#app-navigation-vue {
 }
 
 .client-info-card:hover {
-	border-color: var(--color-primary-element);
+	border-color: var(--color-primary-element-element-element);
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
@@ -877,7 +877,7 @@ nav#app-navigation-vue {
 }
 
 .client-service-card:hover {
-	border-color: var(--color-primary-element);
+	border-color: var(--color-primary-element-element-element);
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 	transform: translateY(-2px);
 }
@@ -899,8 +899,8 @@ nav#app-navigation-vue {
 }
 
 .service-card-count {
-	background: var(--color-primary-element);
-	color: var(--color-primary-element-text);
+	background: var(--color-primary-element-element-element);
+	color: var(--color-primary-element-element-element-text);
 	padding: 4px 10px;
 	border-radius: 12px;
 	font-size: 12px;
@@ -1264,8 +1264,8 @@ nav#app-navigation-vue {
 
 .form-control:focus {
 	outline: none;
-	border-color: var(--color-primary-element);
-	box-shadow: 0 0 0 3px rgba(var(--color-primary-element-rgb), 0.15);
+	border-color: var(--color-primary-element-element-element);
+	box-shadow: 0 0 0 3px rgba(var(--color-primary-element-element-element-rgb), 0.15);
 	background: var(--color-main-background);
 }
 
@@ -1323,12 +1323,12 @@ textarea.form-control {
 }
 
 .stat-card--primary {
-	border-color: var(--color-primary-element);
+	border-color: var(--color-primary-element-element-element);
 	background: linear-gradient(135deg, var(--color-main-background) 0%, rgba(0, 130, 201, 0.05) 100%);
 }
 
 .stat-card--success {
-	border-color: var(--color-success);
+	border-color: var(--color-element-success);
 	background: linear-gradient(135deg, var(--color-main-background) 0%, rgba(75, 192, 120, 0.05) 100%);
 }
 
@@ -1338,7 +1338,7 @@ textarea.form-control {
 }
 
 .stat-card--warning {
-	border-color: var(--color-warning);
+	border-color: var(--color-element-warning);
 	background: linear-gradient(135deg, var(--color-main-background) 0%, rgba(237, 129, 40, 0.05) 100%);
 }
 
@@ -1625,9 +1625,9 @@ textarea.form-control {
 }
 
 .btn-filter.active {
-	background: var(--color-primary-element);
+	background: var(--color-primary-element-element-element);
 	color: white;
-	border-color: var(--color-primary-element);
+	border-color: var(--color-primary-element-element-element);
 }
 
 /* Additional Button Colors */
@@ -1677,28 +1677,28 @@ textarea.form-control {
 }
 
 .status-badge--draft {
-	background: rgba(149, 165, 166, 0.2);
-	color: #7f8c8d;
+	background: var(--color-background-dark);
+	color: var(--color-text-maxcontrast);
 }
 
 .status-badge--sent {
-	background: rgba(52, 152, 219, 0.2);
-	color: #3498db;
+	background: var(--color-info);
+	color: var(--color-info-text);
 }
 
 .status-badge--paid {
-	background: rgba(39, 174, 96, 0.2);
-	color: #27ae60;
+	background: var(--color-element-success);
+	color: var(--color-element-success-text);
 }
 
 .status-badge--overdue {
-	background: rgba(231, 76, 60, 0.2);
-	color: #e74c3c;
+	background: var(--color-element-error);
+	color: var(--color-element-error-text);
 }
 
 .status-badge--cancelled {
-	background: rgba(127, 140, 141, 0.2);
-	color: #7f8c8d;
+	background: var(--color-background-dark);
+	color: var(--color-text-maxcontrast);
 }
 
 /* Task Priority Badges */
@@ -1711,49 +1711,49 @@ textarea.form-control {
 }
 
 .priority-badge--low {
-	background: rgba(39, 174, 96, 0.2);
-	color: #27ae60;
+	background: var(--color-element-success);
+	color: var(--color-element-success-text);
 }
 
 .priority-badge--medium {
-	background: rgba(243, 156, 18, 0.2);
-	color: #f39c12;
+	background: var(--color-element-warning);
+	color: var(--color-element-warning-text);
 }
 
 .priority-badge--high {
-	background: rgba(231, 76, 60, 0.2);
-	color: #e74c3c;
+	background: var(--color-element-error);
+	color: var(--color-element-error-text);
 }
 
 /* Task Status */
 .task-status--todo {
-	color: #7f8c8d;
+	color: var(--color-text-maxcontrast);
 }
 
 .task-status--in_progress {
-	color: #3498db;
+	color: var(--color-element-info);
 }
 
 .task-status--done {
-	color: #27ae60;
+	color: var(--color-element-success);
 	text-decoration: line-through;
 }
 
 /* Project Status */
 .project-status--active {
-	color: #27ae60;
+	color: var(--color-element-success);
 }
 
 .project-status--on_hold {
-	color: #f39c12;
+	color: var(--color-element-warning);
 }
 
 .project-status--completed {
-	color: #3498db;
+	color: var(--color-element-info);
 }
 
 .project-status--cancelled {
-	color: #e74c3c;
+	color: var(--color-element-error);
 }
 
 /* Invoice Items Table */
@@ -1924,8 +1924,8 @@ textarea.form-control {
 .project-type-badge {
 	display: inline-block;
 	padding: 2px 8px;
-	background: var(--color-primary-element-light);
-	color: var(--color-primary-element);
+	background: var(--color-primary-element-element-element-light);
+	color: var(--color-primary-element-element-element);
 	border-radius: 12px;
 	font-size: 11px;
 	font-weight: 500;
@@ -1965,7 +1965,7 @@ textarea.form-control {
 
 .project-invoice-item:hover {
 	background: var(--color-background-hover);
-	border-color: var(--color-primary-element) !important;
+	border-color: var(--color-primary-element-element-element) !important;
 	transform: translateX(2px);
 	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
@@ -1977,7 +1977,7 @@ textarea.form-control {
 
 .project-share-item:hover {
 	background: var(--color-background-hover);
-	border-color: var(--color-primary-element) !important;
+	border-color: var(--color-primary-element-element-element) !important;
 }
 
 .project-share-item .project-share-remove-btn {
@@ -2037,13 +2037,13 @@ div#website-notes {
 
 .toolbar-btn:hover {
 	background: var(--color-background-hover);
-	border-color: var(--color-primary-element);
+	border-color: var(--color-primary-element-element-element);
 }
 
 .toolbar-btn.active {
-	background: var(--color-primary-element-light);
-	border-color: var(--color-primary-element);
-	color: var(--color-primary-element);
+	background: var(--color-primary-element-element-element-light);
+	border-color: var(--color-primary-element-element-element);
+	color: var(--color-primary-element-element-element);
 }
 
 .rich-text-editor {
@@ -2137,7 +2137,7 @@ div#website-notes {
 
 .file-item:hover {
 	background: var(--color-background-dark);
-	border-color: var(--color-primary-element);
+	border-color: var(--color-primary-element-element-element);
 }
 
 .file-icon {
@@ -2191,7 +2191,7 @@ div#website-notes {
 
 .contact-item:hover {
 	background: var(--color-background-dark);
-	border-color: var(--color-primary-element);
+	border-color: var(--color-primary-element-element-element);
 }
 
 .contact-info {
@@ -2334,17 +2334,17 @@ div#website-notes {
 
 .report-item:hover {
 	background: var(--color-background-hover);
-	border-color: var(--color-primary-element);
+	border-color: var(--color-primary-element-element-element);
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .report-item.urgent {
-	border-left: 4px solid var(--color-error);
+	border-left: 4px solid var(--color-element-error);
 	background: rgba(221, 44, 0, 0.05);
 }
 
 .report-item.warning {
-	border-left: 4px solid var(--color-warning);
+	border-left: 4px solid var(--color-element-warning);
 	background: rgba(255, 165, 0, 0.05);
 }
 
@@ -2354,7 +2354,7 @@ div#website-notes {
 	justify-content: center;
 	width: 36px;
 	height: 36px;
-	background: var(--color-primary-element);
+	background: var(--color-primary-element-element-element);
 	color: white;
 	border-radius: 50%;
 	font-weight: 700;
@@ -2426,13 +2426,13 @@ div#website-notes {
 }
 
 .task-status--cancelled {
-	background-color: var(--color-error-light);
-	color: var(--color-error);
+	background-color: var(--color-element-error-light);
+	color: var(--color-element-error);
 }
 
 .subtask-count {
 	font-size: 11px;
-	color: var(--color-primary-element);
+	color: var(--color-primary-element-element-element);
 	font-weight: 600;
 }
 
@@ -2474,7 +2474,7 @@ div#website-notes {
 }
 
 .subtask-item:hover {
-	border-color: var(--color-primary-element);
+	border-color: var(--color-primary-element-element-element);
 	background: var(--color-main-background);
 }
 
@@ -2512,7 +2512,7 @@ div#website-notes {
 .btn-link {
 	background: none;
 	border: none;
-	color: var(--color-primary-element);
+	color: var(--color-primary-element-element-element);
 	padding: 4px 0;
 	cursor: pointer;
 	font-size: 13px;
@@ -2520,7 +2520,7 @@ div#website-notes {
 }
 
 .btn-link:hover {
-	color: var(--color-primary-element-hover);
+	color: var(--color-primary-element-element-element-hover);
 }
 
 
@@ -2546,15 +2546,15 @@ div#website-notes {
 }
 
 .priority-high-bg {
-	background-color: var(--color-error);
+	background-color: var(--color-element-error);
 }
 
 .priority-medium-bg {
-	background-color: var(--color-warning);
+	background-color: var(--color-element-warning);
 }
 
 .priority-low-bg {
-	background-color: var(--color-success);
+	background-color: var(--color-element-success);
 }
 
 .project-progress-mini {
@@ -2570,7 +2570,7 @@ div#website-notes {
 .task-item:hover,
 .project-item:hover {
 	background: var(--color-background-darker);
-	border-left: 4px solid var(--color-primary-element);
+	border-left: 4px solid var(--color-primary-element-element-element);
 	padding-left: 24px;
 	/* Adjust for border */
 }
@@ -2745,9 +2745,9 @@ div#website-notes {
 }
 
 .btn-action:hover {
-	background: var(--color-primary-element-light);
-	border-color: var(--color-primary-element);
-	color: var(--color-primary-element);
+	background: var(--color-primary-element-element-element-light);
+	border-color: var(--color-primary-element-element-element);
+	color: var(--color-primary-element-element-element);
 	transform: translateX(5px);
 }
 
@@ -2776,30 +2776,30 @@ div#website-notes {
 }
 
 .badge--danger {
-	background: var(--color-error);
+	background: var(--color-element-error);
 	color: white;
 }
 
 .badge--warning {
-	background: var(--color-warning);
+	background: var(--color-element-warning);
 	color: white;
 }
 
 .badge--info {
-	background: var(--color-primary-element);
+	background: var(--color-primary-element-element-element);
 	color: white;
 }
 
 .alert-panel--danger {
-	border-left: 4px solid var(--color-error);
+	border-left: 4px solid var(--color-element-error);
 }
 
 .alert-panel--warning {
-	border-left: 4px solid var(--color-warning);
+	border-left: 4px solid var(--color-element-warning);
 }
 
 .alert-panel--info {
-	border-left: 4px solid var(--color-primary-element);
+	border-left: 4px solid var(--color-primary-element-element-element);
 }
 
 /* Time Tracking Styles - Premium Horizontal Layout */
@@ -2834,8 +2834,8 @@ div#website-notes {
 }
 
 .time-stat-card:hover {
-	border-color: var(--color-primary-element);
-	box-shadow: 0 4px 12px rgba(var(--color-primary-element-rgb), 0.15);
+	border-color: var(--color-primary-element-element-element);
+	box-shadow: 0 4px 12px rgba(var(--color-primary-element-element-element-rgb), 0.15);
 	transform: translateY(-2px);
 }
 
@@ -2851,7 +2851,7 @@ div#website-notes {
 .time-stat-value {
 	font-weight: 700;
 	font-size: 28px;
-	color: var(--color-primary-element);
+	color: var(--color-primary-element-element-element);
 	font-family: 'Courier New', monospace;
 	letter-spacing: 2px;
 	line-height: 1.2;
@@ -2866,8 +2866,8 @@ div#website-notes {
 }
 
 .time-user-summary-card:hover {
-	border-color: var(--color-primary-element);
-	box-shadow: 0 4px 12px rgba(var(--color-primary-element-rgb), 0.15);
+	border-color: var(--color-primary-element-element-element);
+	box-shadow: 0 4px 12px rgba(var(--color-primary-element-element-element-rgb), 0.15);
 }
 
 .time-user-summary-header {
@@ -2903,7 +2903,7 @@ div#website-notes {
 
 .time-user-summary-item:hover {
 	background: var(--color-background-hover);
-	border-color: var(--color-primary-element);
+	border-color: var(--color-primary-element-element-element);
 	transform: translateX(2px);
 }
 
@@ -2919,7 +2919,7 @@ div#website-notes {
 .time-user-summary-duration {
 	font-size: 14px;
 	font-weight: 700;
-	color: var(--color-primary-element);
+	color: var(--color-primary-element-element-element);
 	font-family: 'Courier New', monospace;
 	letter-spacing: 1px;
 }
@@ -2950,7 +2950,7 @@ div#website-notes {
 	font-size: 42px;
 	font-weight: 700;
 	font-family: 'Courier New', monospace;
-	color: var(--color-primary-element);
+	color: var(--color-primary-element-element-element);
 	letter-spacing: 2px;
 	margin-bottom: 12px;
 	line-height: 1.2;
@@ -3114,8 +3114,8 @@ div#website-notes {
 
 .input-premium:focus {
 	outline: none;
-	border-color: var(--color-primary-element);
-	box-shadow: 0 0 0 3px rgba(var(--color-primary-element-rgb), 0.1);
+	border-color: var(--color-primary-element-element-element);
+	box-shadow: 0 0 0 3px rgba(var(--color-primary-element-element-element-rgb), 0.1);
 	background: var(--color-main-background);
 }
 
@@ -3212,8 +3212,8 @@ div#website-notes {
 
 .time-entry-item:hover {
 	background: var(--color-background-hover);
-	border-color: var(--color-primary-element);
-	box-shadow: 0 2px 8px rgba(var(--color-primary-element-rgb), 0.1);
+	border-color: var(--color-primary-element-element-element);
+	box-shadow: 0 2px 8px rgba(var(--color-primary-element-element-element-rgb), 0.1);
 	transform: translateX(2px);
 }
 
@@ -3296,7 +3296,7 @@ div#website-notes {
 .time-entry-duration {
 	font-size: 18px;
 	font-weight: 700;
-	color: var(--color-primary-element);
+	color: var(--color-primary-element-element-element);
 	font-family: 'Courier New', monospace;
 	white-space: nowrap;
 	letter-spacing: 1.5px;
@@ -3323,9 +3323,9 @@ div#website-notes {
 
 .time-entry-delete:hover {
 	opacity: 1;
-	background: var(--color-error);
+	background: var(--color-element-error);
 	color: white;
-	border-color: var(--color-error);
+	border-color: var(--color-element-error);
 	transform: scale(1.05);
 }
 
@@ -3458,8 +3458,8 @@ div#website-notes {
 
 .settings-input .form-control:focus {
 	outline: none;
-	border-color: var(--color-primary-element);
-	box-shadow: 0 0 0 3px rgba(var(--color-primary-element-rgb), 0.1);
+	border-color: var(--color-primary-element-element-element);
+	box-shadow: 0 0 0 3px rgba(var(--color-primary-element-element-element-rgb), 0.1);
 }
 
 .settings-actions {
@@ -3491,7 +3491,7 @@ div#website-notes {
 .service-item:hover {
 	transform: translateY(-2px);
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-	border-color: var(--color-primary-element);
+	border-color: var(--color-primary-element-element-element);
 	background: var(--color-background-hover);
 }
 
@@ -3597,7 +3597,7 @@ div#website-notes {
 }
 
 #service-detail-view .detail-info-card:hover {
-	border-color: var(--color-primary-element);
+	border-color: var(--color-primary-element-element-element);
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
@@ -3745,32 +3745,32 @@ div#website-notes {
 }
 
 .status-badge--draft {
-	background: rgba(118, 118, 128, 0.12);
-	color: #666;
-	border: 1px solid rgba(118, 118, 128, 0.2);
+	background: var(--color-background-dark);
+	color: var(--color-text-maxcontrast);
+	border: 1px solid var(--color-border);
 }
 
 .status-badge--sent {
-	background: rgba(0, 122, 255, 0.1);
-	color: #007AFF;
-	border: 1px solid rgba(0, 122, 255, 0.2);
+	background: var(--color-info);
+	color: var(--color-info-text);
+	border: 1px solid var(--color-border-info, var(--color-info-text));
 }
 
 .status-badge--paid {
-	background: rgba(52, 199, 89, 0.1);
-	color: #34C759;
-	border: 1px solid rgba(52, 199, 89, 0.2);
+	background: var(--color-element-success);
+	color: var(--color-element-success-text);
+	border: 1px solid var(--color-border-success, var(--color-element-success-text));
 }
 
 .status-badge--overdue {
-	background: rgba(255, 59, 48, 0.1);
-	color: #FF3B30;
-	border: 1px solid rgba(255, 59, 48, 0.2);
+	background: var(--color-element-error);
+	color: var(--color-element-error-text);
+	border: 1px solid var(--color-border-error, var(--color-element-error-text));
 }
 
 .status-badge--cancelled {
-	background: rgba(142, 142, 147, 0.1);
-	color: #8E8E93;
+	background: var(--color-background-dark);
+	color: var(--color-text-maxcontrast);
 	text-decoration: line-through;
 }
 
@@ -3849,7 +3849,7 @@ div#website-notes {
 }
 
 .invoice-items-table td strong {
-	color: var(--color-primary-element);
+	color: var(--color-primary-element-element-element);
 	font-weight: 700;
 }
 
@@ -3973,7 +3973,7 @@ div#website-notes {
 .history-content strong {
 	display: block;
 	margin-bottom: 4px;
-	color: var(--color-success);
+	color: var(--color-element-success);
 	/* Money color */
 	font-size: 15px;
 }
@@ -4024,9 +4024,9 @@ div#website-notes {
 }
 
 .change-invoice-status-btn:hover {
-	background: var(--color-primary-element);
+	background: var(--color-primary-element-element-element);
 	color: #fff;
-	border-color: var(--color-primary-element);
+	border-color: var(--color-primary-element-element-element);
 	transform: translateY(-2px);
 	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
@@ -4069,8 +4069,8 @@ div#website-notes {
 
 .search-input:focus {
 	outline: none;
-	border-color: var(--color-primary-element);
-	box-shadow: 0 0 0 3px rgba(var(--color-primary-element-rgb), 0.15);
+	border-color: var(--color-primary-element-element-element);
+	box-shadow: 0 0 0 3px rgba(var(--color-primary-element-element-element-rgb), 0.15);
 	background-color: var(--color-main-background);
 }
 
@@ -4138,7 +4138,7 @@ div#website-notes {
 
 .hosting-packages-table__price {
 	font-weight: 600;
-	color: var(--color-primary-element);
+	color: var(--color-primary-element-element-element);
 	white-space: nowrap;
 }
 
@@ -4178,8 +4178,8 @@ div#website-notes {
 }
 
 .hosting-packages-table__status.active {
-	background: var(--color-success);
-	color: var(--color-success-text);
+	background: var(--color-element-success);
+	color: var(--color-element-success-text);
 	border: 1px solid var(--color-element-success);
 	font-weight: 600;
 }
@@ -4211,13 +4211,13 @@ div#website-notes {
 
 .hosting-packages-table__actions button:hover {
 	background: var(--color-background-hover);
-	border-color: var(--color-primary-element);
+	border-color: var(--color-primary-element-element-element);
 }
 
 .hosting-packages-table__actions button.btn-danger:hover {
-	background: var(--color-error);
+	background: var(--color-element-error);
 	color: white;
-	border-color: var(--color-error);
+	border-color: var(--color-element-error);
 }
 
 /* Responsive table */
@@ -4337,8 +4337,8 @@ select.form-control:focus {
 }
 
 .project-tab--active {
-	color: var(--color-primary-element);
-	border-bottom-color: var(--color-primary-element);
+	color: var(--color-primary-element-element-element);
+	border-bottom-color: var(--color-primary-element-element-element);
 	font-weight: 500;
 	background-color: transparent;
 }
@@ -4410,7 +4410,7 @@ select.form-control:focus {
 }
 
 .stat-card:hover {
-	border-color: var(--color-primary-element);
+	border-color: var(--color-primary-element-element-element);
 	background-color: var(--color-background-hover);
 }
 
@@ -4464,7 +4464,7 @@ select.form-control:focus {
 }
 
 .detail-info-card:hover {
-	border-color: var(--color-primary-element);
+	border-color: var(--color-primary-element-element-element);
 }
 
 .info-card-title {
@@ -4509,17 +4509,10 @@ select.form-control:focus {
 .project-share-item:hover,
 .invoice-item:hover {
 	background-color: var(--color-background-hover);
-	border-color: var(--color-primary-element);
+	border-color: var(--color-primary-element-element-element);
 }
 
 /* Progress Bar - Nextcloud Standard */
-.project-progress {
-	margin-bottom: 20px;
-	padding: 16px;
-	background-color: var(--color-main-background);
-	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius-large);
-}
 
 .progress-bar {
 	width: 100%;
@@ -4531,7 +4524,7 @@ select.form-control:focus {
 
 .progress-fill {
 	height: 100%;
-	background-color: var(--color-primary-element);
+	background-color: var(--color-primary-element-element-element);
 	border-radius: 4px;
 	transition: width 0.3s ease-in-out;
 }
@@ -4587,9 +4580,9 @@ select.form-control:focus {
 }
 
 .category-button.active {
-	background-color: var(--color-primary-element);
-	color: var(--color-primary-element-text-dark);
-	border-color: var(--color-primary-element);
+	background-color: var(--color-primary-element-element-element);
+	color: var(--color-primary-element-element-element-text-dark);
+	border-color: var(--color-primary-element-element-element);
 	font-weight: 500;
 }
 
@@ -4613,8 +4606,8 @@ select.form-control:focus {
 }
 
 .action-button--delete:hover {
-	background-color: var(--color-error-background);
-	color: var(--color-error);
+	background-color: var(--color-element-error-background);
+	color: var(--color-element-error);
 }
 
 /* Status Badges */
@@ -4627,23 +4620,23 @@ select.form-control:focus {
 }
 
 .status-active {
-	background-color: var(--color-success-element);
-	color: var(--color-success-element-text);
+	background-color: var(--color-element-success);
+	color: var(--color-element-success-text);
 }
 
 .status-on_hold {
-	background-color: var(--color-warning-element);
-	color: var(--color-warning-element-text);
+	background-color: var(--color-element-warning);
+	color: var(--color-element-warning-text);
 }
 
 .status-completed {
-	background-color: var(--color-primary-element);
-	color: var(--color-primary-element-text-dark);
+	background-color: var(--color-info);
+	color: var(--color-info-text);
 }
 
 .status-cancelled {
-	background-color: var(--color-error-element);
-	color: var(--color-error-element-text);
+	background-color: var(--color-element-error);
+	color: var(--color-element-error-text);
 }
 
 /* Priority Badges */
@@ -4656,18 +4649,18 @@ select.form-control:focus {
 }
 
 .priority-badge--low {
-	background-color: var(--color-success-element);
-	color: var(--color-success-element-text);
+	background-color: var(--color-element-success);
+	color: var(--color-element-success-text);
 }
 
 .priority-badge--medium {
-	background-color: var(--color-warning-element);
-	color: var(--color-warning-element-text);
+	background-color: var(--color-element-warning);
+	color: var(--color-element-warning-text);
 }
 
 .priority-badge--high {
-	background-color: var(--color-error-element);
-	color: var(--color-error-element-text);
+	background-color: var(--color-element-error);
+	color: var(--color-element-error-text);
 }
 
 /* Typography - Nextcloud Standard */

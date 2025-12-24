@@ -361,8 +361,8 @@ export default {
 }
 
 .button-primary {
-	background-color: var(--color-primary-element) !important;
-	color: var(--color-primary-element-text) !important;
+	background-color: var(--color-primary-element-element-element) !important;
+	color: var(--color-primary-element-element-element-text) !important;
 }
 
 .empty-state {
@@ -414,11 +414,11 @@ export default {
 
 .project-item:hover {
 	background-color: var(--color-background-hover);
-	border-color: var(--color-primary-element);
+	border-color: var(--color-primary-element-element-element);
 }
 
 .project-item--active {
-	border-left: 4px solid var(--color-primary-element);
+	border-left: 4px solid var(--color-primary-element-element-element);
 	padding-left: 12px;
 }
 
@@ -543,12 +543,12 @@ export default {
 }
 
 .popover-menu-item--danger {
-	color: var(--color-error-element);
+	color: var(--color-element-error-element);
 }
 
 .popover-menu-item--danger:hover {
-	background-color: var(--color-error-background);
-	color: var(--color-error-element);
+	background-color: var(--color-element-error-background);
+	color: var(--color-element-error-element);
 }
 
 .popover-menu-separator {
@@ -568,35 +568,35 @@ export default {
 }
 
 .status-badge.status-active {
-	background-color: var(--color-success);
-	color: var(--color-success-text);
+	background-color: var(--color-element-success);
+	color: var(--color-element-success-text);
 }
 
 .status-badge.status-on_hold {
-	background-color: var(--color-warning);
-	color: var(--color-warning-text);
+	background-color: var(--color-element-warning);
+	color: var(--color-element-warning-text);
 }
 
 .status-badge.status-completed {
-	background-color: var(--color-primary-element);
-	color: var(--color-primary-element-text);
+	background-color: var(--color-primary-element-element-element);
+	color: var(--color-primary-element-element-element-text);
 }
 
 .status-badge.status-cancelled {
-	background-color: var(--color-error);
-	color: var(--color-error-text);
+	background-color: var(--color-element-error);
+	color: var(--color-element-error-text);
 }
 
 .status-ok {
-	color: var(--color-success);
+	color: var(--color-element-success);
 }
 
 .status-warning {
-	color: var(--color-warning);
+	color: var(--color-element-warning);
 }
 
 .status-critical {
-	color: var(--color-error);
+	color: var(--color-element-error);
 }
 </style>
 

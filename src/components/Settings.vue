@@ -626,7 +626,7 @@ export default {
 }
 
 .settings-title .material-icon {
-	color: var(--color-primary-element);
+	color: var(--color-primary-element-element-element);
 	opacity: 1;
 }
 
@@ -654,7 +654,7 @@ export default {
 
 .settings-section:hover {
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-	border-color: var(--color-primary-element-light);
+	border-color: var(--color-primary-element-element-element-light);
 }
 
 .section-header {
@@ -674,7 +674,7 @@ export default {
 }
 
 .section-title .material-icon {
-	color: var(--color-primary-element);
+	color: var(--color-primary-element-element-element);
 	opacity: 0.9;
 }
 
@@ -715,14 +715,14 @@ export default {
 	left: 0;
 	width: 4px;
 	height: 100%;
-	background-color: var(--color-primary-element);
+	background-color: var(--color-primary-element-element-element);
 	transform: scaleY(0);
 	transition: transform 0.25s ease;
 }
 
 .module-item:hover {
 	background-color: var(--color-background-hover);
-	border-color: var(--color-primary-element);
+	border-color: var(--color-primary-element-element-element);
 	transform: translateY(-2px);
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
@@ -744,7 +744,7 @@ export default {
 	width: 20px;
 	height: 20px;
 	cursor: pointer;
-	accent-color: var(--color-primary-element);
+	accent-color: var(--color-primary-element-element-element);
 	flex-shrink: 0;
 }
 
@@ -759,8 +759,8 @@ export default {
 	width: 44px;
 	height: 44px;
 	border-radius: 10px;
-	background: linear-gradient(135deg, var(--color-primary-element) 0%, var(--color-primary-element-light) 100%);
-	color: var(--color-primary-element-text);
+	background: linear-gradient(135deg, var(--color-primary-element-element-element) 0%, var(--color-primary-element-element-element-light) 100%);
+	color: var(--color-primary-element-element-element-text);
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -833,7 +833,7 @@ export default {
 
 .currency-item:hover {
 	background-color: var(--color-background-hover);
-	border-color: var(--color-primary-element);
+	border-color: var(--color-primary-element-element-element);
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
@@ -846,7 +846,7 @@ export default {
 .currency-symbol {
 	font-size: 28px;
 	font-weight: 600;
-	color: var(--color-primary-element);
+	color: var(--color-primary-element-element-element);
 	min-width: 48px;
 	text-align: center;
 	line-height: 1;
@@ -900,13 +900,13 @@ export default {
 }
 
 .form-control:hover {
-	border-color: var(--color-primary-element-light);
+	border-color: var(--color-primary-element-element-element-light);
 }
 
 .form-control:focus {
 	outline: none;
-	border-color: var(--color-primary-element);
-	box-shadow: 0 0 0 3px rgba(var(--color-primary-element-rgb), 0.1);
+	border-color: var(--color-primary-element-element-element);
+	box-shadow: 0 0 0 3px rgba(var(--color-primary-element-element-element-rgb), 0.1);
 }
 
 .form-control:disabled {
@@ -1046,7 +1046,7 @@ export default {
 
 .loading-icon {
 	animation: spin 1s linear infinite;
-	color: var(--color-primary-element);
+	color: var(--color-primary-element-element-element);
 }
 
 @keyframes spin {
@@ -1060,14 +1060,14 @@ export default {
 
 /* Checkbox improvements */
 .module-checkbox input[type="checkbox"]:checked + .module-content .module-icon {
-	background: linear-gradient(135deg, var(--color-primary-element) 0%, var(--color-primary-element-dark) 100%);
-	box-shadow: 0 3px 10px rgba(var(--color-primary-element-rgb), 0.3);
+	background: linear-gradient(135deg, var(--color-primary-element-element-element) 0%, var(--color-primary-element-element-element-dark) 100%);
+	box-shadow: 0 3px 10px rgba(var(--color-primary-element-element-element-rgb), 0.3);
 }
 
 /* Currency item default badge */
 .currency-item[data-default="true"] {
-	border-color: var(--color-primary-element);
-	background: linear-gradient(135deg, rgba(var(--color-primary-element-rgb), 0.05) 0%, rgba(var(--color-primary-element-rgb), 0.02) 100%);
+	border-color: var(--color-primary-element-element-element);
+	background: linear-gradient(135deg, rgba(var(--color-primary-element-element-element-rgb), 0.05) 0%, rgba(var(--color-primary-element-element-element-rgb), 0.02) 100%);
 }
 
 .currency-item[data-default="true"]::before {
@@ -1077,8 +1077,8 @@ export default {
 	right: 8px;
 	font-size: 11px;
 	font-weight: 600;
-	color: var(--color-primary-element);
-	background-color: rgba(var(--color-primary-element-rgb), 0.1);
+	color: var(--color-primary-element-element-element);
+	background-color: rgba(var(--color-primary-element-element-element-rgb), 0.1);
 	padding: 2px 8px;
 	border-radius: 4px;
 	text-transform: uppercase;
@@ -1133,8 +1133,8 @@ export default {
 }
 
 .checkbox-input:checked + .checkbox-custom {
-	background-color: var(--color-primary-element);
-	border-color: var(--color-primary-element);
+	background-color: var(--color-primary-element-element-element);
+	border-color: var(--color-primary-element-element-element);
 }
 
 .checkbox-input:checked + .checkbox-custom::after {
@@ -1144,13 +1144,13 @@ export default {
 	top: 3px;
 	width: 5px;
 	height: 10px;
-	border: solid var(--color-primary-element-text);
+	border: solid var(--color-primary-element-element-element-text);
 	border-width: 0 2px 2px 0;
 	transform: rotate(45deg);
 }
 
 .checkbox-input:focus + .checkbox-custom {
-	box-shadow: 0 0 0 3px rgba(var(--color-primary-element-rgb), 0.2);
+	box-shadow: 0 0 0 3px rgba(var(--color-primary-element-element-element-rgb), 0.2);
 }
 
 .checkbox-text {

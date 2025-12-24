@@ -61,13 +61,51 @@
                 <div v-if="canStartTimer || currentRunningEntry" class="separator"></div>
 
                 <!-- Actions Menu -->
-                <NcActions :primary="true">
+                <NcActions :primary="true" class="project-header-actions">
                     <NcActionButton @click="$emit('edit')">
                         <template #icon>
                             <IconPencilOutline :size="20" />
                         </template>
                         {{ t('domaincontrol', 'Edit') }}
                     </NcActionButton>
+                    <NcActionSeparator />
+                    <NcActionButton 
+                        v-if="project && project.status !== 'active'"
+                        @click="$emit('change-status', 'active')"
+                    >
+                        <template #icon>
+                            <IconPlayCircle :size="20" />
+                        </template>
+                        {{ t('domaincontrol', 'Set as Active') }}
+                    </NcActionButton>
+                    <NcActionButton 
+                        v-if="project && project.status !== 'on_hold'"
+                        @click="$emit('change-status', 'on_hold')"
+                    >
+                        <template #icon>
+                            <IconPauseCircle :size="20" />
+                        </template>
+                        {{ t('domaincontrol', 'Set as On Hold') }}
+                    </NcActionButton>
+                    <NcActionButton 
+                        v-if="project && project.status !== 'completed'"
+                        @click="$emit('change-status', 'completed')"
+                    >
+                        <template #icon>
+                            <IconCheckCircle :size="20" />
+                        </template>
+                        {{ t('domaincontrol', 'Set as Completed') }}
+                    </NcActionButton>
+                    <NcActionButton 
+                        v-if="project && project.status !== 'cancelled'"
+                        @click="$emit('change-status', 'cancelled')"
+                    >
+                        <template #icon>
+                            <IconCloseCircle :size="20" />
+                        </template>
+                        {{ t('domaincontrol', 'Set as Cancelled') }}
+                    </NcActionButton>
+                    <NcActionSeparator />
                     <NcActionButton @click="$emit('delete')">
                         <template #icon>
                             <IconTrashCanOutline :size="20" />
@@ -107,7 +145,7 @@
 
 <script>
 // Nextcloud Vue Components
-import { NcButton, NcActions, NcActionButton } from '@nextcloud/vue'
+import { NcButton, NcActions, NcActionButton, NcActionSeparator } from '@nextcloud/vue'
 
 // Material Design Icons (Standart Nextcloud Yöntemi)
 import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue'
@@ -115,6 +153,10 @@ import PlayCircle from 'vue-material-design-icons/PlayCircle.vue'
 import StopCircle from 'vue-material-design-icons/StopCircle.vue'
 import IconPencilOutline from 'vue-material-design-icons/PencilOutline.vue'
 import IconTrashCanOutline from 'vue-material-design-icons/TrashCanOutline.vue'
+import IconPlayCircle from 'vue-material-design-icons/PlayCircle.vue'
+import IconPauseCircle from 'vue-material-design-icons/PauseCircle.vue'
+import IconCheckCircle from 'vue-material-design-icons/CheckCircle.vue'
+import IconCloseCircle from 'vue-material-design-icons/CloseCircle.vue'
 import ViewDashboard from 'vue-material-design-icons/ViewDashboard.vue'
 import CheckboxMarkedCircleOutline from 'vue-material-design-icons/CheckboxMarkedCircleOutline.vue'
 import FolderOutline from 'vue-material-design-icons/FolderOutline.vue'
@@ -127,12 +169,17 @@ export default {
         NcButton,
         NcActions,
         NcActionButton,
+        NcActionSeparator,
         // İkonları register ediyoruz
         ArrowLeft,
         PlayCircle,
         StopCircle,
         IconPencilOutline,
         IconTrashCanOutline,
+        IconPlayCircle,
+        IconPauseCircle,
+        IconCheckCircle,
+        IconCloseCircle,
         ViewDashboard,
         CheckboxMarkedCircleOutline,
         FolderOutline,
@@ -157,7 +204,7 @@ export default {
             default: null,
         },
     },
-    emits: ['back', 'edit', 'delete', 'start-timer', 'stop-timer', 'tab-change'],
+    emits: ['back', 'edit', 'delete', 'start-timer', 'stop-timer', 'tab-change', 'change-status'],
     data() {
         return {
             // Tab ID'leri Projects.vue ile eşleşmeli
@@ -171,12 +218,47 @@ export default {
         }
     },
     methods: {
-        t(app, text) {
+        t(app, text, vars) {
             try {
-                return OC?.L10n?.translate(app, text) || text;
+                if (typeof window !== 'undefined') {
+                    // Try OC.L10n.translate first (Nextcloud's standard method)
+                    if (typeof OC !== 'undefined' && OC.L10n && typeof OC.L10n.translate === 'function') {
+                        const translated = OC.L10n.translate(app, text, vars || {})
+                        if (translated && translated !== text) {
+                            let result = translated
+                            if (vars && typeof vars === 'object') {
+                                for (const key in vars) {
+                                    result = result.replace(new RegExp(`\\{${key}\\}`, 'g'), vars[key])
+                                }
+                            }
+                            return result
+                        }
+                    }
+                    // Fallback to window.t
+                    if (typeof window.t === 'function') {
+                        const translated = window.t(app, text, vars || {})
+                        if (translated && translated !== text) {
+                            let result = translated
+                            if (vars && typeof vars === 'object') {
+                                for (const key in vars) {
+                                    result = result.replace(new RegExp(`\\{${key}\\}`, 'g'), vars[key])
+                                }
+                            }
+                            return result
+                        }
+                    }
+                }
             } catch (e) {
-                return text;
+                console.warn('Translation error:', e)
             }
+            // If translation not found, return original text with variable replacement
+            let result = text
+            if (vars && typeof vars === 'object') {
+                for (const key in vars) {
+                    result = result.replace(new RegExp(`\\{${key}\\}`, 'g'), vars[key])
+                }
+            }
+            return result
         },
         getProjectStatusText(status) {
             const map = {
@@ -303,8 +385,8 @@ export default {
             }
 
             &.delete-button:hover {
-                color: var(--color-error);
-                background-color: var(--color-error-hover);
+                color: var(--color-element-error);
+                background-color: var(--color-element-error-hover);
             }
             
             &.timer-button {
@@ -315,13 +397,39 @@ export default {
             }
 
             &.stop-timer-button {
-                background-color: var(--color-error);
-                color: var(--color-error-text);
+                background-color: var(--color-element-error);
+                color: var(--color-element-error-text);
                 
                 &:hover {
-                    background-color: var(--color-error-hover);
+                    background-color: var(--color-element-error-hover);
                 }
             }
+        }
+
+        /* Custom styling for NcActionButton components - only affects this component */
+        /* Target NcActions menu items within project header */
+        .project-header-actions :deep(.action-button),
+        .project-header-actions :deep(button),
+        .project-header-actions :deep(li) {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            height: auto;
+            margin: 0;
+            padding: 0;
+            padding-inline-end: calc((var(--default-clickable-area) - 16px) / 2);
+            box-sizing: border-box;
+            cursor: pointer;
+            white-space: nowrap;
+            color: var(--color-main-text);
+            border: 0;
+            border-radius: 0;
+            background-color: transparent;
+            box-shadow: none;
+            font-weight: normal;
+            font-size: var(--default-font-size);
+            line-height: var(--default-clickable-area);
+            justify-content: flex-start;
         }
     }
 }
@@ -347,20 +455,20 @@ export default {
     }
 
     &.status-active {
-        background-color: rgba(var(--color-success-rgb, 70, 186, 97), 0.15);
-        color: var(--color-success);
+        background-color: var(--color-element-success);
+        color: var(--color-element-success-text);
     }
     &.status-on_hold {
-        background-color: rgba(var(--color-warning-rgb, 234, 163, 11), 0.15);
-        color: var(--color-warning);
+        background-color: var(--color-element-warning);
+        color: var(--color-element-warning-text);
     }
     &.status-completed {
-        background-color: rgba(var(--color-primary-rgb, 0, 130, 201), 0.15);
-        color: var(--color-primary);
+        background-color: var(--color-info);
+        color: var(--color-info-text);
     }
     &.status-cancelled {
-        background-color: rgba(var(--color-error-rgb, 226, 50, 55), 0.15);
-        color: var(--color-error);
+        background-color: var(--color-element-error);
+        color: var(--color-element-error-text);
     }
 }
 
@@ -410,12 +518,12 @@ export default {
             }
 
             &.active {
-                color: var(--color-primary);
+                color: var(--color-primary-element-element);
                 font-weight: 600;
 
                 .tab-icon {
                     opacity: 1;
-                    color: var(--color-primary);
+                    color: var(--color-primary-element-element);
                 }
 
                 .active-indicator {
@@ -424,9 +532,9 @@ export default {
                     left: 0;
                     width: 100%;
                     height: 3px;
-                    background-color: var(--color-primary);
+                    background-color: var(--color-primary-element-element);
                     border-radius: 3px 3px 0 0;
-                    box-shadow: 0 -2px 6px rgba(var(--color-primary-rgb), 0.3);
+                    box-shadow: 0 -2px 6px rgba(var(--color-primary-element-element-rgb), 0.3);
                 }
             }
         }

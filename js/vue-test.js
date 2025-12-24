@@ -43,13 +43,13 @@
 		
 		function render() {
 			container.innerHTML = `
-				<div class="vue-test-container" style="padding: 20px; border: 2px solid var(--color-primary, #00679e); border-radius: 8px; background: var(--color-background-dark, #292929); margin: 20px 0;">
+				<div class="vue-test-container" style="padding: 20px; border: 2px solid var(--color-primary-element-element, #00679e); border-radius: 8px; background: var(--color-background-dark, #292929); margin: 20px 0;">
 					<h3 style="color: var(--color-main-text, #EBEBEB); margin-bottom: 15px;">🧪 Nextcloud Vue.js Test</h3>
 					<p style="color: var(--color-text-maxcontrast, #999999); margin-bottom: 10px;">${state.message}</p>
 					<div style="margin: 15px 0;">
 						<button 
 							id="vue-test-increment"
-							style="padding: 8px 16px; background: var(--color-primary, #00679e); color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px;"
+							style="padding: 8px 16px; background: var(--color-primary-element-element, #00679e); color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px;"
 						>
 							Artır (${state.counter})
 						</button>

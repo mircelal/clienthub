@@ -1427,7 +1427,7 @@ export default {
 
 .form-control:focus {
 	outline: none;
-	border-color: var(--color-primary-element);
+	border-color: var(--color-primary-element-element-element);
 }
 
 .report-section {
@@ -1482,28 +1482,28 @@ export default {
 }
 
 .stat-card--success .stat-card__icon {
-	background-color: var(--color-success);
-	color: var(--color-success-text);
+	background-color: var(--color-element-success);
+	color: var(--color-element-success-text);
 }
 
 .stat-card--info .stat-card__icon {
-	background-color: var(--color-primary-element);
-	color: var(--color-primary-element-text);
+	background-color: var(--color-primary-element-element-element);
+	color: var(--color-primary-element-element-element-text);
 }
 
 .stat-card--warning .stat-card__icon {
-	background-color: var(--color-warning);
-	color: var(--color-warning-text);
+	background-color: var(--color-element-warning);
+	color: var(--color-element-warning-text);
 }
 
 .stat-card--primary .stat-card__icon {
-	background-color: var(--color-primary-element);
-	color: var(--color-primary-element-text);
+	background-color: var(--color-primary-element-element-element);
+	color: var(--color-primary-element-element-element-text);
 }
 
 .stat-card--danger .stat-card__icon {
-	background-color: var(--color-error);
-	color: var(--color-error-text);
+	background-color: var(--color-element-error);
+	color: var(--color-element-error-text);
 }
 
 .stat-card--purple .stat-card__icon {
@@ -1584,8 +1584,8 @@ export default {
 	width: 32px;
 	height: 32px;
 	border-radius: 50%;
-	background-color: var(--color-primary-element);
-	color: var(--color-primary-element-text);
+	background-color: var(--color-primary-element-element-element);
+	color: var(--color-primary-element-element-element-text);
 	display: flex;
 	align-items: center;
 	justify-content: center;

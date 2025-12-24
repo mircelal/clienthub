@@ -103,9 +103,9 @@ class TimeEntryMapper extends QBMapper {
 		
 		return array_map(function($row) {
 			return [
-				'user_id' => $row['user_id'],
-				'total_duration' => (int)$row['total_duration'],
-				'entry_count' => (int)$row['entry_count'],
+				'userId' => $row['user_id'],
+				'duration' => (int)$row['total_duration'],
+				'entryCount' => (int)$row['entry_count'],
 			];
 		}, $rows);
 	}

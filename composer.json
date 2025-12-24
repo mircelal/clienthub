@@ -1,0 +1,15 @@
+{
+	"name": "domaincontrol/domaincontrol",
+	"description": "ClientHub - Comprehensive client, project, and business management system",
+	"type": "library",
+	"license": "AGPL-3.0",
+	"require": {
+		"php": ">=7.4",
+		"tecnickcom/tcpdf": "^6.10"
+	},
+	"autoload": {
+		"psr-4": {
+			"OCA\\DomainControl\\": "lib/"
+		}
+	}
+}

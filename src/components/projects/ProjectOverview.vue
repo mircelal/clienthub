@@ -136,20 +136,23 @@
                         </div>
                     </div>
                     
-                    <div class="nc-list">
+                    <div v-if="!durationByUser || durationByUser.length === 0" class="nc-empty-state small">
+                        <p>{{ translate('domaincontrol', 'No time entries yet') }}</p>
+                    </div>
+                    <div v-else class="nc-list">
                          <div
                             v-for="userTime in durationByUser"
-                            :key="userTime.userId"
+                            :key="userTime.userId || userTime.user_id"
                             class="nc-list-item"
                         >
                             <div class="nc-avatar-icon">
                                 <AccountCircle :size="24" />
                             </div>
                             <div class="nc-list-content">
-                                <span class="list-title">{{ getUserDisplayNameLocal(userTime.userId) }}</span>
+                                <span class="list-title">{{ getUserDisplayNameLocal(userTime.userId || userTime.user_id) }}</span>
                             </div>
                             <div class="nc-list-end font-mono">
-                                {{ formatDurationLocal(userTime.duration) }}
+                                {{ formatDurationLocal(userTime.duration || userTime.total_duration || 0) }}
                             </div>
                         </div>
                     </div>
@@ -431,19 +434,38 @@ export default {
             }).format(val)
         },
         formatDurationLocal(seconds) {
-            if (this.formatDuration && typeof this.formatDuration === 'function') return this.formatDuration(seconds)
-            if (!seconds || seconds === 0) return '0s'
-            const h = Math.floor(seconds / 3600)
-            const m = Math.floor((seconds % 3600) / 60)
+            if (this.formatDuration && typeof this.formatDuration === 'function') {
+                const result = this.formatDuration(seconds)
+                if (result && result !== 'NaN' && result !== 'NaNm') return result
+            }
+            
+            // Ensure seconds is a valid number
+            const sec = parseInt(seconds) || 0
+            if (sec === 0) return '0s'
+            
+            const h = Math.floor(sec / 3600)
+            const m = Math.floor((sec % 3600) / 60)
             return h > 0 ? `${h}h ${m}m` : `${m}m`
         },
         getUserDisplayNameLocal(userId) {
-            if (this.getUserDisplayName && typeof this.getUserDisplayName === 'function') return this.getUserDisplayName(userId)
-            if (this.availableUsers && Array.isArray(this.availableUsers)) {
-                const user = this.availableUsers.find(u => u.userId === userId)
-                if (user) return user.displayName || userId
+            if (!userId) return 'Unknown'
+            
+            // Try prop function first
+            if (this.getUserDisplayName && typeof this.getUserDisplayName === 'function') {
+                const result = this.getUserDisplayName(userId)
+                if (result && result !== userId) return result
             }
-            return userId
+            
+            // Try availableUsers array
+            if (this.availableUsers && Array.isArray(this.availableUsers) && this.availableUsers.length > 0) {
+                const user = this.availableUsers.find(u => u.userId === userId)
+                if (user && user.displayName) {
+                    return user.displayName
+                }
+            }
+            
+            // Fallback: return userId or 'Unknown'
+            return userId || 'Unknown'
         },
         getDeadlineBgClass(project) {
             if (!project || !project.deadline) return 'secondary-bg'
@@ -496,9 +518,31 @@ export default {
         },
         formatActivityDescription(activity) {
             const metadata = activity.metadata || {}
-            // Clean up description if necessary, currently returning the provided logic
-            // Note: In a real app, you would reconstruct strings here using translation keys
-            return activity.description || activity.activityType
+            const type = activity.activityType
+            
+            const descriptions = {
+                note_created: this.translate('domaincontrol', 'Created note: {title}', { title: metadata.title || '' }),
+                note_updated: this.translate('domaincontrol', 'Updated note: {title}', { title: metadata.title || '' }),
+                note_deleted: this.translate('domaincontrol', 'Deleted note'),
+                file_uploaded: this.translate('domaincontrol', 'Uploaded file: {fileName}', { fileName: metadata.fileName || '' }),
+                file_deleted: this.translate('domaincontrol', 'Deleted file: {fileName}', { fileName: metadata.fileName || '' }),
+                task_created: this.translate('domaincontrol', 'Created task'),
+                task_updated: this.translate('domaincontrol', 'Updated task'),
+                task_completed: this.translate('domaincontrol', 'Completed task'),
+                task_deleted: this.translate('domaincontrol', 'Deleted task'),
+                time_started: this.translate('domaincontrol', 'Started time tracking'),
+                time_stopped: this.translate('domaincontrol', 'Stopped time tracking'),
+                time_updated: this.translate('domaincontrol', 'Updated time entry'),
+                time_deleted: this.translate('domaincontrol', 'Deleted time entry'),
+                project_created: this.translate('domaincontrol', 'Created project'),
+                project_shared: this.translate('domaincontrol', 'Shared project with user'),
+                project_unshared: this.translate('domaincontrol', 'Unshared project with user'),
+                project_updated: this.translate('domaincontrol', 'Updated project'),
+                item_linked: this.translate('domaincontrol', 'Linked {itemType} to project', { itemType: metadata.itemType || '' }),
+                item_unlinked: this.translate('domaincontrol', 'Unlinked {itemType} from project', { itemType: metadata.itemType || '' }),
+            }
+            
+            return descriptions[type] || activity.description || type
         },
     },
 }
@@ -531,7 +575,7 @@ export default {
 }
 
 .nc-stat-widget:hover {
-    border-color: var(--color-primary-element);
+    border-color: var(--color-primary-element-element-element);
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
@@ -547,10 +591,10 @@ export default {
     background-color: var(--color-background-hover);
 }
 
-.primary-bg { background-color: rgba(0, 130, 201, 0.1); color: var(--color-primary); }
-.success-bg { background-color: rgba(70, 186, 97, 0.1); color: var(--color-success); }
-.warning-bg { background-color: rgba(233, 144, 2, 0.1); color: var(--color-warning); }
-.error-bg { background-color: rgba(233, 50, 45, 0.1); color: var(--color-error); }
+.primary-bg { background-color: rgba(0, 130, 201, 0.1); color: var(--color-primary-element-element); }
+.success-bg { background-color: rgba(70, 186, 97, 0.1); color: var(--color-element-success); }
+.warning-bg { background-color: rgba(233, 144, 2, 0.1); color: var(--color-element-warning); }
+.error-bg { background-color: rgba(233, 50, 45, 0.1); color: var(--color-element-error); }
 .info-bg { background-color: rgba(0, 130, 201, 0.05); color: var(--color-text-maxcontrast); }
 .secondary-bg { background-color: var(--color-background-dark); color: var(--color-text-maxcontrast); }
 
@@ -576,16 +620,16 @@ export default {
 }
 
 .nc-link {
-    color: var(--color-primary);
+    color: var(--color-primary-element-element);
     text-decoration: none;
 }
 .nc-link:hover { text-decoration: underline; }
 
 .status-text { text-transform: capitalize; }
-.text-primary { color: var(--color-primary); }
-.text-success { color: var(--color-success); }
-.text-warning { color: var(--color-warning); }
-.text-error { color: var(--color-error); }
+.text-primary { color: var(--color-primary-element-element); }
+.text-success { color: var(--color-element-success); }
+.text-warning { color: var(--color-element-warning); }
+.text-error { color: var(--color-element-error); }
 .font-bold { font-weight: 700; }
 .font-mono { font-family: monospace; }
 
@@ -654,7 +698,7 @@ export default {
     border-radius: 10px;
     font-weight: bold;
 }
-.header-badge.primary { background-color: var(--color-background-dark); color: var(--color-primary); }
+.header-badge.primary { background-color: var(--color-background-dark); color: var(--color-primary-element-element); }
 
 /* --- Lists (Time Summary) --- */
 .nc-list {

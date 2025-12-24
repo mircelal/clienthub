@@ -296,7 +296,7 @@ export default {
 }
 
 .text-success {
-	color: var(--color-success);
+	color: var(--color-element-success);
 	font-weight: 600;
 }
 
@@ -331,7 +331,7 @@ export default {
 
 .form-control:focus {
 	outline: none;
-	border-color: var(--color-primary);
+	border-color: var(--color-primary-element-element);
 }
 
 .form-control::placeholder {
@@ -372,12 +372,12 @@ export default {
 }
 
 .button-vue--primary {
-	background-color: var(--color-primary);
-	color: var(--color-primary-text);
+	background-color: var(--color-primary-element-element);
+	color: var(--color-primary-element-element-text);
 }
 
 .button-vue--primary:hover:not(:disabled) {
-	background-color: var(--color-primary-hover);
+	background-color: var(--color-primary-element-element-hover);
 }
 
 .button-vue--secondary {
@@ -391,12 +391,12 @@ export default {
 }
 
 .button-vue--success {
-	background-color: var(--color-success);
-	color: var(--color-success-text);
+	background-color: var(--color-element-success);
+	color: var(--color-element-success-text);
 }
 
 .button-vue--success:hover:not(:disabled) {
-	background-color: var(--color-success-hover);
+	background-color: var(--color-element-success-hover);
 }
 </style>
 

@@ -351,9 +351,9 @@ export default {
 }
 
 .category-button.active {
-	background-color: var(--color-primary-element);
-	color: var(--color-primary-element-text-dark);
-	border-color: var(--color-primary-element);
+	background-color: var(--color-primary-element-element-element);
+	color: var(--color-primary-element-element-element-text-dark);
+	border-color: var(--color-primary-element-element-element);
 }
 
 .notes-list {
@@ -508,7 +508,7 @@ export default {
 
 .form-control:focus {
 	outline: none;
-	border-color: var(--color-primary-element);
+	border-color: var(--color-primary-element-element-element);
 }
 </style>
 

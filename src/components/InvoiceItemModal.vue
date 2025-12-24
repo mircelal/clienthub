@@ -1,416 +1,329 @@
 <template>
-	<div v-if="isOpen" class="modal-overlay" @click.self="closeModal">
-		<div class="modal-content">
-			<div class="modal-header">
-				<h3 class="modal-title">
-					{{ editingItem ? translate('domaincontrol', 'Edit Item') : translate('domaincontrol', 'Add Item') }}
-				</h3>
-				<button class="modal-close" @click="closeModal">
-					<MaterialIcon name="close" :size="24" />
-				</button>
-			</div>
-			<div class="modal-body">
-				<form @submit.prevent="saveItem">
-					<input type="hidden" v-model="formData.invoiceId" />
-					<div class="form-group">
-						<label for="item-description">{{ translate('domaincontrol', 'Description') }} *</label>
-						<input
-							type="text"
-							id="item-description"
-							v-model="formData.description"
-							required
-							class="form-control"
-							:placeholder="translate('domaincontrol', 'e.g., Annual domain renewal')"
-						/>
-					</div>
-					<div class="form-row">
-						<div class="form-group">
-							<label for="item-quantity">{{ translate('domaincontrol', 'Quantity') }}</label>
-							<input
-								type="number"
-								id="item-quantity"
-								v-model="formData.quantity"
-								min="1"
-								class="form-control"
-								@input="calculateTotal"
-							/>
-						</div>
-						<div class="form-group">
-							<label for="item-unit-price">{{ translate('domaincontrol', 'Unit Price') }}</label>
-							<input
-								type="number"
-								id="item-unit-price"
-								v-model="formData.unitPrice"
-								step="0.01"
-								class="form-control"
-								placeholder="0.00"
-								@input="calculateTotal"
-							/>
-						</div>
-						<div class="form-group">
-							<label for="item-total-price">{{ translate('domaincontrol', 'Total Price') }}</label>
-							<input
-								type="number"
-								id="item-total-price"
-								v-model="formData.totalPrice"
-								step="0.01"
-								class="form-control"
-								readonly
-							/>
-						</div>
-					</div>
-					<div class="form-row">
-						<div class="form-group">
-							<label for="item-period-start">{{ translate('domaincontrol', 'Period Start') }}</label>
-							<input
-								type="date"
-								id="item-period-start"
-								v-model="formData.periodStart"
-								class="form-control"
-							/>
-						</div>
-						<div class="form-group">
-							<label for="item-period-end">{{ translate('domaincontrol', 'Period End') }}</label>
-							<input
-								type="date"
-								id="item-period-end"
-								v-model="formData.periodEnd"
-								class="form-control"
-							/>
-						</div>
-					</div>
-					<div class="form-actions">
-						<button type="button" class="button-vue button-vue--secondary" @click="closeModal">
-							{{ translate('domaincontrol', 'Cancel') }}
-						</button>
-						<button type="submit" class="button-vue button-vue--primary" :disabled="saving">
-							{{ saving ? translate('domaincontrol', 'Saving...') : translate('domaincontrol', 'Save') }}
-						</button>
-					</div>
-				</form>
-			</div>
-		</div>
-	</div>
+    <div v-if="open" class="modal-overlay" @click.self="$emit('close')">
+        <div class="modal-content modal-content--medium">
+            <div class="modal-header">
+                <h2 class="modal-title">{{ translate('domaincontrol', 'Add Invoice Item') }}</h2>
+                <button class="modal-close" @click="$emit('close')">
+                    <Close :size="24" />
+                </button>
+            </div>
+            <div class="modal-body">
+                <form @submit.prevent="saveItem">
+                    <div class="form-group">
+                        <label class="form-label">{{ translate('domaincontrol', 'Description') }} *</label>
+                        <input
+                            type="text"
+                            v-model="formData.description"
+                            class="form-control"
+                            :placeholder="translate('domaincontrol', 'Item description')"
+                            required
+                        />
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">{{ translate('domaincontrol', 'Quantity') }}</label>
+                            <input
+                                type="number"
+                                v-model.number="formData.quantity"
+                                class="form-control"
+                                min="1"
+                                step="1"
+                                @input="calculateTotal"
+                            />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">{{ translate('domaincontrol', 'Unit Price') }}</label>
+                            <input
+                                type="number"
+                                v-model.number="formData.unitPrice"
+                                class="form-control"
+                                min="0"
+                                step="0.01"
+                                @input="calculateTotal"
+                            />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">{{ translate('domaincontrol', 'Total Price') }}</label>
+                            <input
+                                type="number"
+                                v-model.number="formData.totalPrice"
+                                class="form-control"
+                                min="0"
+                                step="0.01"
+                                readonly
+                            />
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">{{ translate('domaincontrol', 'Period Start') }}</label>
+                            <input
+                                type="date"
+                                v-model="formData.periodStart"
+                                class="form-control"
+                            />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">{{ translate('domaincontrol', 'Period End') }}</label>
+                            <input
+                                type="date"
+                                v-model="formData.periodEnd"
+                                class="form-control"
+                            />
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">{{ translate('domaincontrol', 'Item Type') }}</label>
+                        <select v-model="formData.itemType" class="form-control">
+                            <option value="service">{{ translate('domaincontrol', 'Service') }}</option>
+                            <option value="domain">{{ translate('domaincontrol', 'Domain') }}</option>
+                            <option value="hosting">{{ translate('domaincontrol', 'Hosting') }}</option>
+                            <option value="website">{{ translate('domaincontrol', 'Website') }}</option>
+                            <option value="other">{{ translate('domaincontrol', 'Other') }}</option>
+                        </select>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @click="$emit('close')">
+                            {{ translate('domaincontrol', 'Cancel') }}
+                        </button>
+                        <button type="submit" class="btn btn-primary" :disabled="saving">
+                            <span v-if="saving">{{ translate('domaincontrol', 'Saving...') }}</span>
+                            <span v-else>{{ translate('domaincontrol', 'Add Item') }}</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </template>
 
 <script>
+import Close from 'vue-material-design-icons/Close.vue'
 import api from '../services/api'
-import MaterialIcon from './MaterialIcon.vue'
 
 export default {
-	name: 'InvoiceItemModal',
-	components: {
-		MaterialIcon,
-	},
-	props: {
-		open: {
-			type: Boolean,
-			default: false,
-		},
-		invoice: {
-			type: Object,
-			default: null,
-		},
-		item: {
-			type: Object,
-			default: null,
-		},
-	},
-	emits: ['close', 'saved'],
-	data() {
-		return {
-			isOpen: false,
-			saving: false,
-			formData: {
-				invoiceId: null,
-				description: '',
-				quantity: 1,
-				unitPrice: '',
-				totalPrice: '',
-				periodStart: '',
-				periodEnd: '',
-			},
-		}
-	},
-	watch: {
-		open(newVal) {
-			this.isOpen = newVal
-			if (newVal) {
-				this.resetForm()
-				if (this.invoice) {
-					this.formData.invoiceId = this.invoice.id
-				}
-				if (this.item) {
-					this.loadItem()
-				}
-			}
-		},
-	},
-	methods: {
-		resetForm() {
-			this.formData = {
-				invoiceId: null,
-				description: '',
-				quantity: 1,
-				unitPrice: '',
-				totalPrice: '',
-				periodStart: '',
-				periodEnd: '',
-			}
-		},
-		loadItem() {
-			if (!this.item) return
-			this.formData = {
-				invoiceId: this.item.invoiceId || this.invoice?.id || null,
-				description: this.item.description || '',
-				quantity: this.item.quantity || 1,
-				unitPrice: this.item.unitPrice || '',
-				totalPrice: this.item.totalPrice || '',
-				periodStart: this.item.periodStart || '',
-				periodEnd: this.item.periodEnd || '',
-			}
-		},
-		calculateTotal() {
-			const quantity = parseFloat(this.formData.quantity) || 0
-			const unitPrice = parseFloat(this.formData.unitPrice) || 0
-			this.formData.totalPrice = (quantity * unitPrice).toFixed(2)
-		},
-		async saveItem() {
-			this.saving = true
-			try {
-				const data = {
-					...this.formData,
-					invoiceId: this.formData.invoiceId || '',
-					description: this.formData.description || '',
-					quantity: this.formData.quantity || 1,
-					unitPrice: this.formData.unitPrice || '0',
-					totalPrice: this.formData.totalPrice || '0',
-					periodStart: this.formData.periodStart || '',
-					periodEnd: this.formData.periodEnd || '',
-				}
-
-				if (this.item && this.item.id) {
-					// Update existing item - would need update endpoint
-					// For now, we'll delete and recreate
-					await api.invoices.removeItem(this.formData.invoiceId, this.item.id)
-				}
-				await api.invoices.addItem(this.formData.invoiceId, data)
-				this.$emit('saved')
-				this.closeModal()
-			} catch (error) {
-				console.error('Error saving item:', error)
-				alert(this.translate('domaincontrol', 'Error saving item'))
-			} finally {
-				this.saving = false
-			}
-		},
-		closeModal() {
-			this.isOpen = false
-			this.$emit('close')
-		},
-		translate(appId, text, vars) {
-			try {
-				if (typeof window !== 'undefined') {
-					if (typeof OC !== 'undefined' && OC.L10n && typeof OC.L10n.translate === 'function') {
-						const translated = OC.L10n.translate(appId, text, vars || {})
-						if (translated && translated !== text) {
-							return translated
-						}
-					}
-					if (typeof window.t === 'function') {
-						const translated = window.t(appId, text, vars || {})
-						if (translated && translated !== text) {
-							return translated
-						}
-					}
-				}
-			} catch (e) {
-				console.warn('Translation error:', e)
-			}
-
-			const translations = {
-				'Edit Item': 'Kalem Düzenle',
-				'Add Item': 'Kalem Ekle',
-				'Description': 'Açıklama',
-				'e.g., Annual domain renewal': 'Örn: Yıllık domain yenileme',
-				'Quantity': 'Miktar',
-				'Unit Price': 'Birim Fiyat',
-				'Total Price': 'Toplam Fiyat',
-				'Period Start': 'Dönem Başlangıç',
-				'Period End': 'Dönem Bitiş',
-				'Cancel': 'İptal',
-				'Saving...': 'Kaydediliyor...',
-				'Save': 'Kaydet',
-				'Error saving item': 'Kalem kaydedilirken hata oluştu',
-			}
-
-			return translations[text] || text
-		},
-	},
+    name: 'InvoiceItemModal',
+    components: {
+        Close
+    },
+    props: {
+        open: {
+            type: Boolean,
+            default: false
+        },
+        invoiceId: {
+            type: Number,
+            required: true
+        }
+    },
+    emits: ['close', 'saved'],
+    data() {
+        return {
+            saving: false,
+            formData: {
+                description: '',
+                quantity: 1,
+                unitPrice: 0,
+                totalPrice: 0,
+                periodStart: '',
+                periodEnd: '',
+                itemType: 'service',
+                itemId: 0
+            }
+        }
+    },
+    watch: {
+        open(newVal) {
+            if (newVal) {
+                this.resetForm()
+            }
+        }
+    },
+    methods: {
+        translate(appId, text, vars) {
+            try {
+                if (typeof window !== 'undefined' && typeof window.t === 'function') {
+                    return window.t(appId, text, vars || {})
+                }
+            } catch (e) { /* ignore */ }
+            return text
+        },
+        resetForm() {
+            this.formData = {
+                description: '',
+                quantity: 1,
+                unitPrice: 0,
+                totalPrice: 0,
+                periodStart: '',
+                periodEnd: '',
+                itemType: 'service',
+                itemId: 0
+            }
+        },
+        calculateTotal() {
+            this.formData.totalPrice = (this.formData.quantity || 1) * (this.formData.unitPrice || 0)
+        },
+        async saveItem() {
+            this.saving = true
+            try {
+                await api.invoices.addItem(this.invoiceId, this.formData)
+                this.$emit('saved')
+                this.$emit('close')
+            } catch (error) {
+                console.error('Error saving invoice item:', error)
+                alert(this.translate('domaincontrol', 'Error saving invoice item'))
+            } finally {
+                this.saving = false
+            }
+        }
+    }
 }
 </script>
 
 <style scoped>
 .modal-overlay {
-	position: fixed;
-	top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	background-color: rgba(0, 0, 0, 0.5);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	z-index: 10001;
-	padding: 20px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
 }
 
 .modal-content {
-	background-color: var(--color-main-background);
-	border-radius: var(--border-radius-container);
-	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-	max-width: 500px;
-	width: 100%;
-	max-height: 85vh;
-	display: flex;
-	flex-direction: column;
-	overflow: hidden;
+    background: var(--color-main-background);
+    border-radius: var(--border-radius-large);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    max-width: 600px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-content--medium {
+    max-width: 600px;
 }
 
 .modal-header {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	padding: 20px;
-	border-bottom: 1px solid var(--color-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--color-border);
 }
 
 .modal-title {
-	margin: 0;
-	font-size: 20px;
-	font-weight: 600;
-	color: var(--color-main-text);
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--color-main-text);
 }
 
 .modal-close {
-	background: none;
-	border: none;
-	color: var(--color-text-maxcontrast);
-	cursor: pointer;
-	padding: 0;
-	width: 32px;
-	height: 32px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	border-radius: var(--border-radius-small);
-	transition: background-color 0.2s;
+    background: none;
+    border: none;
+    padding: 4px;
+    cursor: pointer;
+    color: var(--color-text-maxcontrast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .modal-close:hover {
-	background-color: var(--color-background-hover);
+    color: var(--color-main-text);
 }
 
 .modal-body {
-	padding: 20px;
-	overflow-y: auto;
-	flex: 1;
-	min-height: 0;
-}
-
-.form-row {
-	display: grid;
-	grid-template-columns: repeat(3, 1fr);
-	gap: 16px;
-	margin-bottom: 16px;
+    padding: 24px;
 }
 
 .form-group {
-	margin-bottom: 16px;
+    margin-bottom: 20px;
 }
 
-.form-group label {
-	display: block;
-	margin-bottom: 6px;
-	font-weight: 500;
-	color: var(--color-main-text);
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-main-text);
 }
 
 .form-control {
-	width: 100%;
-	padding: 8px 12px;
-	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius-element);
-	background-color: var(--color-background-dark);
-	color: var(--color-main-text);
-	font-size: 14px;
-	box-sizing: border-box;
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    background: var(--color-main-background);
+    color: var(--color-main-text);
+    font-size: 14px;
 }
 
 .form-control:focus {
-	outline: none;
-	border-color: var(--color-primary);
+    outline: none;
+    border-color: var(--color-primary-element-element);
 }
 
-.form-control:read-only {
-	background-color: var(--color-background-hover);
-	cursor: not-allowed;
+.form-control[readonly] {
+    background: var(--color-background-hover);
+    cursor: not-allowed;
 }
 
-.form-control::placeholder {
-	color: var(--color-text-maxcontrast);
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--color-border);
 }
 
-.form-actions {
-	display: flex;
-	justify-content: flex-end;
-	gap: 12px;
-	margin-top: 24px;
-	padding-top: 20px;
-	border-top: 1px solid var(--color-border);
-	position: sticky;
-	bottom: 0;
-	background-color: var(--color-main-background);
-	z-index: 10;
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
 }
 
-.button-vue {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	padding: 8px 16px;
-	border-radius: var(--border-radius-small);
-	font-size: 14px;
-	cursor: pointer;
-	transition: all 0.2s ease;
-	text-decoration: none;
-	white-space: nowrap;
-	box-sizing: border-box;
-	border: 1px solid transparent;
+.btn-primary {
+    background: var(--color-primary-element-element);
+    color: var(--color-primary-element-element-text);
 }
 
-.button-vue:disabled {
-	opacity: 0.6;
-	cursor: not-allowed;
+.btn-primary:hover:not(:disabled) {
+    background: var(--color-primary-element-element-hover);
 }
 
-.button-vue--primary {
-	background-color: var(--color-primary);
-	color: var(--color-primary-text);
+.btn-secondary {
+    background: var(--color-background-hover);
+    color: var(--color-main-text);
 }
 
-.button-vue--primary:hover:not(:disabled) {
-	background-color: var(--color-primary-hover);
+.btn-secondary:hover {
+    background: var(--color-background-dark);
 }
 
-.button-vue--secondary {
-	background-color: transparent;
-	color: var(--color-main-text);
-	border-color: var(--color-border);
-}
-
-.button-vue--secondary:hover:not(:disabled) {
-	background-color: var(--color-background-hover);
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 </style>
-

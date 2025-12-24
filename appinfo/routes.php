@@ -101,6 +101,10 @@ return [
 		['name' => 'invoice#create', 'url' => '/api/invoices', 'verb' => 'POST'],
 		['name' => 'invoice#update', 'url' => '/api/invoices/{id}', 'verb' => 'PUT'],
 		['name' => 'invoice#delete', 'url' => '/api/invoices/{id}', 'verb' => 'DELETE'],
+		['name' => 'invoice#duplicate', 'url' => '/api/invoices/{id}/duplicate', 'verb' => 'POST'],
+		['name' => 'invoice#downloadPdf', 'url' => '/api/invoices/{id}/download-pdf', 'verb' => 'GET'],
+		['name' => 'invoice#sendEmail', 'url' => '/api/invoices/{id}/send-email', 'verb' => 'POST'],
+		['name' => 'invoice#exportReport', 'url' => '/api/invoices/export', 'verb' => 'GET'],
 		['name' => 'invoice#byClient', 'url' => '/api/clients/{clientId}/invoices', 'verb' => 'GET'],
 		['name' => 'invoice_item#index', 'url' => '/api/invoice-items', 'verb' => 'GET'],
 		['name' => 'invoice_item#show', 'url' => '/api/invoice-items/{id}', 'verb' => 'GET'],
@@ -167,6 +171,13 @@ return [
 		['name' => 'project_note#create', 'url' => '/api/projects/{projectId}/notes', 'verb' => 'POST'],
 		['name' => 'project_note#update', 'url' => '/api/projects/{projectId}/notes/{id}', 'verb' => 'PUT'],
 		['name' => 'project_note#delete', 'url' => '/api/projects/{projectId}/notes/{id}', 'verb' => 'DELETE'],
+
+		// Client Note routes
+		['name' => 'client_note#index', 'url' => '/api/clients/{clientId}/notes', 'verb' => 'GET'],
+		['name' => 'client_note#show', 'url' => '/api/clients/{clientId}/notes/{id}', 'verb' => 'GET'],
+		['name' => 'client_note#create', 'url' => '/api/clients/{clientId}/notes', 'verb' => 'POST'],
+		['name' => 'client_note#update', 'url' => '/api/clients/{clientId}/notes/{id}', 'verb' => 'PUT'],
+		['name' => 'client_note#delete', 'url' => '/api/clients/{clientId}/notes/{id}', 'verb' => 'DELETE'],
 
 		// Project File routes
 		['name' => 'project_file#index', 'url' => '/api/projects/{projectId}/files', 'verb' => 'GET'],

@@ -1,1190 +1,836 @@
 <template>
-	<div class="hostings-view">
-		<!-- Hosting Modal -->
-		<HostingModal
-			:open="modalOpen"
-			:hosting="editingHosting"
-			:clients="clients"
-			:packages="hostingPackages"
-			@close="closeModal"
-			@saved="handleHostingSaved"
-		/>
+    <div class="hostings-view-container">
+        <!-- ========================================== -->
+        <!-- MODALS                                     -->
+        <!-- ========================================== -->
+        <HostingModal
+            :open="modalOpen"
+            :hosting="editingHosting"
+            :clients="clients"
+            :packages="hostingPackages"
+            @close="closeModal"
+            @saved="handleHostingSaved"
+        />
 
-		<!-- Hosting Payment Modal -->
-		<HostingPaymentModal
-			:open="paymentModalOpen"
-			:hosting="payingHosting"
-			@close="closePaymentModal"
-			@paid="handleHostingPaid"
-		/>
+        <HostingPaymentModal
+            :open="paymentModalOpen"
+            :hosting="payingHosting"
+            @close="closePaymentModal"
+            @paid="handleHostingPaid"
+        />
 
-		<!-- Hosting Packages View -->
-		<div v-if="showPackagesView" class="hosting-packages-view">
-			<div class="domaincontrol-actions">
-				<button class="button-vue button-vue--tertiary" @click="showPackagesView = false">
-					<MaterialIcon name="arrow-left" :size="20" />
-					{{ translate('domaincontrol', 'Back') }}
-				</button>
-				<button class="button-vue button-vue--primary" @click="showPackageModal()">
-					<MaterialIcon name="add" :size="20" />
-					{{ translate('domaincontrol', 'Add Package') }}
-				</button>
-			</div>
+        <HostingPackageModal
+            :open="packageModalOpen"
+            :package="editingPackage"
+            @close="closePackageModal"
+            @saved="handlePackageSaved"
+        />
 
-			<!-- Hosting Packages List -->
-			<div v-if="hostingPackages.length === 0 && !packagesLoading" class="empty-content">
-				<MaterialIcon name="category-office" :size="48" color="var(--color-text-maxcontrast)" class="empty-content__icon" />
-				<p class="empty-content__text">
-					{{ translate('domaincontrol', 'No packages yet') }}
-				</p>
-				<button class="button-vue button-vue--primary" @click="showPackageModal()">
-					{{ translate('domaincontrol', 'Add First Package') }}
-				</button>
-			</div>
+        <!-- ========================================== -->
+        <!-- PACKAGES VIEW                              -->
+        <!-- ========================================== -->
+        <div v-if="showPackagesView" class="nc-sub-view">
+            <!-- Header -->
+            <div class="nc-section-header">
+                <div class="header-left">
+                    <NcButton type="tertiary" @click="showPackagesView = false">
+                        <template #icon><ArrowLeft :size="20" /></template>
+                        {{ translate('domaincontrol', 'Back') }}
+                    </NcButton>
+                    <h2 class="nc-app-title">{{ translate('domaincontrol', 'Hosting Packages') }}</h2>
+                </div>
+                <div class="header-actions">
+                    <NcButton type="primary" @click="showPackageModal()">
+                        <template #icon><Plus :size="20" /></template>
+                        {{ translate('domaincontrol', 'Add Package') }}
+                    </NcButton>
+                </div>
+            </div>
 
-			<div v-else-if="packagesLoading" class="loading-content">
-				<MaterialIcon name="loading" :size="32" class="loading-icon" />
-				<p>{{ translate('domaincontrol', 'Loading packages...') }}</p>
-			</div>
+            <!-- Content -->
+            <div v-if="hostingPackages.length === 0 && !packagesLoading" class="nc-empty-state">
+                <PackageVariant :size="64" class="nc-state-icon" />
+                <h3>{{ translate('domaincontrol', 'No packages yet') }}</h3>
+                <NcButton type="primary" @click="showPackageModal()" class="mt-4">
+                    {{ translate('domaincontrol', 'Add First Package') }}
+                </NcButton>
+            </div>
 
-			<div v-else class="hosting-packages-list">
-				<div
-					v-for="pkg in hostingPackages"
-					:key="pkg.id"
-					class="list-item package-item"
-					@click="editPackage(pkg)"
-				>
-					<div class="list-item__avatar">
-						<MaterialIcon name="category-office" :size="24" />
-					</div>
-					<div class="list-item__content">
-						<div class="list-item__title">{{ pkg.name }}</div>
-						<div class="list-item__meta">
-							<span>{{ pkg.provider }}</span>
-							<span v-if="pkg.priceMonthly || pkg.priceYearly" class="package-price">
-								<span v-if="pkg.priceMonthly">{{ formatCurrency(pkg.priceMonthly, pkg.currency) }}/{{ translate('domaincontrol', 'Month') }}</span>
-								<span v-if="pkg.priceMonthly && pkg.priceYearly"> / </span>
-								<span v-if="pkg.priceYearly">{{ formatCurrency(pkg.priceYearly, pkg.currency) }}/{{ translate('domaincontrol', 'Year') }}</span>
-							</span>
-						</div>
-					</div>
-					<div class="list-item__stats">
-						<div class="list-item__stat">
-							<div class="list-item__stat-label">{{ translate('domaincontrol', 'Status') }}</div>
-							<div class="list-item__stat-value">
-								<span class="status-badge" :class="{ 'package-active': pkg.isActive, 'package-inactive': !pkg.isActive }">
-									{{ pkg.isActive ? translate('domaincontrol', 'Active') : translate('domaincontrol', 'Inactive') }}
-								</span>
-							</div>
-						</div>
-					</div>
-					<div class="list-item__actions">
-						<button
-							class="action-button action-button--edit"
-							@click.stop="editPackage(pkg)"
-							:title="translate('domaincontrol', 'Edit')"
-						>
-							<MaterialIcon name="edit" :size="18" />
-						</button>
-						<button
-							class="action-button action-button--delete"
-							@click.stop="confirmDeletePackage(pkg)"
-							:title="translate('domaincontrol', 'Delete')"
-						>
-							<MaterialIcon name="delete" :size="18" />
-						</button>
-					</div>
-				</div>
-			</div>
-		</div>
+            <div v-else-if="packagesLoading" class="nc-loading-state">
+                <Refresh :size="48" class="spin-animation nc-state-icon" />
+                <p>{{ translate('domaincontrol', 'Loading packages...') }}</p>
+            </div>
 
-		<!-- Hosting List View -->
-		<div v-else-if="!selectedHosting" class="hostings-list-view">
-			<div class="domaincontrol-actions">
-				<button class="button-vue button-vue--primary" @click="showAddModal">
-					<MaterialIcon name="add" :size="20" />
-					{{ translate('domaincontrol', 'Add Hosting') }}
-				</button>
-				<button class="button-vue button-vue--secondary" @click="showPackagesView = true">
-					<MaterialIcon name="category-office" :size="20" />
-					{{ translate('domaincontrol', 'Manage Packages') }}
-				</button>
-				<div class="hosting-search-wrapper">
-					<input
-						type="text"
-						v-model="searchQuery"
-						class="hosting-search-input"
-						:placeholder="translate('domaincontrol', 'Search hostings...')"
-						@input="filterHostings"
-					/>
-				</div>
-			</div>
+            <div v-else class="nc-list-container">
+                <div v-for="pkg in hostingPackages" :key="pkg.id" class="nc-list-item" @click="editPackage(pkg)">
+                    <div class="item-icon-wrapper">
+                        <PackageVariant :size="24" />
+                    </div>
+                    <div class="item-content">
+                        <div class="item-title">{{ pkg.name }}</div>
+                        <div class="item-subtitle">
+                            {{ pkg.provider }} 
+                            <span v-if="pkg.priceMonthly" class="bullet-sep">•</span>
+                            <span v-if="pkg.priceMonthly">{{ formatCurrency(pkg.priceMonthly, pkg.currency) }}/{{ translate('domaincontrol', 'mo') }}</span>
+                        </div>
+                    </div>
+                    <div class="item-status">
+                        <span class="nc-badge" :class="pkg.isActive ? 'badge-success' : 'badge-neutral'">
+                            {{ pkg.isActive ? translate('domaincontrol', 'Active') : translate('domaincontrol', 'Inactive') }}
+                        </span>
+                    </div>
+                    <div class="item-actions">
+                        <button class="action-btn" @click.stop="editPackage(pkg)" :title="translate('domaincontrol', 'Edit')">
+                            <Pencil :size="18" />
+                        </button>
+                        <button class="action-btn delete-hover" @click.stop="confirmDeletePackage(pkg)" :title="translate('domaincontrol', 'Delete')">
+                            <Delete :size="18" />
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-			<!-- Empty State -->
-			<div v-if="filteredHostings.length === 0 && !loading" class="empty-content">
-				<MaterialIcon name="category-office" :size="48" color="var(--color-text-maxcontrast)" class="empty-content__icon" />
-				<p class="empty-content__text">
-					{{ searchQuery ? translate('domaincontrol', 'No hostings found') : translate('domaincontrol', 'No hostings yet') }}
-				</p>
-				<button v-if="!searchQuery" class="button-vue button-vue--primary" @click="showAddModal">
-					{{ translate('domaincontrol', 'Add First Hosting') }}
-				</button>
-			</div>
+        <!-- ========================================== -->
+        <!-- HOSTING LIST VIEW                          -->
+        <!-- ========================================== -->
+        <div v-else-if="!selectedHosting" class="nc-main-view">
+            <!-- Header -->
+            <div class="nc-section-header">
+                <div class="header-left">
+                    <h2 class="nc-app-title">
+                        <ServerNetwork :size="24" class="header-icon" />
+                        {{ translate('domaincontrol', 'Hostings') }}
+                    </h2>
+                </div>
+                <div class="header-actions">
+                    <div class="search-wrapper">
+                        <Magnify :size="20" class="search-icon" />
+                        <input
+                            type="text"
+                            v-model="searchQuery"
+                            class="nc-input search-input"
+                            :placeholder="translate('domaincontrol', 'Search hostings...')"
+                        />
+                    </div>
+                    <NcButton type="secondary" @click="showPackagesView = true">
+                        <template #icon><PackageVariant :size="20" /></template>
+                        {{ translate('domaincontrol', 'Packages') }}
+                    </NcButton>
+                    <NcButton type="primary" @click="showAddModal">
+                        <template #icon><Plus :size="20" /></template>
+                        {{ translate('domaincontrol', 'Add Hosting') }}
+                    </NcButton>
+                </div>
+            </div>
 
-			<!-- Loading State -->
-			<div v-if="loading" class="loading-content">
-				<MaterialIcon name="loading" :size="32" class="loading-icon" />
-				<p>{{ translate('domaincontrol', 'Loading hostings...') }}</p>
-			</div>
+            <!-- Empty / Loading -->
+            <div v-if="loading" class="nc-loading-state">
+                <Refresh :size="48" class="spin-animation nc-state-icon" />
+                <p>{{ translate('domaincontrol', 'Loading hostings...') }}</p>
+            </div>
 
-			<!-- Hostings List -->
-			<div v-else-if="filteredHostings.length > 0" class="hostings-list">
-				<div
-					v-for="hosting in filteredHostings"
-					:key="hosting.id"
-					class="list-item hosting-item"
-					:class="getHostingStatusClass(hosting)"
-					@click="selectHosting(hosting)"
-				>
-					<div class="list-item__avatar">
-						<MaterialIcon name="category-office" :size="24" />
-					</div>
-					<div class="list-item__content">
-						<div class="list-item__title">{{ hosting.provider }} {{ hosting.plan ? `- ${hosting.plan}` : '' }}</div>
-						<div class="list-item__meta">
-							<span v-if="getClientName(hosting.clientId)">
-								{{ getClientName(hosting.clientId) }}
-							</span>
-							<span v-if="hosting.serverIp">
-								{{ hosting.serverIp }}
-							</span>
-						</div>
-					</div>
-					<div class="list-item__stats">
-						<div class="list-item__stat">
-							<div class="list-item__stat-label">{{ translate('domaincontrol', 'Next Payment') }}</div>
-							<div class="list-item__stat-value">{{ formatDate(hosting.expirationDate) || '-' }}</div>
-						</div>
-						<div class="list-item__stat">
-							<div class="list-item__stat-label">{{ translate('domaincontrol', 'Days Left') }}</div>
-							<div class="list-item__stat-value">{{ getDaysUntilExpiry(hosting.expirationDate) }}</div>
-						</div>
-						<div class="list-item__stat">
-							<div class="list-item__stat-label">{{ translate('domaincontrol', 'Status') }}</div>
-							<div class="list-item__stat-value">
-								<span class="status-badge" :class="getHostingStatusClass(hosting)">
-									{{ getHostingStatusText(hosting) }}
-								</span>
-							</div>
-						</div>
-					</div>
-					<div class="list-item__actions">
-						<button
-							class="action-button action-button--edit"
-							@click.stop="editHosting(hosting)"
-							:title="translate('domaincontrol', 'Edit')"
-						>
-							<MaterialIcon name="edit" :size="18" />
-						</button>
-						<button
-							class="action-button action-button--delete"
-							@click.stop="confirmDelete(hosting)"
-							:title="translate('domaincontrol', 'Delete')"
-						>
-							<MaterialIcon name="delete" :size="18" />
-						</button>
-					</div>
-				</div>
-			</div>
-		</div>
+            <div v-else-if="filteredHostings.length === 0" class="nc-empty-state">
+                <ServerNetwork :size="64" class="nc-state-icon" />
+                <h3>{{ searchQuery ? translate('domaincontrol', 'No hostings found') : translate('domaincontrol', 'No hostings yet') }}</h3>
+                <NcButton v-if="!searchQuery" type="primary" @click="showAddModal" class="mt-4">
+                    {{ translate('domaincontrol', 'Add First Hosting') }}
+                </NcButton>
+            </div>
 
-		<!-- Hosting Detail View -->
-		<div v-else class="hosting-detail-view">
-			<div class="detail-header">
-				<button class="button-vue button-vue--tertiary" @click="backToList">
-					<MaterialIcon name="arrow-left" :size="20" />
-					{{ translate('domaincontrol', 'Back') }}
-				</button>
-				<h2 class="detail-title">{{ selectedHosting.provider }} {{ selectedHosting.plan ? `- ${selectedHosting.plan}` : '' }}</h2>
-				<div class="detail-actions">
-					<button class="button-vue button-vue--success" @click="showPaymentModal(selectedHosting)">
-						{{ translate('domaincontrol', 'Add Payment') }}
-					</button>
-					<button class="button-vue button-vue--secondary" @click="editHosting(selectedHosting)">
-						{{ translate('domaincontrol', 'Edit') }}
-					</button>
-					<button class="button-vue button-vue--danger" @click="confirmDelete(selectedHosting)">
-						{{ translate('domaincontrol', 'Delete') }}
-					</button>
-				</div>
-			</div>
+            <!-- List -->
+            <div v-else class="nc-list-container">
+                <div 
+                    v-for="hosting in filteredHostings" 
+                    :key="hosting.id" 
+                    class="nc-list-item hosting-row"
+                    :class="getHostingStatusClass(hosting)"
+                    @click="selectHosting(hosting)"
+                >
+                    <div class="item-avatar">
+                        <div class="avatar-circle" :style="{ backgroundColor: getAvatarColor(hosting.provider) }">
+                            {{ hosting.provider.substring(0,2).toUpperCase() }}
+                        </div>
+                    </div>
+                    
+                    <div class="item-content">
+                        <div class="item-title">
+                            {{ hosting.provider }} 
+                            <span v-if="hosting.plan" class="plan-tag">{{ hosting.plan }}</span>
+                        </div>
+                        <div class="item-subtitle">
+                            <span v-if="getClientName(hosting.clientId) !== 'Unassigned'">
+                                <Account :size="12" class="inline-icon"/> {{ getClientName(hosting.clientId) }}
+                            </span>
+                            <span v-if="hosting.serverIp" class="ml-2">
+                                <IpNetwork :size="12" class="inline-icon"/> {{ hosting.serverIp }}
+                            </span>
+                        </div>
+                    </div>
 
-			<div class="detail-content">
-				<!-- Stats Cards -->
-				<div class="detail-stats hosting-stats">
-					<div class="stat-card hosting-stat-card">
-						<div class="stat-card__icon">
-							<MaterialIcon name="calendar" :size="24" />
-						</div>
-						<div class="stat-card__content">
-							<div class="stat-card__label">{{ translate('domaincontrol', 'Next Payment') }}</div>
-							<div class="stat-card__value">{{ formatDate(selectedHosting.expirationDate) || '-' }}</div>
-						</div>
-					</div>
-					<div class="stat-card hosting-stat-card">
-						<div class="stat-card__icon" :class="getHostingStatusClass(selectedHosting)">
-							<MaterialIcon name="calendar" :size="24" />
-						</div>
-						<div class="stat-card__content">
-							<div class="stat-card__label">{{ translate('domaincontrol', 'Days Left') }}</div>
-							<div class="stat-card__value" :class="getHostingStatusClass(selectedHosting)">
-								{{ getDaysUntilExpiry(selectedHosting.expirationDate) }}
-							</div>
-						</div>
-					</div>
-					<div class="stat-card hosting-stat-card">
-						<div class="stat-card__icon">
-							<MaterialIcon name="monitoring" :size="24" />
-						</div>
-						<div class="stat-card__content">
-							<div class="stat-card__label">{{ translate('domaincontrol', 'Status') }}</div>
-							<div class="stat-card__value">
-								<span class="status-badge" :class="getHostingStatusClass(selectedHosting)">
-									{{ getHostingStatusText(selectedHosting) }}
-								</span>
-							</div>
-						</div>
-					</div>
-					<div class="stat-card hosting-stat-card">
-						<div class="stat-card__icon">
-							<MaterialIcon name="files" :size="24" />
-						</div>
-						<div class="stat-card__content">
-							<div class="stat-card__label">{{ translate('domaincontrol', 'Price') }}</div>
-							<div class="stat-card__value">
-								{{ formatCurrency(selectedHosting.price, selectedHosting.currency) || '-' }}
-							</div>
-						</div>
-					</div>
-				</div>
+                    <div class="item-meta desktop-only">
+                        <div class="meta-block">
+                            <span class="meta-label">{{ translate('domaincontrol', 'Next Payment') }}</span>
+                            <span class="meta-value">{{ formatDate(hosting.expirationDate) }}</span>
+                        </div>
+                        <div class="meta-block">
+                            <span class="meta-label">{{ translate('domaincontrol', 'Status') }}</span>
+                            <span class="nc-badge" :class="getHostingStatusBadgeClass(hosting)">
+                                {{ getHostingStatusText(hosting) }}
+                            </span>
+                        </div>
+                    </div>
 
-				<!-- Info Grid -->
-				<div class="detail-info-grid">
-					<div class="detail-info-card hosting-info-card">
-						<h3 class="hosting-info-title">{{ translate('domaincontrol', 'General Information') }}</h3>
-						<table class="detail-table hosting-detail-table">
-							<tbody>
-								<tr>
-									<td class="table-label">{{ translate('domaincontrol', 'Client') }}</td>
-									<td class="table-value">
-										<a
-											href="#"
-											@click.prevent="navigateToClient(selectedHosting.clientId)"
-											class="link-primary"
-										>
-											{{ getClientName(selectedHosting.clientId) }}
-										</a>
-									</td>
-								</tr>
-								<tr v-if="selectedHosting.plan">
-									<td class="table-label">{{ translate('domaincontrol', 'Plan') }}</td>
-									<td class="table-value">{{ selectedHosting.plan }}</td>
-								</tr>
-								<tr v-if="selectedHosting.serverIp">
-									<td class="table-label">{{ translate('domaincontrol', 'Server IP') }}</td>
-									<td class="table-value">{{ selectedHosting.serverIp }}</td>
-								</tr>
-								<tr v-if="selectedHosting.serverType">
-									<td class="table-label">{{ translate('domaincontrol', 'Server Type') }}</td>
-									<td class="table-value">
-										{{ selectedHosting.serverType === 'own' ? translate('domaincontrol', 'Own Server') : translate('domaincontrol', 'External Server') }}
-									</td>
-								</tr>
-								<tr v-if="selectedHosting.startDate">
-									<td class="table-label">{{ translate('domaincontrol', 'Start Date') }}</td>
-									<td class="table-value">{{ formatDate(selectedHosting.startDate) }}</td>
-								</tr>
-								<tr v-if="selectedHosting.renewalInterval">
-									<td class="table-label">{{ translate('domaincontrol', 'Renewal Interval') }}</td>
-									<td class="table-value">{{ formatRenewalInterval(selectedHosting.renewalInterval) }}</td>
-								</tr>
-							</tbody>
-						</table>
-					</div>
+                    <div class="item-actions">
+                        <button class="action-btn" @click.stop="editHosting(hosting)" :title="translate('domaincontrol', 'Edit')">
+                            <Pencil :size="18" />
+                        </button>
+                        <button class="action-btn delete-hover" @click.stop="confirmDelete(hosting)" :title="translate('domaincontrol', 'Delete')">
+                            <Delete :size="18" />
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-					<div class="detail-info-card hosting-info-card">
-						<h3 class="hosting-info-title">{{ translate('domaincontrol', 'Panel Login Info') }}</h3>
-						<div v-if="selectedHosting.panelUrl" style="margin-bottom: 8px;">
-							<a :href="selectedHosting.panelUrl" target="_blank" class="link-primary">
-								{{ selectedHosting.panelUrl }}
-							</a>
-						</div>
-						<pre class="detail-notes hosting-notes">{{ selectedHosting.panelNotes || translate('domaincontrol', 'No panel login info') }}</pre>
-					</div>
-				</div>
+        <!-- ========================================== -->
+        <!-- HOSTING DETAIL VIEW                        -->
+        <!-- ========================================== -->
+        <div v-else class="nc-detail-view">
+            <!-- Header -->
+            <div class="nc-detail-header">
+                <div class="header-left">
+                    <NcButton type="tertiary" @click="backToList">
+                        <template #icon><ArrowLeft :size="20" /></template>
+                        {{ translate('domaincontrol', 'Back') }}
+                    </NcButton>
+                    <div class="detail-avatar" :style="{ backgroundColor: getAvatarColor(selectedHosting.provider) }">
+                        {{ selectedHosting.provider.substring(0,1).toUpperCase() }}
+                    </div>
+                    <div class="detail-title-group">
+                        <h2 class="detail-title">{{ selectedHosting.provider }}</h2>
+                        <span v-if="selectedHosting.plan" class="detail-subtitle">{{ selectedHosting.plan }}</span>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <NcButton type="success" @click="showPaymentModal(selectedHosting)">
+                        <template #icon><CurrencyUsd :size="20" /></template>
+                        {{ translate('domaincontrol', 'Add Payment') }}
+                    </NcButton>
+                    <NcButton type="secondary" @click="editHosting(selectedHosting)">
+                        <template #icon><Pencil :size="20" /></template>
+                        {{ translate('domaincontrol', 'Edit') }}
+                    </NcButton>
+                    <NcButton type="error" @click="confirmDelete(selectedHosting)">
+                        <template #icon><Delete :size="20" /></template>
+                        {{ translate('domaincontrol', 'Delete') }}
+                    </NcButton>
+                </div>
+            </div>
 
-				<div class="detail-info-card hosting-info-card">
-					<h3 class="hosting-info-title">{{ translate('domaincontrol', 'Linked Domains') }}</h3>
-					<div class="mini-list hosting-mini-list">
-						<div v-if="getLinkedDomains(selectedHosting.id).length === 0" class="empty-mini">
-							{{ translate('domaincontrol', 'No linked domains') }}
-						</div>
-						<div
-							v-for="domain in getLinkedDomains(selectedHosting.id)"
-							:key="domain.id"
-							class="mini-item"
-							@click="navigateToDomain(domain.id)"
-						>
-							<span>{{ domain.domainName }}</span>
-							<span>{{ formatDate(domain.expirationDate) || '-' }}</span>
-						</div>
-					</div>
-				</div>
+            <!-- Content Grid -->
+            <div class="nc-detail-content">
+                
+                <!-- Left Column (Main) -->
+                <div class="detail-column main">
+                    
+                    <!-- KPI Cards -->
+                    <div class="stats-grid">
+                        <div class="stat-widget">
+                            <div class="widget-icon">
+                                <CalendarClock :size="24" />
+                            </div>
+                            <div class="widget-info">
+                                <span class="label">{{ translate('domaincontrol', 'Next Payment') }}</span>
+                                <span class="value">{{ formatDate(selectedHosting.expirationDate) || '-' }}</span>
+                            </div>
+                        </div>
+                        <div class="stat-widget" :class="getHostingStatusClass(selectedHosting) + '-bg'">
+                            <div class="widget-icon">
+                                <Timelapse :size="24" />
+                            </div>
+                            <div class="widget-info">
+                                <span class="label">{{ translate('domaincontrol', 'Days Left') }}</span>
+                                <span class="value">{{ getDaysUntilExpiry(selectedHosting.expirationDate) }}</span>
+                            </div>
+                        </div>
+                        <div class="stat-widget">
+                            <div class="widget-icon">
+                                <CurrencyUsd :size="24" />
+                            </div>
+                            <div class="widget-info">
+                                <span class="label">{{ translate('domaincontrol', 'Cost') }}</span>
+                                <span class="value">{{ formatCurrency(selectedHosting.price, selectedHosting.currency) || '-' }}</span>
+                            </div>
+                        </div>
+                    </div>
 
-				<div class="detail-info-card hosting-info-card">
-					<h3 class="hosting-info-title">{{ translate('domaincontrol', 'Linked Websites') }}</h3>
-					<div class="mini-list hosting-mini-list">
-						<div v-if="getLinkedWebsites(selectedHosting.id).length === 0" class="empty-mini">
-							{{ translate('domaincontrol', 'No linked websites') }}
-						</div>
-						<div
-							v-for="website in getLinkedWebsites(selectedHosting.id)"
-							:key="website.id"
-							class="mini-item"
-							@click="navigateToWebsite(website.id)"
-						>
-							<span>{{ website.name || website.software || 'N/A' }}</span>
-							<span>{{ website.url || '-' }}</span>
-						</div>
-					</div>
-				</div>
+                    <!-- Information Panel -->
+                    <div class="nc-panel">
+                        <div class="panel-header">
+                            <h3>{{ translate('domaincontrol', 'Hosting Details') }}</h3>
+                        </div>
+                        <div class="panel-body">
+                            <div class="info-row">
+                                <span class="row-label">{{ translate('domaincontrol', 'Client') }}</span>
+                                <span class="row-value link" @click="navigateToClient(selectedHosting.clientId)">
+                                    {{ getClientName(selectedHosting.clientId) }}
+                                </span>
+                            </div>
+                            <div class="info-row" v-if="selectedHosting.serverIp">
+                                <span class="row-label">{{ translate('domaincontrol', 'Server IP') }}</span>
+                                <span class="row-value font-mono">{{ selectedHosting.serverIp }}</span>
+                            </div>
+                            <div class="info-row" v-if="selectedHosting.serverType">
+                                <span class="row-label">{{ translate('domaincontrol', 'Type') }}</span>
+                                <span class="row-value">
+                                    {{ selectedHosting.serverType === 'own' ? translate('domaincontrol', 'Own Server') : translate('domaincontrol', 'External Server') }}
+                                </span>
+                            </div>
+                            <div class="info-row" v-if="selectedHosting.renewalInterval">
+                                <span class="row-label">{{ translate('domaincontrol', 'Cycle') }}</span>
+                                <span class="row-value">{{ formatRenewalInterval(selectedHosting.renewalInterval) }}</span>
+                            </div>
+                        </div>
+                    </div>
 
-				<div class="detail-history-card hosting-history-card">
-					<h3 class="hosting-history-title">{{ translate('domaincontrol', 'Payment History') }}</h3>
-					<div class="history-list hosting-history-list">
-						<div v-if="getPaymentHistory(selectedHosting).length === 0" class="empty-state">
-							{{ translate('domaincontrol', 'No payment history') }}
-						</div>
-						<div
-							v-for="(entry, index) in getPaymentHistory(selectedHosting)"
-							:key="index"
-							class="history-item"
-						>
-							<div class="history-date">
-								<MaterialIcon name="calendar" :size="16" /> {{ formatDate(entry.date) }}
-							</div>
-							<div class="history-content">
-								<strong>{{ formatCurrency(entry.amount, entry.currency) }}</strong>
-								<span class="history-detail">
-									{{ translate('domaincontrol', 'Period') }}: {{ entry.period }} {{ translate('domaincontrol', 'months') }}
-								</span>
-								<span v-if="entry.note" class="history-note">
-									{{ entry.note }}
-								</span>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
+                    <!-- Panel Login Info -->
+                    <div class="nc-panel">
+                        <div class="panel-header">
+                            <h3>
+                                <Login :size="18" class="inline-icon" />
+                                {{ translate('domaincontrol', 'Panel Access') }}
+                            </h3>
+                        </div>
+                        <div class="panel-body">
+                             <div v-if="selectedHosting.panelUrl" class="info-row">
+                                <span class="row-label">URL</span>
+                                <a :href="selectedHosting.panelUrl" target="_blank" class="row-value link">{{ selectedHosting.panelUrl }}</a>
+                            </div>
+                            <div class="notes-box font-mono">
+                                {{ selectedHosting.panelNotes || translate('domaincontrol', 'No login info available') }}
+                            </div>
+                        </div>
+                    </div>
 
-		<!-- Hosting Package Modal -->
-		<HostingPackageModal
-			:open="packageModalOpen"
-			:package="editingPackage"
-			@close="closePackageModal"
-			@saved="handlePackageSaved"
-		/>
-	</div>
+                    <!-- Payment History -->
+                    <div class="nc-panel">
+                        <div class="panel-header">
+                            <h3>
+                                <History :size="18" class="inline-icon" />
+                                {{ translate('domaincontrol', 'Payment History') }}
+                            </h3>
+                        </div>
+                         <div v-if="getPaymentHistory(selectedHosting).length === 0" class="empty-mini">
+                            {{ translate('domaincontrol', 'No payment history') }}
+                        </div>
+                        <div v-else class="history-list">
+                             <div v-for="(entry, index) in getPaymentHistory(selectedHosting)" :key="index" class="history-item">
+                                <div class="hist-date"><Calendar :size="14" /> {{ formatDate(entry.date) }}</div>
+                                <div class="hist-amount text-success">+ {{ formatCurrency(entry.amount, entry.currency) }}</div>
+                                <div class="hist-period">{{ entry.period }} {{ translate('domaincontrol', 'months') }}</div>
+                             </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Right Column (Sidebar) -->
+                <div class="detail-column sidebar">
+                    
+                    <!-- Linked Domains -->
+                    <div class="nc-panel">
+                        <div class="panel-header">
+                            <h3>
+                                <Web :size="18" class="inline-icon" />
+                                {{ translate('domaincontrol', 'Domains') }}
+                            </h3>
+                            <span class="count-badge">{{ getLinkedDomains(selectedHosting.id).length }}</span>
+                        </div>
+                        <div class="mini-list">
+                            <div v-if="getLinkedDomains(selectedHosting.id).length === 0" class="empty-mini">
+                                {{ translate('domaincontrol', 'No linked domains') }}
+                            </div>
+                            <div v-for="domain in getLinkedDomains(selectedHosting.id)" :key="domain.id" class="mini-item" @click="navigateToDomain(domain.id)">
+                                <span class="mini-title">{{ domain.domainName }}</span>
+                                <span class="mini-sub">{{ formatDate(domain.expirationDate) }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Linked Websites -->
+                    <div class="nc-panel">
+                        <div class="panel-header">
+                            <h3>
+                                <WebBox :size="18" class="inline-icon" />
+                                {{ translate('domaincontrol', 'Websites') }}
+                            </h3>
+                            <span class="count-badge">{{ getLinkedWebsites(selectedHosting.id).length }}</span>
+                        </div>
+                         <div class="mini-list">
+                            <div v-if="getLinkedWebsites(selectedHosting.id).length === 0" class="empty-mini">
+                                {{ translate('domaincontrol', 'No linked websites') }}
+                            </div>
+                            <div v-for="website in getLinkedWebsites(selectedHosting.id)" :key="website.id" class="mini-item" @click="navigateToWebsite(website.id)">
+                                <span class="mini-title">{{ website.name || website.software }}</span>
+                                <span class="mini-sub">{{ website.url || '-' }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
 </template>
 
 <script>
+import { NcButton } from '@nextcloud/vue'
 import api from '../services/api'
-import MaterialIcon from './MaterialIcon.vue'
 import HostingModal from './HostingModal.vue'
 import HostingPaymentModal from './HostingPaymentModal.vue'
 import HostingPackageModal from './HostingPackageModal.vue'
 
+// Icons (Standard Nextcloud/Material Design Icons)
+import ServerNetwork from 'vue-material-design-icons/ServerNetwork.vue'
+import Magnify from 'vue-material-design-icons/Magnify.vue'
+import Plus from 'vue-material-design-icons/Plus.vue'
+import Refresh from 'vue-material-design-icons/Refresh.vue'
+import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue'
+import Pencil from 'vue-material-design-icons/Pencil.vue'
+import Delete from 'vue-material-design-icons/Delete.vue'
+import PackageVariant from 'vue-material-design-icons/PackageVariant.vue'
+import Account from 'vue-material-design-icons/Account.vue'
+import IpNetwork from 'vue-material-design-icons/IpNetwork.vue'
+import CalendarClock from 'vue-material-design-icons/CalendarClock.vue'
+import Timelapse from 'vue-material-design-icons/Timelapse.vue'
+import CurrencyUsd from 'vue-material-design-icons/CurrencyUsd.vue'
+import Login from 'vue-material-design-icons/Login.vue'
+import History from 'vue-material-design-icons/History.vue'
+import Calendar from 'vue-material-design-icons/Calendar.vue'
+import Web from 'vue-material-design-icons/Web.vue'
+import WebBox from 'vue-material-design-icons/WebBox.vue'
+
 export default {
-	name: 'Hostings',
-	components: {
-		MaterialIcon,
-		HostingModal,
-		HostingPaymentModal,
-		HostingPackageModal,
-	},
-	data() {
-		return {
-			hostings: [],
-			hostingPackages: [],
-			clients: [],
-			domains: [],
-			websites: [],
-			selectedHosting: null,
-			searchQuery: '',
-			loading: false,
-			packagesLoading: false,
-			modalOpen: false,
-			editingHosting: null,
-			paymentModalOpen: false,
-			payingHosting: null,
-			showPackagesView: false,
-			packageModalOpen: false,
-			editingPackage: null,
-		}
-	},
-	computed: {
-		filteredHostings() {
-			if (!this.searchQuery) {
-				return this.hostings
-			}
-			const query = this.searchQuery.toLowerCase()
-			return this.hostings.filter(hosting => {
-				return (
-					hosting.provider?.toLowerCase().includes(query) ||
-					hosting.plan?.toLowerCase().includes(query) ||
-					this.getClientName(hosting.clientId)?.toLowerCase().includes(query) ||
-					hosting.serverIp?.toLowerCase().includes(query)
-				)
-			})
-		},
-	},
-	mounted() {
-		this.loadHostings()
-		this.loadRelatedData()
-	},
-	methods: {
-		translate(appId, text, vars) {
-			try {
-				if (typeof window !== 'undefined') {
-					if (typeof OC !== 'undefined' && OC.L10n && typeof OC.L10n.translate === 'function') {
-						const translated = OC.L10n.translate(appId, text, vars || {})
-						if (translated && translated !== text) {
-							return translated
-						}
-					}
-					if (typeof window.t === 'function') {
-						const translated = window.t(appId, text, vars || {})
-						if (translated && translated !== text) {
-							return translated
-						}
-					}
-				}
-			} catch (e) {
-				console.warn('Translation error:', e)
-			}
-
-			const translations = {
-				'Add Hosting': 'Hosting Ekle',
-				'Manage Packages': 'Paketleri Yönet',
-				'Search hostings...': 'Hosting ara...',
-				'No hostings found': 'Hosting bulunamadı',
-				'No hostings yet': 'Henüz hosting eklenmemiş',
-				'Add First Hosting': 'İlk Hostingi Ekle',
-				'Loading hostings...': 'Hostingler yükleniyor...',
-				'Back': 'Geri',
-				'Add Payment': 'Ödeme Ekle',
-				'Edit': 'Düzenle',
-				'Delete': 'Sil',
-				'Next Payment': 'Sonraki Ödeme',
-				'Days Left': 'Kalan Gün',
-				'Status': 'Durum',
-				'Price': 'Fiyat',
-				'General Information': 'Genel Bilgiler',
-				'Client': 'Müşteri',
-				'Plan': 'Paket',
-				'Server IP': 'Sunucu IP',
-				'Server Type': 'Sunucu Tipi',
-				'Own Server': 'Kendi Sunucum',
-				'External Server': 'Harici Sunucu',
-				'Start Date': 'Başlangıç Tarihi',
-				'Renewal Interval': 'Ödeme Periyodu',
-				'Panel Login Info': 'Panel Giriş Bilgileri',
-				'No panel login info': 'Panel giriş bilgisi eklenmemiş',
-				'Linked Domains': 'Bağlı Domainler',
-				'No linked domains': 'Bu hosting\'e bağlı domain yok',
-				'Linked Websites': 'Bağlı Siteler',
-				'No linked websites': 'Bu hosting\'e bağlı site yok',
-				'Payment History': 'Ödeme Geçmişi',
-				'No payment history': 'Henüz ödeme yapılmamış',
-				'Period': 'Süre',
-				'months': 'ay',
-				'Add Package': 'Paket Ekle',
-				'No packages yet': 'Henüz paket eklenmemiş',
-				'Add First Package': 'İlk Paketi Ekle',
-				'Loading packages...': 'Paketler yükleniyor...',
-				'Provider': 'Sağlayıcı',
-				'Month': 'Ay',
-				'Year': 'Yıl',
-				'Active': 'Aktif',
-				'Inactive': 'Pasif',
-				'Error deleting hosting': 'Hosting silinirken hata oluştu',
-				'Hosting deleted successfully': 'Hosting başarıyla silindi',
-			}
-
-			return translations[text] || text
-		},
-		async loadHostings() {
-			this.loading = true
-			try {
-				const response = await api.hostings.getAll()
-				this.hostings = response.data || []
-				console.log('Hostings loaded:', this.hostings.length)
-			} catch (error) {
-				console.error('Error loading hostings:', error)
-				this.hostings = []
-			} finally {
-				this.loading = false
-			}
-		},
-		async loadHostingPackages() {
-			this.packagesLoading = true
-			try {
-				const response = await api.hostingPackages.getAll()
-				this.hostingPackages = response.data || []
-				console.log('Hosting packages loaded:', this.hostingPackages.length)
-			} catch (error) {
-				console.error('Error loading hosting packages:', error)
-				this.hostingPackages = []
-			} finally {
-				this.packagesLoading = false
-			}
-		},
-		async loadRelatedData() {
-			try {
-				const [clientsRes, domainsRes, websitesRes] = await Promise.all([
-					api.clients.getAll().catch(() => ({ data: [] })),
-					api.domains.getAll().catch(() => ({ data: [] })),
-					api.websites.getAll().catch(() => ({ data: [] })),
-				])
-				this.clients = clientsRes.data || []
-				this.domains = domainsRes.data || []
-				this.websites = websitesRes.data || []
-			} catch (error) {
-				console.error('Error loading related data:', error)
-			}
-		},
-		filterHostings() {
-			// Handled by computed property
-		},
-		selectHosting(hosting) {
-			this.selectedHosting = hosting
-		},
-		backToList() {
-			this.selectedHosting = null
-		},
-		showAddModal() {
-			this.editingHosting = null
-			this.modalOpen = true
-		},
-		editHosting(hosting) {
-			this.editingHosting = hosting
-			this.modalOpen = true
-		},
-		closeModal() {
-			this.modalOpen = false
-			this.editingHosting = null
-		},
-		handleHostingSaved() {
-			this.closeModal()
-			this.loadHostings()
-			this.loadRelatedData()
-		},
-		showPaymentModal(hosting) {
-			this.payingHosting = hosting
-			this.paymentModalOpen = true
-		},
-		closePaymentModal() {
-			this.paymentModalOpen = false
-			this.payingHosting = null
-		},
-		handleHostingPaid() {
-			this.closePaymentModal()
-			this.loadHostings()
-		},
-		showPackageModal(pkg = null) {
-			this.editingPackage = pkg
-			this.packageModalOpen = true
-		},
-		editPackage(pkg) {
-			this.showPackageModal(pkg)
-		},
-		closePackageModal() {
-			this.packageModalOpen = false
-			this.editingPackage = null
-		},
-		handlePackageSaved() {
-			this.closePackageModal()
-			this.loadHostingPackages()
-		},
-		async confirmDelete(hosting) {
-			if (confirm(this.translate('domaincontrol', `Are you sure you want to delete this hosting?`))) {
-				try {
-					await api.hostings.delete(hosting.id)
-					this.backToList()
-					this.loadHostings()
-					this.loadRelatedData()
-					OC.Notification.show(this.translate('domaincontrol', 'Hosting deleted successfully'))
-				} catch (error) {
-					console.error('Error deleting hosting:', error)
-					OC.Notification.showTemporary(this.translate('domaincontrol', 'Error deleting hosting'))
-				}
-			}
-		},
-		async confirmDeletePackage(pkg) {
-			if (confirm(this.translate('domaincontrol', `Are you sure you want to delete package ${pkg.name}?`))) {
-				try {
-					await api.hostingPackages.delete(pkg.id)
-					this.loadHostingPackages()
-					OC.Notification.show(this.translate('domaincontrol', 'Package deleted successfully'))
-				} catch (error) {
-					console.error('Error deleting package:', error)
-					OC.Notification.showTemporary(this.translate('domaincontrol', 'Error deleting package'))
-				}
-			}
-		},
-		formatDate(dateString) {
-			if (!dateString) return '-'
-			try {
-				const options = { year: 'numeric', month: 'long', day: 'numeric' }
-				return new Date(dateString).toLocaleDateString(undefined, options)
-			} catch (e) {
-				return dateString.split(' ')[0]
-			}
-		},
-		getDaysUntilExpiry(expirationDate) {
-			if (!expirationDate) return 'N/A'
-			const today = new Date()
-			today.setHours(0, 0, 0, 0)
-			const expiry = new Date(expirationDate)
-			expiry.setHours(0, 0, 0, 0)
-			const diffTime = expiry.getTime() - today.getTime()
-			const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-			return diffDays
-		},
-		getHostingStatusClass(hosting) {
-			const daysLeft = this.getDaysUntilExpiry(hosting.expirationDate)
-			if (daysLeft <= 0) return 'status-critical'
-			if (daysLeft <= 30) return 'status-warning'
-			return 'status-ok'
-		},
-		getHostingStatusText(hosting) {
-			const daysLeft = this.getDaysUntilExpiry(hosting.expirationDate)
-			if (daysLeft <= 0) return this.translate('domaincontrol', 'EXPIRED')
-			if (daysLeft <= 7) return this.translate('domaincontrol', 'CRITICAL')
-			if (daysLeft <= 30) return this.translate('domaincontrol', 'UPCOMING')
-			return this.translate('domaincontrol', 'ACTIVE')
-		},
-		getClientName(clientId) {
-			const client = this.clients.find(c => c.id == clientId)
-			return client ? client.name : this.translate('domaincontrol', 'Unassigned')
-		},
-		getLinkedDomains(hostingId) {
-			return this.domains.filter(d => d.hostingId == hostingId)
-		},
-		getLinkedWebsites(hostingId) {
-			return this.websites.filter(w => w.hostingId == hostingId)
-		},
-		getPaymentHistory(hosting) {
-			try {
-				return hosting.paymentHistory ? JSON.parse(hosting.paymentHistory) : []
-			} catch (e) {
-				console.error('Error parsing payment history:', e)
-				return []
-			}
-		},
-		formatCurrency(amount, currency) {
-			if (amount === null || amount === undefined) return ''
-			const symbol = { USD: '$', EUR: '€', TRY: '₺', AZN: '₼', GBP: '£', RUB: '₽' }[currency] || ''
-			return `${symbol}${parseFloat(amount).toFixed(2)}`
-		},
-		formatRenewalInterval(interval) {
-			const intervals = {
-				monthly: this.translate('domaincontrol', 'Monthly'),
-				quarterly: this.translate('domaincontrol', 'Quarterly'),
-				yearly: this.translate('domaincontrol', 'Yearly'),
-				biennial: this.translate('domaincontrol', 'Biennial'),
-			}
-			return intervals[interval] || interval
-		},
-		navigateToClient(clientId) {
-			if (typeof window.DomainControl !== 'undefined' && window.DomainControl.switchTab) {
-				window.DomainControl.switchTab('clients')
-				console.log(`Navigate to client detail for ID: ${clientId}`)
-			}
-		},
-		navigateToDomain(domainId) {
-			if (typeof window.DomainControl !== 'undefined' && window.DomainControl.switchTab) {
-				window.DomainControl.switchTab('domains')
-				console.log(`Navigate to domain detail for ID: ${domainId}`)
-			}
-		},
-		navigateToWebsite(websiteId) {
-			if (typeof window.DomainControl !== 'undefined' && window.DomainControl.switchTab) {
-				window.DomainControl.switchTab('websites')
-				console.log(`Navigate to website detail for ID: ${websiteId}`)
-			}
-		},
-	},
-	watch: {
-		showPackagesView(newVal) {
-			if (newVal) {
-				this.loadHostingPackages()
-			}
-		},
-	},
+    name: 'Hostings',
+    components: {
+        NcButton,
+        HostingModal,
+        HostingPaymentModal,
+        HostingPackageModal,
+        // Icons
+        ServerNetwork, Magnify, Plus, Refresh, ArrowLeft, Pencil, Delete, 
+        PackageVariant, Account, IpNetwork, CalendarClock, Timelapse, 
+        CurrencyUsd, Login, History, Calendar, Web, WebBox
+    },
+    data() {
+        return {
+            hostings: [],
+            hostingPackages: [],
+            clients: [],
+            domains: [],
+            websites: [],
+            selectedHosting: null,
+            searchQuery: '',
+            loading: false,
+            packagesLoading: false,
+            modalOpen: false,
+            editingHosting: null,
+            paymentModalOpen: false,
+            payingHosting: null,
+            showPackagesView: false,
+            packageModalOpen: false,
+            editingPackage: null,
+        }
+    },
+    computed: {
+        filteredHostings() {
+            if (!this.searchQuery) return this.hostings
+            const query = this.searchQuery.toLowerCase()
+            return this.hostings.filter(hosting => {
+                return (
+                    hosting.provider?.toLowerCase().includes(query) ||
+                    hosting.plan?.toLowerCase().includes(query) ||
+                    this.getClientName(hosting.clientId)?.toLowerCase().includes(query) ||
+                    hosting.serverIp?.toLowerCase().includes(query)
+                )
+            })
+        },
+    },
+    mounted() {
+        this.loadHostings()
+        this.loadRelatedData()
+    },
+    methods: {
+        translate(appId, text, vars) {
+             try {
+                if (typeof window !== 'undefined') {
+                    if (typeof OC !== 'undefined' && OC.L10n && typeof OC.L10n.translate === 'function') {
+                        const translated = OC.L10n.translate(appId, text, vars || {})
+                        if (translated && translated !== text) return translated
+                    }
+                    if (typeof window.t === 'function') {
+                        const translated = window.t(appId, text, vars || {})
+                        if (translated && translated !== text) return translated
+                    }
+                }
+            } catch (e) { console.warn('Translation error:', e) }
+            // English Fallback
+            const dict = {
+                'mo': 'mo'
+            }
+            return dict[text] || text
+        },
+        async loadHostings() {
+            this.loading = true
+            try {
+                const response = await api.hostings.getAll()
+                this.hostings = response.data || []
+            } catch (error) {
+                console.error(error)
+                this.hostings = []
+            } finally {
+                this.loading = false
+            }
+        },
+        async loadHostingPackages() {
+            this.packagesLoading = true
+            try {
+                const response = await api.hostingPackages.getAll()
+                this.hostingPackages = response.data || []
+            } catch (error) {
+                console.error(error)
+                this.hostingPackages = []
+            } finally {
+                this.packagesLoading = false
+            }
+        },
+        async loadRelatedData() {
+            try {
+                const [clientsRes, domainsRes, websitesRes] = await Promise.all([
+                    api.clients.getAll().catch(() => ({ data: [] })),
+                    api.domains.getAll().catch(() => ({ data: [] })),
+                    api.websites.getAll().catch(() => ({ data: [] })),
+                ])
+                this.clients = clientsRes.data || []
+                this.domains = domainsRes.data || []
+                this.websites = websitesRes.data || []
+            } catch (error) {
+                console.error(error)
+            }
+        },
+        selectHosting(hosting) {
+            this.selectedHosting = hosting
+        },
+        backToList() {
+            this.selectedHosting = null
+        },
+        showAddModal() {
+            this.editingHosting = null
+            this.modalOpen = true
+        },
+        editHosting(hosting) {
+            this.editingHosting = hosting
+            this.modalOpen = true
+        },
+        closeModal() {
+            this.modalOpen = false
+            this.editingHosting = null
+        },
+        handleHostingSaved() {
+            this.closeModal()
+            this.loadHostings()
+            this.loadRelatedData()
+        },
+        showPaymentModal(hosting) {
+            this.payingHosting = hosting
+            this.paymentModalOpen = true
+        },
+        closePaymentModal() {
+            this.paymentModalOpen = false
+            this.payingHosting = null
+        },
+        handleHostingPaid() {
+            this.closePaymentModal()
+            this.loadHostings()
+        },
+        showPackageModal(pkg = null) {
+            this.editingPackage = pkg
+            this.packageModalOpen = true
+        },
+        editPackage(pkg) {
+            this.showPackageModal(pkg)
+        },
+        closePackageModal() {
+            this.packageModalOpen = false
+            this.editingPackage = null
+        },
+        handlePackageSaved() {
+            this.closePackageModal()
+            this.loadHostingPackages()
+        },
+        async confirmDelete(hosting) {
+            if (confirm(this.translate('domaincontrol', `Are you sure you want to delete this hosting?`))) {
+                try {
+                    await api.hostings.delete(hosting.id)
+                    this.backToList()
+                    this.loadHostings()
+                    this.loadRelatedData()
+                } catch (error) {
+                    alert('Error deleting hosting')
+                }
+            }
+        },
+        async confirmDeletePackage(pkg) {
+            if (confirm(this.translate('domaincontrol', `Are you sure you want to delete package ${pkg.name}?`))) {
+                try {
+                    await api.hostingPackages.delete(pkg.id)
+                    this.loadHostingPackages()
+                } catch (error) {
+                     alert('Error deleting package')
+                }
+            }
+        },
+        formatDate(dateString) {
+            if (!dateString) return '-'
+            try {
+                return new Date(dateString).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
+            } catch (e) { return dateString.split(' ')[0] }
+        },
+        getDaysUntilExpiry(expirationDate) {
+            if (!expirationDate) return 0
+            const today = new Date()
+            today.setHours(0, 0, 0, 0)
+            const expiry = new Date(expirationDate)
+            expiry.setHours(0, 0, 0, 0)
+            return Math.ceil((expiry - today) / (1000 * 60 * 60 * 24))
+        },
+        getHostingStatusClass(hosting) {
+            const days = this.getDaysUntilExpiry(hosting.expirationDate)
+            if (days <= 0) return 'status-critical'
+            if (days <= 30) return 'status-warning'
+            return 'status-ok'
+        },
+        getHostingStatusText(hosting) {
+            const days = this.getDaysUntilExpiry(hosting.expirationDate)
+            if (days <= 0) return this.translate('domaincontrol', 'Expired')
+            if (days <= 7) return this.translate('domaincontrol', 'Critical')
+            if (days <= 30) return this.translate('domaincontrol', 'Renewal Due')
+            return this.translate('domaincontrol', 'Active')
+        },
+        getHostingStatusBadgeClass(hosting) {
+            const status = this.getHostingStatusClass(hosting)
+            if(status === 'status-critical') return 'badge-error'
+            if(status === 'status-warning') return 'badge-warning'
+            return 'badge-success'
+        },
+        getClientName(clientId) {
+            const client = this.clients.find(c => c.id == clientId)
+            return client ? client.name : this.translate('domaincontrol', 'Unassigned')
+        },
+        getLinkedDomains(hostingId) { return this.domains.filter(d => d.hostingId == hostingId) },
+        getLinkedWebsites(hostingId) { return this.websites.filter(w => w.hostingId == hostingId) },
+        getPaymentHistory(hosting) {
+            try { return hosting.paymentHistory ? JSON.parse(hosting.paymentHistory) : [] } 
+            catch (e) { return [] }
+        },
+        formatCurrency(amount, currency) {
+            if (amount == null) return ''
+            const symbol = { USD: '$', EUR: '€', TRY: '₺' }[currency] || ''
+            return `${symbol}${parseFloat(amount).toFixed(2)}`
+        },
+        formatRenewalInterval(interval) { return interval }, // Simplification
+        navigateToClient(id) { if(window.DomainControl?.switchTab) window.DomainControl.switchTab('clients') },
+        navigateToDomain(id) { if(window.DomainControl?.switchTab) window.DomainControl.switchTab('domains') },
+        navigateToWebsite(id) { if(window.DomainControl?.switchTab) window.DomainControl.switchTab('websites') },
+        
+        getAvatarColor(name) {
+             if (!name) return '#999'
+            let hash = 0
+            for (let i = 0; i < name.length; i++) {
+                hash = name.charCodeAt(i) + ((hash << 5) - hash)
+            }
+            return `hsl(${hash % 360}, 65%, 45%)`
+        }
+    },
+    watch: {
+        showPackagesView(newVal) { if (newVal) this.loadHostingPackages() },
+    },
 }
 </script>
 
 <style scoped>
-/* General View Layout */
-.hostings-list-view,
-.hosting-detail-view,
-.hosting-packages-view {
-	padding: 20px;
-	padding-bottom: 40px;
-	max-width: 1200px;
-	margin: 0 auto;
+/* GLOBAL CONTAINER */
+.hostings-view-container {
+    padding: 20px;
+    height: 100%;
+    color: var(--color-main-text);
+    font-family: var(--font-face, sans-serif);
 }
 
-.hosting-search-wrapper {
-	flex-grow: 1;
-	min-width: 200px;
-	position: relative;
+.nc-main-view, .nc-sub-view {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 }
 
-.hosting-search-input {
-	width: 100%;
-	padding: 8px 12px 8px 40px;
-	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius-element);
-	background-color: var(--color-background-dark);
-	color: var(--color-main-text);
-	font-size: 14px;
-	box-sizing: border-box;
-	background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>');
-	background-repeat: no-repeat;
-	background-position: 12px center;
-	background-size: 16px;
+/* --- Header --- */
+.nc-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+.header-left { display: flex; align-items: center; gap: 12px; }
+.nc-app-title { margin: 0; font-size: 24px; font-weight: bold; display: flex; align-items: center; gap: 12px; }
+.header-icon { opacity: 0.8; color: var(--color-text-maxcontrast); }
+.header-actions { display: flex; align-items: center; gap: 12px; }
+
+/* Search Bar */
+.search-wrapper { position: relative; width: 250px; }
+.search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--color-text-maxcontrast); opacity: 0.7; }
+.search-input { width: 100%; padding: 8px 12px 8px 36px; border-radius: var(--border-radius-pill); border: 1px solid var(--color-border); background: var(--color-main-background); color: var(--color-main-text); }
+.search-input:focus { border-color: var(--color-primary); outline: none; }
+
+/* --- Lists --- */
+.nc-list-container {
+    display: flex; flex-direction: column; background: var(--color-main-background);
+    border: 1px solid var(--color-border); border-radius: var(--border-radius-large); overflow: hidden;
 }
 
-.hosting-search-input:focus {
-	outline: none;
-	border-color: var(--color-primary);
+.nc-list-item {
+    display: flex; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--color-border);
+    cursor: pointer; transition: background 0.1s ease;
+}
+.nc-list-item:last-child { border-bottom: none; }
+.nc-list-item:hover { background-color: var(--color-background-hover); }
+
+/* Status Indicators Border */
+.status-critical { border-left: 4px solid var(--color-error-element); }
+.status-warning { border-left: 4px solid var(--color-warning-element); }
+.status-ok { border-left: 4px solid transparent; } /* Default alignment */
+
+/* Hosting Row Items */
+.item-avatar { margin-right: 16px; }
+.avatar-circle {
+    width: 42px; height: 42px; border-radius: 50%; color: #fff; display: flex; align-items: center; justify-content: center;
+    font-weight: bold; font-size: 16px; text-shadow: 0 1px 2px rgba(0,0,0,0.2);
 }
 
-/* Hosting Packages List - Nextcloud style */
-.hosting-packages-list {
-	display: grid;
-	gap: 12px;
-	margin-top: 20px;
+.item-content { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.item-title { font-weight: 600; font-size: 16px; color: var(--color-main-text); display: flex; align-items: center; gap: 8px; }
+.plan-tag { font-size: 12px; background: var(--color-background-dark); padding: 1px 6px; border-radius: 4px; color: var(--color-text-maxcontrast); font-weight: normal; }
+.item-subtitle { font-size: 13px; color: var(--color-text-maxcontrast); display: flex; align-items: center; }
+.inline-icon { opacity: 0.7; margin-right: 4px; }
+.ml-2 { margin-left: 12px; }
+.bullet-sep { margin: 0 6px; opacity: 0.5; }
+
+.item-meta { display: flex; gap: 24px; margin-right: 20px; align-items: center; }
+.meta-block { display: flex; flex-direction: column; align-items: flex-end; }
+.meta-label { font-size: 11px; color: var(--color-text-maxcontrast); text-transform: uppercase; margin-bottom: 2px; }
+.meta-value { font-size: 14px; font-weight: 500; }
+
+.nc-badge { font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 600; text-transform: uppercase; }
+.badge-success { background: rgba(70, 186, 97, 0.15); color: var(--color-success-element); }
+.badge-warning { background: rgba(233, 144, 2, 0.15); color: var(--color-warning-element); }
+.badge-error { background: rgba(233, 50, 45, 0.15); color: var(--color-error-element); }
+.badge-neutral { background: var(--color-background-dark); color: var(--color-text-maxcontrast); }
+
+.item-actions { display: flex; gap: 4px; opacity: 0.6; transition: opacity 0.2s; }
+.nc-list-item:hover .item-actions { opacity: 1; }
+.action-btn {
+    background: none; border: none; padding: 6px; color: var(--color-text-maxcontrast); cursor: pointer; border-radius: 4px;
+}
+.action-btn:hover { background: var(--color-background-dark); color: var(--color-main-text); }
+.delete-hover:hover { color: var(--color-error-element); background: rgba(233, 50, 45, 0.1); }
+
+/* --- Detail View --- */
+.nc-detail-header {
+    display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; border-bottom: 1px solid var(--color-border);
+}
+.detail-avatar {
+    width: 48px; height: 48px; border-radius: 50%; color: #fff; display: flex; align-items: center; justify-content: center;
+    font-weight: bold; font-size: 20px; margin-left: 16px; margin-right: 16px;
+}
+.detail-title-group { display: flex; flex-direction: column; }
+.detail-title { margin: 0; font-size: 24px; font-weight: bold; }
+.detail-subtitle { font-size: 14px; color: var(--color-text-maxcontrast); }
+
+.nc-detail-content { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
+.detail-column { display: flex; flex-direction: column; gap: 24px; }
+
+/* Stats Grid */
+.stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.stat-widget {
+    background: var(--color-main-background); border: 1px solid var(--color-border); border-radius: var(--border-radius-large);
+    padding: 16px; display: flex; align-items: center; gap: 12px;
+}
+.widget-icon {
+    width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
+    color: var(--color-text-maxcontrast); background: var(--color-background-hover);
+}
+.status-critical-bg .widget-icon { color: var(--color-error-element); background: rgba(233, 50, 45, 0.1); }
+.status-warning-bg .widget-icon { color: var(--color-warning-element); background: rgba(233, 144, 2, 0.1); }
+.widget-info { display: flex; flex-direction: column; }
+.widget-info .label { font-size: 12px; color: var(--color-text-maxcontrast); }
+.widget-info .value { font-size: 18px; font-weight: bold; color: var(--color-main-text); }
+
+/* Panels */
+.nc-panel { background: var(--color-main-background); border: 1px solid var(--color-border); border-radius: var(--border-radius-large); overflow: hidden; }
+.panel-header {
+    padding: 12px 16px; background: var(--color-background-hover); border-bottom: 1px solid var(--color-border);
+    display: flex; justify-content: space-between; align-items: center;
+}
+.panel-header h3 { margin: 0; font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.panel-body { padding: 0; }
+.info-row { display: flex; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--color-border); font-size: 14px; }
+.info-row:last-child { border-bottom: none; }
+.row-label { width: 120px; color: var(--color-text-maxcontrast); }
+.row-value { color: var(--color-main-text); font-weight: 500; }
+.row-value.link { color: var(--color-primary); cursor: pointer; text-decoration: none; }
+.row-value.link:hover { text-decoration: underline; }
+.font-mono { font-family: monospace; }
+.notes-box { padding: 16px; background: var(--color-background-dark); font-size: 13px; color: var(--color-text-maxcontrast); white-space: pre-wrap; word-break: break-all; }
+
+/* History & Mini List */
+.history-list, .mini-list { display: flex; flex-direction: column; }
+.history-item, .mini-item {
+    display: flex; align-items: center; padding: 10px 16px; border-bottom: 1px solid var(--color-border);
+    font-size: 13px; gap: 12px;
+}
+.history-item:last-child, .mini-item:last-child { border-bottom: none; }
+.mini-item { justify-content: space-between; cursor: pointer; transition: background 0.1s; }
+.mini-item:hover { background: var(--color-background-hover); }
+.mini-title { font-weight: 500; }
+.mini-sub { color: var(--color-text-maxcontrast); }
+
+.hist-date { flex: 1; display: flex; align-items: center; gap: 6px; color: var(--color-text-maxcontrast); }
+.hist-amount { font-weight: 600; width: 100px; text-align: right; }
+.hist-period { width: 80px; text-align: right; color: var(--color-text-maxcontrast); }
+.text-success { color: var(--color-success-element); }
+
+/* Package Item */
+.item-icon-wrapper { 
+    width: 40px; height: 40px; border-radius: 8px; background: var(--color-background-hover); 
+    display: flex; align-items: center; justify-content: center; color: var(--color-text-maxcontrast); margin-right: 16px; 
 }
 
-.package-item {
-	cursor: pointer;
+/* Empty & Loading */
+.nc-empty-state, .nc-loading-state {
+    padding: 60px; text-align: center; display: flex; flex-direction: column; align-items: center;
+    color: var(--color-text-maxcontrast);
 }
-
-.package-item .list-item__avatar .material-icon {
-	filter: brightness(0) invert(1);
-}
-
-.package-price {
-	color: var(--color-primary-element);
-	font-weight: 500;
-}
-
-.package-active {
-	background-color: var(--color-success);
-	color: var(--color-success-text);
-}
-
-.package-inactive {
-	background-color: var(--color-text-maxcontrast);
-	color: var(--color-main-background);
-}
-
-/* List Item Styling - Similar to Domains */
-.hostings-list {
-	display: grid;
-	gap: 12px;
-}
-
-.list-item {
-	display: flex;
-	align-items: center;
-	background-color: var(--color-background-dark);
-	border-radius: var(--border-radius-element);
-	padding: 12px 16px;
-	transition: background-color 0.2s ease;
-	border: 1px solid var(--color-border);
-}
-
-.list-item:hover {
-	background-color: var(--color-background-hover);
-}
-
-.list-item__avatar {
-	width: 40px;
-	height: 40px;
-	border-radius: 50%;
-	background-color: var(--color-primary-element);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	font-size: 1.2em;
-	color: var(--color-primary-element-text);
-	margin-right: 16px;
-	flex-shrink: 0;
-}
-
-.list-item__avatar .material-icon {
-	filter: brightness(0) invert(1);
-}
-
-.list-item__content {
-	flex-grow: 1;
-	min-width: 0;
-}
-
-.list-item__title {
-	font-weight: 600;
-	color: var(--color-main-text);
-	font-size: 16px;
-	margin-bottom: 4px;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-}
-
-.list-item__meta {
-	font-size: 13px;
-	color: var(--color-text-maxcontrast);
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-}
-
-.list-item__stats {
-	display: flex;
-	gap: 20px;
-	margin-left: 20px;
-	flex-shrink: 0;
-}
-
-.list-item__stat {
-	text-align: right;
-}
-
-.list-item__stat-label {
-	font-size: 12px;
-	color: var(--color-text-maxcontrast);
-	margin-bottom: 2px;
-}
-
-.list-item__stat-value {
-	font-weight: 500;
-	color: var(--color-main-text);
-	font-size: 14px;
-}
-
-.list-item__actions {
-	display: flex;
-	gap: 8px;
-	margin-left: 20px;
-	flex-shrink: 0;
-}
-
-/* Status Badges */
-.status-badge {
-	padding: 4px 8px;
-	border-radius: var(--border-radius-pill);
-	font-size: 11px;
-	font-weight: 600;
-	text-transform: uppercase;
-	display: inline-block;
-}
-
-.status-ok {
-	background-color: var(--color-success);
-	color: var(--color-success-text);
-}
-
-.status-warning {
-	background-color: var(--color-warning);
-	color: var(--color-warning-text);
-}
-
-.status-critical {
-	background-color: var(--color-error);
-	color: var(--color-error-text);
-}
-
-/* Detail View Styling */
-.detail-header {
-	display: flex;
-	align-items: center;
-	gap: 20px;
-	margin-bottom: 20px;
-	flex-wrap: wrap;
-}
-
-.detail-title {
-	margin: 0;
-	font-size: 24px;
-	color: var(--color-main-text);
-	flex-grow: 1;
-}
-
-.detail-actions {
-	display: flex;
-	gap: 12px;
-}
-
-.detail-content {
-	display: grid;
-	gap: 20px;
-}
-
-.detail-stats {
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-	gap: 16px;
-}
-
-.stat-card {
-	background-color: var(--color-background-dark);
-	border-radius: var(--border-radius-element);
-	padding: 16px;
-	display: flex;
-	align-items: center;
-	gap: 12px;
-	border: 1px solid var(--color-border);
-}
-
-.stat-card__icon {
-	width: 40px;
-	height: 40px;
-	border-radius: 50%;
-	background-color: var(--color-background-hover);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	flex-shrink: 0;
-}
-
-.stat-card__icon .material-icon {
-	filter: brightness(0) invert(1) opacity(0.7);
-}
-
-.stat-card__content {
-	flex-grow: 1;
-}
-
-.stat-card__label {
-	font-size: 13px;
-	color: var(--color-text-maxcontrast);
-	margin-bottom: 4px;
-}
-
-.stat-card__value {
-	font-size: 18px;
-	font-weight: 600;
-	color: var(--color-main-text);
-}
-
-.detail-info-grid {
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-	gap: 20px;
-}
-
-.detail-info-card,
-.detail-history-card {
-	background-color: var(--color-background-dark);
-	border-radius: var(--border-radius-element);
-	padding: 20px;
-	border: 1px solid var(--color-border);
-}
-
-.hosting-info-title,
-.hosting-history-title {
-	margin-top: 0;
-	margin-bottom: 15px;
-	font-size: 18px;
-	color: var(--color-main-text);
-}
-
-.detail-table {
-	width: 100%;
-	border-collapse: collapse;
-}
-
-.detail-table td {
-	padding: 8px 0;
-	border-bottom: 1px solid var(--color-border);
-}
-
-.detail-table tr:last-child td {
-	border-bottom: none;
-}
-
-.table-label {
-	font-weight: 500;
-	color: var(--color-text-maxcontrast);
-	width: 120px;
-}
-
-.table-value {
-	color: var(--color-main-text);
-}
-
-.detail-notes {
-	background-color: var(--color-background-hover);
-	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius-small);
-	padding: 10px;
-	white-space: pre-wrap;
-	font-family: var(--font-face);
-	font-size: 14px;
-	color: var(--color-main-text);
-}
-
-.mini-list {
-	display: grid;
-	gap: 8px;
-}
-
-.mini-item {
-	background-color: var(--color-background-hover);
-	border-radius: var(--border-radius-small);
-	padding: 8px 12px;
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	font-size: 14px;
-	color: var(--color-main-text);
-	border: 1px solid var(--color-border);
-	cursor: pointer;
-	transition: background-color 0.2s ease;
-}
-
-.mini-item:hover {
-	background-color: var(--color-background-darker);
-}
-
-.empty-mini {
-	color: var(--color-text-maxcontrast);
-	font-style: italic;
-	padding: 10px;
-	text-align: center;
-}
-
-.history-list {
-	display: grid;
-	gap: 12px;
-}
-
-.history-item {
-	background-color: var(--color-background-hover);
-	border-radius: var(--border-radius-small);
-	padding: 12px;
-	border: 1px solid var(--color-border);
-}
-
-.history-date {
-	font-size: 13px;
-	color: var(--color-text-maxcontrast);
-	margin-bottom: 8px;
-	display: flex;
-	align-items: center;
-	gap: 5px;
-}
-
-.history-content {
-	font-size: 14px;
-	color: var(--color-main-text);
-}
-
-.history-detail {
-	display: block;
-	color: var(--color-text-maxcontrast);
-	margin-top: 4px;
-}
-
-.history-note {
-	display: block;
-	font-style: italic;
-	color: var(--color-text-maxcontrast);
-	margin-top: 8px;
-}
-
-.link-primary {
-	color: var(--color-primary-element);
-	text-decoration: none;
-}
-
-.link-primary:hover {
-	text-decoration: underline;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-	.domaincontrol-actions {
-		flex-direction: column;
-		align-items: stretch;
-	}
-
-	.hosting-search-wrapper {
-		width: 100%;
-	}
-
-	.detail-header {
-		flex-direction: column;
-		align-items: flex-start;
-	}
-
-	.detail-actions {
-		width: 100%;
-		justify-content: stretch;
-	}
-
-	.detail-actions .button-vue {
-		flex-grow: 1;
-	}
-
-	.detail-stats,
-	.detail-info-grid {
-		grid-template-columns: 1fr;
-	}
-
-	.hosting-packages-grid {
-		grid-template-columns: 1fr;
-	}
-
-	.list-item {
-		flex-wrap: wrap;
-	}
-
-	.list-item__content {
-		flex-basis: 100%;
-		margin-bottom: 10px;
-	}
-
-	.list-item__stats {
-		flex-basis: 100%;
-		justify-content: space-around;
-		margin-left: 0;
-		margin-top: 10px;
-	}
-
-	.list-item__actions {
-		flex-basis: 100%;
-		justify-content: flex-end;
-		margin-left: 0;
-		margin-top: 10px;
-	}
+.nc-state-icon { opacity: 0.5; margin-bottom: 16px; }
+.spin-animation { animation: spin 1s linear infinite; }
+.count-badge { background: var(--color-primary); color: #fff; padding: 1px 8px; border-radius: 10px; font-size: 11px; font-weight: bold; }
+.mt-4 { margin-top: 16px; }
+
+/* Responsive */
+@media (max-width: 900px) {
+    .nc-detail-content { grid-template-columns: 1fr; }
+    .desktop-only { display: none; }
+    .stats-grid { grid-template-columns: 1fr; }
 }
 </style>

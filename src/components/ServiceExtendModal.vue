@@ -256,7 +256,7 @@ export default {
 
 .form-control:focus {
 	outline: none;
-	border-color: var(--color-primary-element);
+	border-color: var(--color-primary-element-element-element);
 }
 
 .form-control-static {
@@ -270,7 +270,7 @@ export default {
 
 .new-expiry {
 	font-weight: 600;
-	color: var(--color-primary-element);
+	color: var(--color-primary-element-element-element);
 }
 
 .form-actions {

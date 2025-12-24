@@ -382,7 +382,7 @@ export default {
 }
 
 .text-success {
-	color: var(--color-success);
+	color: var(--color-element-success);
 	font-weight: 500;
 }
 
@@ -417,7 +417,7 @@ export default {
 
 .form-control:focus {
 	outline: none;
-	border-color: var(--color-primary-element);
+	border-color: var(--color-primary-element-element-element);
 }
 
 .form-actions {
@@ -430,12 +430,12 @@ export default {
 }
 
 .button-vue--success {
-	background-color: var(--color-success);
-	color: var(--color-success-text);
+	background-color: var(--color-element-success);
+	color: var(--color-element-success-text);
 }
 
 .button-vue--success:hover:not(:disabled) {
-	background-color: var(--color-success-hover);
+	background-color: var(--color-element-success-hover);
 }
 </style>
 

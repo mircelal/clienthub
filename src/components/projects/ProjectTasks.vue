@@ -261,15 +261,15 @@ export default {
     --color-main-text: #222;
     --color-main-background: #fff;
     --color-background-hover: #f5f5f5;
-    --color-primary: #0082c9;
-    --color-primary-text: #ffffff;
+    --color-primary-element-element: #0082c9;
+    --color-primary-element-element-text: #ffffff;
     --color-border: #ededed;
     --color-border-dark: #dbdbdb;
     --color-text-maxcontrast: #767676;
     --color-text-light: #888;
-    --color-success: #46ba61;
-    --color-warning: #e99002;
-    --color-error: #e9322d;
+    --color-element-success: #46ba61;
+    --color-element-warning: #e99002;
+    --color-element-error: #e9322d;
     --border-radius: 4px;
     --border-radius-large: 12px;
     
@@ -325,8 +325,8 @@ export default {
 }
 
 .nc-button-primary {
-    background-color: var(--color-primary);
-    color: var(--color-primary-text);
+    background-color: var(--color-primary-element-element);
+    color: var(--color-primary-element-element-text);
     box-shadow: 0 1px 2px rgba(0,0,0,0.1);
 }
 
@@ -372,7 +372,7 @@ export default {
 
 .spin-animation {
     animation: spin 1s linear infinite;
-    color: var(--color-primary);
+    color: var(--color-primary-element-element);
 }
 
 @keyframes spin {
@@ -412,7 +412,7 @@ export default {
 
 .progress-percentage {
     font-weight: 700;
-    color: var(--color-primary);
+    color: var(--color-primary-element-element);
 }
 
 .progress-track {
@@ -425,7 +425,7 @@ export default {
 
 .progress-fill {
     height: 100%;
-    background-color: var(--color-success);
+    background-color: var(--color-element-success);
     border-radius: 99px;
     transition: width 0.4s ease-out;
 }
@@ -500,12 +500,12 @@ export default {
 }
 
 .custom-checkbox-container:hover input ~ .checkmark {
-    border-color: var(--color-primary);
+    border-color: var(--color-primary-element-element);
 }
 
 .custom-checkbox-container input:checked ~ .checkmark {
-    background-color: var(--color-primary);
-    border-color: var(--color-primary);
+    background-color: var(--color-primary-element-element);
+    border-color: var(--color-primary-element-element);
 }
 
 .checkmark:after {
@@ -612,7 +612,7 @@ export default {
 }
 
 .text-error {
-    color: var(--color-error);
+    color: var(--color-element-error);
     font-weight: 600;
 }
 
@@ -678,7 +678,7 @@ export default {
     top: 0;
     bottom: 0;
     width: 3px;
-    background-color: var(--color-error);
+    background-color: var(--color-element-error);
     border-top-left-radius: var(--border-radius);
     border-bottom-left-radius: var(--border-radius);
 }

@@ -503,7 +503,7 @@ export default {
 
 .form-control:focus {
 	outline: none;
-	border-color: var(--color-primary);
+	border-color: var(--color-primary-element-element);
 }
 
 .form-control::placeholder {
@@ -551,12 +551,12 @@ export default {
 }
 
 .button-vue--primary {
-	background-color: var(--color-primary);
-	color: var(--color-primary-text);
+	background-color: var(--color-primary-element-element);
+	color: var(--color-primary-element-element-text);
 }
 
 .button-vue--primary:hover:not(:disabled) {
-	background-color: var(--color-primary-hover);
+	background-color: var(--color-primary-element-element-hover);
 }
 
 .button-vue--secondary {

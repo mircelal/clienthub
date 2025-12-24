@@ -695,7 +695,7 @@ export default {
 }
 
 .nc-stat-widget:hover {
-    border-color: var(--color-primary-element);
+    border-color: var(--color-primary-element-element-element);
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
@@ -709,10 +709,10 @@ export default {
     justify-content: center;
 }
 
-.primary-bg { background-color: rgba(0, 130, 201, 0.1); color: var(--color-primary); }
-.success-bg { background-color: rgba(70, 186, 97, 0.1); color: var(--color-success); }
-.warning-bg { background-color: rgba(233, 144, 2, 0.1); color: var(--color-warning); }
-.error-bg { background-color: rgba(233, 50, 45, 0.1); color: var(--color-error); }
+.primary-bg { background-color: rgba(0, 130, 201, 0.1); color: var(--color-primary-element-element); }
+.success-bg { background-color: rgba(70, 186, 97, 0.1); color: var(--color-element-success); }
+.warning-bg { background-color: rgba(233, 144, 2, 0.1); color: var(--color-element-warning); }
+.error-bg { background-color: rgba(233, 50, 45, 0.1); color: var(--color-element-error); }
 
 .widget-content {
     display: flex;
@@ -784,11 +784,11 @@ export default {
 }
 
 .mini-value { font-size: 16px; font-weight: 600; }
-.text-success { color: var(--color-success); }
-.text-error { color: var(--color-error); }
-.text-warning { color: var(--color-warning); }
+.text-success { color: var(--color-element-success); }
+.text-error { color: var(--color-element-error); }
+.text-warning { color: var(--color-element-warning); }
 .text-subtle { color: var(--color-text-maxcontrast); }
-.text-primary { color: var(--color-primary); }
+.text-primary { color: var(--color-primary-element-element); }
 .icon-inline { opacity: 0.7; }
 
 /* Quick Actions */
@@ -835,9 +835,9 @@ export default {
 
 /* Alert Panels */
 .alert-panel { border-left: 4px solid transparent; }
-.error-border { border-left-color: var(--color-error); }
-.warning-border { border-left-color: var(--color-warning); }
-.info-border { border-left-color: var(--color-primary); }
+.error-border { border-left-color: var(--color-element-error); }
+.warning-border { border-left-color: var(--color-element-warning); }
+.info-border { border-left-color: var(--color-primary-element-element); }
 
 .nc-counter-badge {
     padding: 2px 8px;
@@ -846,9 +846,9 @@ export default {
     font-weight: bold;
     color: white;
 }
-.bg-error { background-color: var(--color-error); }
-.bg-warning { background-color: var(--color-warning); }
-.bg-primary { background-color: var(--color-primary); }
+.bg-error { background-color: var(--color-element-error); }
+.bg-warning { background-color: var(--color-element-warning); }
+.bg-primary { background-color: var(--color-primary-element-element); }
 
 .nc-empty-placeholder {
     display: flex;

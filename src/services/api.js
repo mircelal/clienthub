@@ -35,6 +35,27 @@ export default {
 			},
 		}),
 		delete: (id) => axios.delete(`${apiBase}/clients/${id}`),
+		byClient: {
+			projects: (clientId) => axios.get(`${apiBase}/clients/${clientId}/projects`),
+			tasks: (clientId) => axios.get(`${apiBase}/clients/${clientId}/tasks`),
+			payments: (clientId) => axios.get(`${apiBase}/clients/${clientId}/payments`),
+			invoices: (clientId) => axios.get(`${apiBase}/clients/${clientId}/invoices`),
+			notes: {
+				getAll: (clientId) => axios.get(`${apiBase}/clients/${clientId}/notes`),
+				get: (clientId, id) => axios.get(`${apiBase}/clients/${clientId}/notes/${id}`),
+				create: (clientId, data) => axios.post(`${apiBase}/clients/${clientId}/notes`, toFormData(data), {
+					headers: {
+						'Content-Type': 'application/x-www-form-urlencoded',
+					},
+				}),
+				update: (clientId, id, data) => axios.put(`${apiBase}/clients/${clientId}/notes/${id}`, toFormData(data), {
+					headers: {
+						'Content-Type': 'application/x-www-form-urlencoded',
+					},
+				}),
+				delete: (clientId, id) => axios.delete(`${apiBase}/clients/${clientId}/notes/${id}`),
+			},
+		},
 	},
 	domains: {
 		getAll: () => axios.get(`${apiBase}/domains`),
@@ -152,6 +173,7 @@ export default {
 		get: (id) => axios.get(`${apiBase}/projects/${id}`),
 		getActive: () => axios.get(`${apiBase}/projects/active`),
 		approachingDeadline: () => axios.get(`${apiBase}/projects/approaching-deadline`),
+		byClient: (clientId) => axios.get(`${apiBase}/clients/${clientId}/projects`),
 		create: (data) => axios.post(`${apiBase}/projects`, toFormData(data), {
 			headers: {
 				'Content-Type': 'application/x-www-form-urlencoded',
@@ -228,6 +250,7 @@ export default {
 		getUnpaid: () => axios.get(`${apiBase}/invoices/unpaid`),
 		getOverdue: () => axios.get(`${apiBase}/invoices/overdue`),
 		getUpcoming: () => axios.get(`${apiBase}/invoices/upcoming`),
+		byClient: (clientId) => axios.get(`${apiBase}/clients/${clientId}/invoices`),
 		create: (data) => axios.post(`${apiBase}/invoices`, toFormData(data), {
 			headers: {
 				'Content-Type': 'application/x-www-form-urlencoded',
@@ -239,6 +262,14 @@ export default {
 			},
 		}),
 		delete: (id) => axios.delete(`${apiBase}/invoices/${id}`),
+		duplicate: (id) => axios.post(`${apiBase}/invoices/${id}/duplicate`),
+		downloadPdf: (id) => axios.get(`${apiBase}/invoices/${id}/download-pdf`, { responseType: 'blob' }),
+		sendEmail: (id, data) => axios.post(`${apiBase}/invoices/${id}/send-email`, toFormData(data), {
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+		}),
+		exportReport: () => axios.get(`${apiBase}/invoices/export`),
 		getItems: (id) => axios.get(`${apiBase}/invoices/${id}/items`),
 		addItem: (id, data) => axios.post(`${apiBase}/invoices/${id}/items`, toFormData(data), {
 			headers: {
@@ -252,6 +283,7 @@ export default {
 		getAll: () => axios.get(`${apiBase}/payments`),
 		get: (id) => axios.get(`${apiBase}/payments/${id}`),
 		getMonthlyTotal: () => axios.get(`${apiBase}/payments/monthly-total`),
+		byClient: (clientId) => axios.get(`${apiBase}/clients/${clientId}/payments`),
 		create: (data) => axios.post(`${apiBase}/payments`, toFormData(data), {
 			headers: {
 				'Content-Type': 'application/x-www-form-urlencoded',

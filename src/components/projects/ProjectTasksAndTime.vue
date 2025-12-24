@@ -51,9 +51,7 @@
                             </span>
                             <span class="nc-progress-percentage">{{ progressPercentage }}%</span>
                         </div>
-                        <div class="nc-progress-track">
-                            <div class="nc-progress-fill" :style="{ width: progressPercentage + '%' }"></div>
-                        </div>
+                        <NcProgressBar :value="progressPercentage" />
                     </div>
 
                     <!-- Tasks List -->
@@ -95,6 +93,11 @@
                                             {{ getPriorityText(task.priority) }}
                                         </span>
                                     </div>
+                                </div>
+                                
+                                <!-- Task Description -->
+                                <div v-if="task.description" class="nc-task-description">
+                                    {{ task.description }}
                                 </div>
                                 
                                 <div class="nc-row-meta">
@@ -269,7 +272,7 @@
 </template>
 
 <script>
-import { NcButton } from '@nextcloud/vue'
+import { NcButton, NcProgressBar } from '@nextcloud/vue'
 // vue-material-design-icons
 import ClipboardCheck from 'vue-material-design-icons/ClipboardCheck.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
@@ -290,6 +293,7 @@ export default {
     name: 'ProjectTasksAndTime',
     components: {
         NcButton,
+        NcProgressBar,
         ClipboardCheck,
         Plus,
         Refresh,
@@ -506,9 +510,7 @@ export default {
 
 /* --- Progress Bar --- */
 .nc-progress-container { margin-bottom: 20px; }
-.nc-progress-info { display: flex; justify-content: space-between; font-size: 13px; color: var(--color-text-maxcontrast); margin-bottom: 6px; }
-.nc-progress-track { width: 100%; height: 6px; background: var(--color-background-dark); border-radius: 4px; overflow: hidden; }
-.nc-progress-fill { height: 100%; background: var(--color-success); border-radius: 4px; transition: width 0.3s; }
+.nc-progress-info { display: flex; justify-content: space-between; font-size: 13px; color: var(--color-text-maxcontrast); margin-bottom: 8px; }
 
 /* --- Task List --- */
 .nc-list-row {
@@ -529,21 +531,33 @@ export default {
 .nc-custom-checkbox { position: relative; padding-left: 20px; cursor: pointer; }
 .nc-custom-checkbox input { position: absolute; opacity: 0; }
 .nc-checkmark { position: absolute; top: -9px; left: 0; height: 18px; width: 18px; border: 2px solid var(--color-text-maxcontrast); border-radius: 50%; }
-.nc-custom-checkbox input:checked ~ .nc-checkmark { background: var(--color-primary); border-color: var(--color-primary); }
+.nc-custom-checkbox input:checked ~ .nc-checkmark { background: var(--color-primary-element-element); border-color: var(--color-primary-element-element); }
 .nc-custom-checkbox input:checked ~ .nc-checkmark:after { content: ""; position: absolute; display: block; left: 5px; top: 2px; width: 4px; height: 8px; border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg); }
 
 /* Task Content */
 .nc-row-content { flex: 1; }
 .nc-task-title { font-weight: 600; color: var(--color-main-text); margin-right: 8px; }
 .nc-row-header { margin-bottom: 4px; display: flex; align-items: center; }
-.nc-row-meta { display: flex; gap: 12px; font-size: 12px; color: var(--color-text-maxcontrast); align-items: center; }
+.nc-task-description { 
+    font-size: 13px; 
+    color: var(--color-text-maxcontrast); 
+    margin: 4px 0 6px 0; 
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.nc-row-meta { display: flex; gap: 12px; font-size: 12px; color: var(--color-text-maxcontrast); align-items: center; margin-top: 4px; }
 .nc-meta-item { display: inline-flex; align-items: center; gap: 4px; }
 .icon-fix { display: inline-flex; } /* Ensure icons don't collapse */
 
 /* Badges */
 .nc-badge { padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold; }
-.badge-priority-high { color: var(--color-error); background: rgba(233, 50, 45, 0.1); }
-.badge-priority-low { color: var(--color-success); background: rgba(70, 186, 97, 0.1); }
+.badge-priority-high { color: var(--color-element-error); background: rgba(233, 50, 45, 0.1); }
+.badge-priority-low { color: var(--color-element-success); background: rgba(70, 186, 97, 0.1); }
 
 /* --- NEW TIMER DESIGN (Card) --- */
 .timer-card {
@@ -561,7 +575,7 @@ export default {
 }
 
 .timer-card.is-active {
-    border-color: var(--color-primary);
+    border-color: var(--color-primary-element-element);
     background: linear-gradient(to right, var(--color-main-background), rgba(0, 130, 201, 0.03));
 }
 
@@ -590,7 +604,7 @@ export default {
     font-size: 11px;
     text-transform: uppercase;
     font-weight: 700;
-    color: var(--color-success);
+    color: var(--color-element-success);
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -601,7 +615,7 @@ export default {
 .blink-dot {
     width: 8px;
     height: 8px;
-    background: var(--color-success);
+    background: var(--color-element-success);
     border-radius: 50%;
     animation: blink 1s infinite;
 }
@@ -620,7 +634,7 @@ export default {
     color: var(--color-main-text);
     padding: 8px 0;
 }
-.nc-input-clean:focus { outline: none; border-bottom: 2px solid var(--color-primary); }
+.nc-input-clean:focus { outline: none; border-bottom: 2px solid var(--color-primary-element-element); }
 .nc-input-clean::placeholder { color: var(--color-text-maxcontrast); opacity: 0.6; }
 
 .timer-right {
@@ -663,7 +677,7 @@ export default {
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--color-primary);
+    color: var(--color-primary-element-element);
 }
 
 .stat-content { display: flex; flex-direction: column; }
@@ -704,8 +718,8 @@ export default {
     background: none; border: none; cursor: pointer; color: var(--color-text-maxcontrast); opacity: 0; transition: all 0.2s; padding: 4px; border-radius: 50%;
 }
 .clean-list-item:hover .btn-icon-only { opacity: 1; }
-.btn-icon-only:hover { background: var(--color-background-dark); color: var(--color-error); }
-.text-running { color: var(--color-success); font-weight: bold; }
+.btn-icon-only:hover { background: var(--color-background-dark); color: var(--color-element-error); }
+.text-running { color: var(--color-element-success); font-weight: bold; }
 
 /* Mobile */
 @media (max-width: 650px) {
