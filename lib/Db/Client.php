@@ -16,6 +16,8 @@ use OCP\AppFramework\Db\Entity;
  * @method void setNotes(string $notes)
  * @method string getUserId()
  * @method void setUserId(string $userId)
+ * @method string|null getNcUserId()
+ * @method void setNcUserId(string|null $ncUserId)
  * @method string getCreatedAt()
  * @method void setCreatedAt(string $createdAt)
  * @method string getUpdatedAt()
@@ -27,6 +29,7 @@ class Client extends Entity implements \JsonSerializable {
 	protected $phone;
 	protected $notes;
 	protected $userId;
+	protected $ncUserId = null;
 	protected $createdAt;
 	protected $updatedAt;
 
@@ -36,6 +39,8 @@ class Client extends Entity implements \JsonSerializable {
 		$this->addType('phone', 'string');
 		$this->addType('notes', 'string');
 		$this->addType('userId', 'string');
+		// ncUserId is nullable, so we don't use addType for it
+		// This allows NULL values to remain NULL instead of being cast to empty string
 		$this->addType('createdAt', 'string');
 		$this->addType('updatedAt', 'string');
 	}
@@ -48,6 +53,7 @@ class Client extends Entity implements \JsonSerializable {
 			'phone' => $this->phone,
 			'notes' => $this->notes,
 			'userId' => $this->userId,
+			'nextcloudUserId' => $this->ncUserId, // Use full name in API response for clarity
 			'createdAt' => $this->createdAt,
 			'updatedAt' => $this->updatedAt,
 		];
