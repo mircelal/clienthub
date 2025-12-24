@@ -76,14 +76,64 @@ Comprehensive client, project, and business management system. Manage all your b
 
 ## Installation
 
-1. Clone or download this repository
-2. Copy the `domaincontrol` folder to your Nextcloud `apps/` directory
-3. Enable the app via command line:
+Since ClientHub is not available in the Nextcloud App Store, you need to install it manually from GitHub.
+
+### Prerequisites
+- Nextcloud 25 or higher
+- PHP 8.0 or higher
+- Administrator access to your Nextcloud instance
+
+### Installation Steps
+
+1. **Clone or download the repository**
+   ```bash
+   git clone https://github.com/mircelal/clienthub.git
+   ```
+   
+   Or download the ZIP file from GitHub and extract it.
+
+2. **Copy to Nextcloud apps directory**
+   ```bash
+   # Navigate to your Nextcloud installation directory
+   cd /path/to/nextcloud
+   
+   # Copy the domaincontrol folder to the apps directory
+   cp -r /path/to/clienthub/domaincontrol apps/
+   ```
+   
+   **Note**: The folder name must be `domaincontrol` (not `clienthub`).
+
+3. **Set proper permissions**
+   ```bash
+   # Make sure the web server user owns the app directory
+   chown -R www-data:www-data apps/domaincontrol
+   chmod -R 755 apps/domaincontrol
+   ```
+
+4. **Enable the app**
+   
+   **Option A: Via Nextcloud Admin Interface (Recommended)**
+   - Log in as an administrator
+   - Go to **Settings** → **Administration** → **Apps**
+   - Find "ClientHub" in the **Not enabled** section
+   - Click **Enable**
+
+   **Option B: Via Command Line**
    ```bash
    cd /path/to/nextcloud
    php occ app:enable domaincontrol
    ```
-4. The app will appear in your Nextcloud navigation menu
+
+5. **Access the application**
+   - After enabling, "ClientHub" will appear in your Nextcloud navigation menu
+   - Click on it to start using the application
+
+### Troubleshooting
+
+- **App not appearing**: Make sure the folder is named `domaincontrol` and is in the `apps/` directory
+- **Permission errors**: Check that the web server user has read/write access to the app directory
+- **Dependencies missing**: Run `composer install` in the app directory if needed
+- **Build required**: If you're using the development version, run `npm install && npm run build` in the app directory
 
 ## Usage
 
