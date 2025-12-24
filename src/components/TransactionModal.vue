@@ -64,23 +64,6 @@
 							required
 						/>
 					</div>
-					<div class="form-group">
-						<label for="transaction-currency" class="form-label">
-							{{ translate('domaincontrol', 'Currency') }}
-						</label>
-						<select
-							id="transaction-currency"
-							v-model="formData.currency"
-							class="form-control"
-						>
-							<option value="USD">$ USD</option>
-							<option value="EUR">€ EUR</option>
-							<option value="TRY">₺ TRY</option>
-							<option value="AZN">₼ AZN</option>
-							<option value="GBP">£ GBP</option>
-							<option value="RUB">₽ RUB</option>
-						</select>
-					</div>
 				</div>
 
 				<div class="form-row">
@@ -244,11 +227,11 @@ export default {
 	data() {
 		return {
 			saving: false,
+			defaultCurrency: 'USD',
 			formData: {
 				type: '',
 				categoryId: '',
 				amount: '',
-				currency: 'USD',
 				transactionDate: '',
 				paymentMethod: '',
 				description: '',
@@ -268,6 +251,9 @@ export default {
 			return this.categories.filter(c => c.type === this.formData.type)
 		},
 	},
+	mounted() {
+		this.loadSettings()
+	},
 	watch: {
 		open(newVal) {
 			if (newVal) {
@@ -282,12 +268,21 @@ export default {
 		},
 	},
 	methods: {
+		async loadSettings() {
+			try {
+				const response = await api.settings.get()
+				const settings = response.data || {}
+				this.defaultCurrency = settings.default_currency || 'USD'
+			} catch (error) {
+				console.error('Error loading settings:', error)
+				this.defaultCurrency = 'USD'
+			}
+		},
 		resetForm() {
 			this.formData = {
 				type: '',
 				categoryId: '',
 				amount: '',
-				currency: 'USD',
 				transactionDate: '',
 				paymentMethod: '',
 				description: '',
@@ -304,7 +299,6 @@ export default {
 				type: this.transaction.type || '',
 				categoryId: this.transaction.categoryId || '',
 				amount: this.transaction.amount || '',
-				currency: this.transaction.currency || 'USD',
 				transactionDate: this.transaction.transactionDate ? this.transaction.transactionDate.split(' ')[0] : '',
 				paymentMethod: this.transaction.paymentMethod || '',
 				description: this.transaction.description || '',
@@ -325,7 +319,7 @@ export default {
 					type: this.formData.type || '',
 					categoryId: this.formData.categoryId || '',
 					amount: this.formData.amount || '',
-					currency: this.formData.currency || 'USD',
+					currency: this.defaultCurrency || 'USD',
 					transactionDate: this.formData.transactionDate || '',
 					paymentMethod: this.formData.paymentMethod || '',
 					description: this.formData.description || '',

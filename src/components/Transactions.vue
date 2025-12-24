@@ -1,6 +1,6 @@
 <template>
     <div class="nc-app-content">
-        <!-- Transaction Modal (Değişmedi) -->
+        <!-- Transaction Modal -->
         <TransactionModal
             :open="modalOpen"
             :transaction="editingTransaction"
@@ -11,16 +11,42 @@
             @saved="handleTransactionSaved"
         />
 
+        <!-- Category Management Modal -->
+        <TransactionCategoryManagementModal
+            :open="categoryManagementOpen"
+            :categories="categories"
+            @close="closeCategoryManagement"
+            @add="showAddCategory"
+            @edit="editCategory"
+            @delete="deleteCategory"
+        />
+
+        <!-- Category Add/Edit Modal -->
+        <TransactionCategoryModal
+            :open="categoryModalOpen"
+            :category="editingCategory"
+            @close="closeCategoryModal"
+            @saved="handleCategorySaved"
+        />
+
         <!-- LIST COLUMN (Sol Taraf) -->
         <div class="nc-app-content-list" :class="{ 'mobile-hidden': selectedTransaction }">
             <!-- Header: Search & Filters & Add Button -->
             <div class="app-content-list__header">
                 <div class="header-main-actions">
                     <h2 class="header-title">{{ translate('domaincontrol', 'Transactions') }}</h2>
-                    <button class="nc-button nc-button--primary" @click="showAddModal" :title="translate('domaincontrol', 'Add Transaction')">
-                        <MaterialIcon name="add" :size="20" />
-                        <span class="button-text">{{ translate('domaincontrol', 'Add') }}</span>
-                    </button>
+                    <NcButton type="tertiary" @click="showCategoryManagement" :title="translate('domaincontrol', 'Manage Categories')">
+                        <template #icon>
+                            <Tag :size="20" />
+                        </template>
+                        {{ translate('domaincontrol', 'Categories') }}
+                    </NcButton>
+                    <NcButton type="primary" @click="showAddModal" :title="translate('domaincontrol', 'Add Transaction')">
+                        <template #icon>
+                            <Plus :size="20" />
+                        </template>
+                        {{ translate('domaincontrol', 'Add') }}
+                    </NcButton>
                 </div>
                 
                 <div class="search-box-wrapper">
@@ -96,7 +122,7 @@
                         </div>
                         <div class="nc-list-item__end">
                             <div class="amount" :class="`amount-${transaction.type}`">
-                                {{ transaction.type === 'income' ? '+' : '-' }}{{ formatCurrency(transaction.amount, transaction.currency) }}
+                                {{ transaction.type === 'income' ? '+' : '-' }}{{ formatCurrency(transaction.amount) }}
                             </div>
                             <div class="action-menu-wrapper" @click.stop>
                                 <button class="icon-action" @click.stop="togglePopover(transaction.id)">
@@ -142,7 +168,7 @@
                         <MaterialIcon :name="selectedTransaction.type === 'income' ? 'add' : 'minus'" :size="32" />
                     </div>
                     <div class="amount-value">
-                        {{ formatCurrency(selectedTransaction.amount, selectedTransaction.currency) }}
+                        {{ formatCurrency(selectedTransaction.amount) }}
                     </div>
                     <div class="amount-label">
                         {{ getTransactionTypeText(selectedTransaction.type) }}
@@ -230,12 +256,22 @@
 import api from '../services/api'
 import MaterialIcon from './MaterialIcon.vue'
 import TransactionModal from './TransactionModal.vue'
+import TransactionCategoryModal from './TransactionCategoryModal.vue'
+import TransactionCategoryManagementModal from './TransactionCategoryManagementModal.vue'
+import { NcButton } from '@nextcloud/vue'
+import Tag from 'vue-material-design-icons/Tag.vue'
+import Plus from 'vue-material-design-icons/Plus.vue'
 
 export default {
     name: 'Transactions',
     components: {
         MaterialIcon,
         TransactionModal,
+        TransactionCategoryModal,
+        TransactionCategoryManagementModal,
+        NcButton,
+        Tag,
+        Plus,
     },
     data() {
         return {
@@ -250,6 +286,13 @@ export default {
             currentFilter: 'all',
             searchQuery: '',
             openPopover: null,
+            // Currency settings
+            defaultCurrency: 'USD',
+            currencies: [],
+            // Category management
+            categoryModalOpen: false,
+            editingCategory: null,
+            categoryManagementOpen: false,
         }
     },
     computed: {
@@ -281,6 +324,7 @@ export default {
         },
     },
     mounted() {
+        this.loadSettings()
         this.loadData()
         document.addEventListener('click', this.handleClickOutside)
     },
@@ -372,6 +416,41 @@ export default {
                 if (updated) this.selectedTransaction = updated
             }
             this.closeModal()
+        },
+        showCategoryManagement() {
+            this.categoryManagementOpen = true
+        },
+        closeCategoryManagement() {
+            this.categoryManagementOpen = false
+        },
+        showAddCategory() {
+            this.editingCategory = null
+            this.categoryManagementOpen = false
+            this.categoryModalOpen = true
+        },
+        editCategory(category) {
+            this.editingCategory = category
+            this.categoryManagementOpen = false
+            this.categoryModalOpen = true
+        },
+        closeCategoryModal() {
+            this.categoryModalOpen = false
+            this.editingCategory = null
+        },
+        async handleCategorySaved() {
+            await this.loadCategories()
+            this.closeCategoryModal()
+            // Reopen category management modal
+            this.categoryManagementOpen = true
+        },
+        async deleteCategory(category) {
+            try {
+                await api.transactionCategories.delete(category.id)
+                await this.loadCategories()
+            } catch (error) {
+                console.error('Error deleting category:', error)
+                alert(this.translate('domaincontrol', 'Error deleting category'))
+            }
         },
         async confirmDelete(transaction) {
             if (!confirm(this.translate('domaincontrol', 'Are you sure you want to delete this transaction?'))) {
@@ -476,13 +555,62 @@ export default {
             const d = new Date(date)
             return d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })
         },
-        formatCurrency(amount, currency = 'USD') {
+        async loadSettings() {
+            try {
+                const response = await api.settings.get()
+                const settings = response.data || {}
+                
+                this.defaultCurrency = settings.default_currency || 'USD'
+                
+                // Load currencies to get symbol
+                if (settings.currencies) {
+                    try {
+                        this.currencies = JSON.parse(settings.currencies)
+                    } catch (e) {
+                        this.currencies = []
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading settings:', error)
+                this.defaultCurrency = 'USD'
+            }
+        },
+        getCurrencySymbol(currencyCode) {
+            if (!currencyCode) currencyCode = this.defaultCurrency || 'USD'
+            
+            // First try to find in loaded currencies
+            if (this.currencies && this.currencies.length > 0) {
+                const currency = this.currencies.find(c => c.code === currencyCode)
+                if (currency && currency.symbol) {
+                    return currency.symbol
+                }
+            }
+            
+            // Fallback to default symbols if not found in settings
+            const defaultSymbols = {
+                'USD': '$',
+                'EUR': '€',
+                'TRY': '₺',
+                'AZN': '₼',
+                'GBP': '£',
+                'RUB': '₽',
+            }
+            return defaultSymbols[currencyCode] || currencyCode
+        },
+        formatCurrency(amount, currency = null) {
             if (amount === null || amount === undefined) return '-'
-            const formatter = new Intl.NumberFormat('tr-TR', {
-                style: 'currency',
-                currency: currency || 'USD',
-            })
-            return formatter.format(amount)
+            // Always use default currency from settings
+            const currencyCode = this.defaultCurrency || 'USD'
+            const symbol = this.getCurrencySymbol(currencyCode)
+            
+            const val = parseFloat(amount)
+            if (isNaN(val)) return '-'
+            
+            // Always show symbol (getCurrencySymbol now has fallback)
+            return new Intl.NumberFormat('tr-TR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+            }).format(val) + ' ' + symbol
         },
         translate(appId, text, vars) {
              try {

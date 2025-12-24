@@ -32,6 +32,16 @@
                     </span>
                 </div>
                 <div class="header-actions">
+                    <NcTextField
+                        :model-value="searchQuery"
+                        :placeholder="translate('domaincontrol', 'Search domains...')"
+                        class="search-input"
+                        @update:model-value="searchQuery = $event"
+                    >
+                        <template #icon>
+                            <Magnify :size="20" />
+                        </template>
+                    </NcTextField>
                     <NcButton type="secondary" @click="testEmail">
                         <template #icon>
                             <Email :size="20" />
@@ -345,7 +355,7 @@
 import api from '../services/api'
 import DomainModal from './DomainModal.vue'
 import DomainExtendModal from './DomainExtendModal.vue'
-import { NcButton } from '@nextcloud/vue'
+import { NcButton, NcTextField } from '@nextcloud/vue'
 // vue-material-design-icons
 import Email from 'vue-material-design-icons/Email.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
@@ -361,6 +371,7 @@ import TimerSand from 'vue-material-design-icons/TimerSand.vue'
 import CheckCircle from 'vue-material-design-icons/CheckCircle.vue'
 import Cash from 'vue-material-design-icons/Cash.vue'
 import Lock from 'vue-material-design-icons/Lock.vue'
+import Magnify from 'vue-material-design-icons/Magnify.vue'
 
 export default {
     name: 'Domains',
@@ -368,6 +379,7 @@ export default {
         DomainModal,
         DomainExtendModal,
         NcButton,
+        NcTextField,
         Email,
         Plus,
         Refresh,
@@ -382,6 +394,7 @@ export default {
         CheckCircle,
         Cash,
         Lock,
+        Magnify,
     },
     data() {
         return {
@@ -395,11 +408,34 @@ export default {
             extendModalOpen: false,
             editingDomain: null,
             extendingDomain: null,
+            searchQuery: '',
         }
     },
     computed: {
         filteredDomains() {
-            return this.domains
+            if (!this.searchQuery) {
+                return this.domains
+            }
+            
+            const query = this.searchQuery.toLowerCase()
+            return this.domains.filter(domain => {
+                // Search in domain name
+                if (domain.domainName && domain.domainName.toLowerCase().includes(query)) {
+                    return true
+                }
+                // Search in registrar
+                if (domain.registrar && domain.registrar.toLowerCase().includes(query)) {
+                    return true
+                }
+                // Search in client name
+                if (domain.clientId) {
+                    const client = this.clients.find(c => c.id === domain.clientId)
+                    if (client && client.name && client.name.toLowerCase().includes(query)) {
+                        return true
+                    }
+                }
+                return false
+            })
         },
     },
     mounted() {
@@ -629,7 +665,15 @@ export default {
     color: var(--color-text-maxcontrast);
 }
 
-.header-actions { display: flex; gap: 8px; }
+.header-actions { display: flex; gap: 8px; align-items: center; }
+.search-input {
+    min-width: 300px;
+    max-width: 500px;
+    width: 100%;
+}
+.search-input :deep(input) {
+    width: 100%;
+}
 
 /* --- Empty States --- */
 .nc-empty-state {

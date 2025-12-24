@@ -33,7 +33,7 @@
                 <div class="widget-content">
                     <span class="widget-label">{{ translate('domaincontrol', 'Total Budget') }}</span>
                     <span class="widget-value font-mono">
-                        {{ formatCurrency(project.budget, project.currency) }}
+                        {{ formatCurrency(project.budget) }}
                     </span>
                 </div>
             </div>
@@ -46,7 +46,7 @@
                 <div class="widget-content">
                     <span class="widget-label">{{ translate('domaincontrol', 'Total Invoiced') }}</span>
                     <span class="widget-value font-mono">
-                        {{ formatCurrency(totalInvoiced, project.currency) }}
+                        {{ formatCurrency(totalInvoiced) }}
                     </span>
                 </div>
             </div>
@@ -59,7 +59,7 @@
                 <div class="widget-content">
                     <span class="widget-label">{{ translate('domaincontrol', 'Collected') }}</span>
                     <span class="widget-value font-mono text-success">
-                        {{ formatCurrency(totalPaid, project.currency) }}
+                        {{ formatCurrency(totalPaid) }}
                     </span>
                 </div>
             </div>
@@ -72,7 +72,7 @@
                 <div class="widget-content">
                     <span class="widget-label">{{ translate('domaincontrol', 'Pending') }}</span>
                     <span class="widget-value font-mono text-warning">
-                        {{ formatCurrency(totalPending, project.currency) }}
+                        {{ formatCurrency(totalPending) }}
                     </span>
                 </div>
             </div>
@@ -85,7 +85,7 @@
                 <div class="widget-content">
                     <span class="widget-label">{{ translate('domaincontrol', 'Total Expenses') }}</span>
                     <span class="widget-value font-mono text-error">
-                        {{ formatCurrency(totalExpenses, project.currency) }}
+                        {{ formatCurrency(totalExpenses) }}
                     </span>
                 </div>
             </div>
@@ -98,7 +98,7 @@
                 <div class="widget-content">
                     <span class="widget-label">{{ translate('domaincontrol', 'Net Profit') }}</span>
                     <span class="widget-value font-mono" :class="getNetProfitTextClass()">
-                        {{ formatCurrency(getNetProfit(), project.currency) }}
+                        {{ formatCurrency(getNetProfit()) }}
                     </span>
                 </div>
             </div>
@@ -111,7 +111,7 @@
                 <div class="widget-content">
                     <span class="widget-label">{{ translate('domaincontrol', 'Remaining Receivable') }}</span>
                     <span class="widget-value font-mono text-warning">
-                        {{ formatCurrency(totalPending, project.currency) }}
+                        {{ formatCurrency(totalPending) }}
                     </span>
                 </div>
             </div>
@@ -172,7 +172,7 @@
                             <div class="amount-group">
                                 <span class="amount-label">{{ translate('domaincontrol', 'Amount') }}</span>
                                 <span class="amount-value font-mono text-error">
-                                    -{{ formatCurrency(expense.amount || 0, expense.currency || project.currency) }}
+                                    -{{ formatCurrency(expense.amount || 0) }}
                                 </span>
                             </div>
                         </div>
@@ -202,7 +202,7 @@
                                     <div class="detail-item">
                                         <span class="detail-label">{{ translate('domaincontrol', 'Amount') }}</span>
                                         <span class="detail-value font-mono text-error">
-                                            -{{ formatCurrency(expense.amount || 0, expense.currency || project.currency) }}
+                                            -{{ formatCurrency(expense.amount || 0) }}
                                         </span>
                                     </div>
                                     <div class="detail-item">
@@ -307,12 +307,12 @@
                         <div class="col-amounts">
                             <div class="amount-group">
                                 <span class="amount-label">{{ translate('domaincontrol', 'Total') }}</span>
-                                <span class="amount-value font-mono">{{ formatCurrency(invoice.totalAmount || invoice.total || 0, invoice.currency) }}</span>
+                                <span class="amount-value font-mono">{{ formatCurrency(invoice.totalAmount || invoice.total || 0) }}</span>
                             </div>
                             <div class="amount-group desktop-only">
                                 <span class="amount-label">{{ translate('domaincontrol', 'Balance') }}</span>
                                 <span class="amount-value font-mono" :class="getRemainingAmountClass(invoice)">
-                                    {{ formatCurrency(getRemainingAmount(invoice), invoice.currency) }}
+                                    {{ formatCurrency(getRemainingAmount(invoice)) }}
                                 </span>
                             </div>
                         </div>
@@ -359,8 +359,8 @@
                                                 </div>
                                             </td>
                                             <td class="text-right">{{ item.quantity || 1 }}</td>
-                                            <td class="text-right font-mono">{{ formatCurrency(item.unitPrice || 0, invoice.currency) }}</td>
-                                            <td class="text-right font-mono font-bold">{{ formatCurrency(item.totalPrice || 0, invoice.currency) }}</td>
+                                            <td class="text-right font-mono">{{ formatCurrency(item.unitPrice || 0) }}</td>
+                                            <td class="text-right font-mono font-bold">{{ formatCurrency(item.totalPrice || 0) }}</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -386,7 +386,7 @@
                                         <div class="payment-method">{{ payment.paymentMethod || '-' }}</div>
                                         <div class="payment-note">{{ payment.notes }}</div>
                                         <div class="payment-amount font-mono text-success">
-                                            +{{ formatCurrency(payment.amount || 0, invoice.currency) }}
+                                            +{{ formatCurrency(payment.amount || 0) }}
                                         </div>
                                     </div>
                                 </div>
@@ -505,7 +505,12 @@ export default {
             invoiceDetails: {},
             loadingInvoiceDetails: {},
             expandedExpenses: {},
+            defaultCurrency: 'USD',
+            currencies: [],
         }
+    },
+    mounted() {
+        this.loadSettings()
     },
     methods: {
         translate(appId, text, vars) {
@@ -523,14 +528,62 @@ export default {
             } catch (e) { console.warn('Translation error:', e) }
             return text
         },
-        formatCurrency(amount, currency = 'USD') {
+        async loadSettings() {
+            try {
+                const response = await api.settings.get()
+                const settings = response.data || {}
+                
+                this.defaultCurrency = settings.default_currency || 'USD'
+                
+                // Load currencies to get symbol
+                if (settings.currencies) {
+                    try {
+                        this.currencies = JSON.parse(settings.currencies)
+                    } catch (e) {
+                        this.currencies = []
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading settings:', error)
+                this.defaultCurrency = 'USD'
+            }
+        },
+        getCurrencySymbol(currencyCode) {
+            if (!currencyCode) currencyCode = this.defaultCurrency || 'USD'
+            
+            // First try to find in loaded currencies
+            if (this.currencies && this.currencies.length > 0) {
+                const currency = this.currencies.find(c => c.code === currencyCode)
+                if (currency && currency.symbol) {
+                    return currency.symbol
+                }
+            }
+            
+            // Fallback to default symbols if not found in settings
+            const defaultSymbols = {
+                'USD': '$',
+                'EUR': '€',
+                'TRY': '₺',
+                'AZN': '₼',
+                'GBP': '£',
+                'RUB': '₽',
+            }
+            return defaultSymbols[currencyCode] || currencyCode
+        },
+        formatCurrency(amount, currency = null) {
             if (amount === null || amount === undefined) return '-'
+            // Always use default currency from settings
+            const currencyCode = this.defaultCurrency || 'USD'
+            const symbol = this.getCurrencySymbol(currencyCode)
+            
             const val = parseFloat(amount)
             if (isNaN(val)) return '-'
+            
+            // Always show symbol (getCurrencySymbol now has fallback)
             return new Intl.NumberFormat('tr-TR', {
-                style: 'currency',
-                currency: currency || 'USD',
-            }).format(val)
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+            }).format(val) + ' ' + symbol
         },
         formatDate(dateString) {
             if (!dateString) return '-'

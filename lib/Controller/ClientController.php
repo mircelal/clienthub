@@ -7,18 +7,22 @@ use OCA\DomainControl\AppInfo\Application;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
+use OCP\IGroupManager;
 use OCA\DomainControl\Db\ClientMapper;
 use OCA\DomainControl\Db\Client;
 
 class ClientController extends Controller {
 	private $userId;
 	private ClientMapper $mapper;
+	private IGroupManager $groupManager;
 
 	public function __construct(IRequest $request,
 	                            ClientMapper $mapper,
+	                            IGroupManager $groupManager,
 	                            $userId) {
 		parent::__construct(Application::APP_ID, $request);
 		$this->mapper = $mapper;
+		$this->groupManager = $groupManager;
 		$this->userId = $userId;
 	}
 
@@ -107,6 +111,9 @@ class ClientController extends Controller {
 			if (isset($data['notes'])) {
 				$client->setNotes($data['notes']);
 			}
+			if (isset($data['ncUserId'])) {
+				$client->setNcUserId($data['ncUserId']);
+			}
 			
 			$now = date('Y-m-d H:i:s');
 			$client->setUpdatedAt($now);
@@ -128,6 +135,167 @@ class ClientController extends Controller {
 			return new JSONResponse(['success' => true]);
 		} catch (\Exception $e) {
 			return new JSONResponse(['error' => $e->getMessage()], 500);
+		}
+	}
+
+	/**
+	 * Test endpoint: Create Nextcloud user for testing
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 */
+	public function testCreateNextcloudUser(): JSONResponse {
+		try {
+			// Get request data
+			$body = file_get_contents('php://input');
+			$data = json_decode($body, true) ?: [];
+			
+		$testUsername = $data['username'] ?? 'test_user_' . time();
+		$testPassword = $data['password'] ?? bin2hex(random_bytes(8));
+		$testDisplayName = $data['displayName'] ?? 'Test User';
+		$testEmail = $data['email'] ?? null;
+		$testGroup = $data['group'] ?? null;
+		$testQuota = $data['quota'] ?? null;
+		
+		// Validate: Password or email is required (Nextcloud requirement)
+		if (empty($testPassword) && empty($testEmail)) {
+			return new JSONResponse([
+				'success' => false,
+				'error' => 'Password or email address is required'
+			], 400);
+		}
+		
+		// Get UserManager
+		$userManager = \OC::$server->getUserManager();
+		
+		// Check if user already exists
+		if ($userManager->userExists($testUsername)) {
+			return new JSONResponse([
+				'success' => false,
+				'error' => 'User already exists',
+				'username' => $testUsername
+			], 400);
+		}
+		
+		// Create user (password is required for createUser method)
+		if (empty($testPassword)) {
+			return new JSONResponse([
+				'success' => false,
+				'error' => 'Password is required to create user via API'
+			], 400);
+		}
+		
+		$user = $userManager->createUser($testUsername, $testPassword);
+			
+			if (!$user) {
+				return new JSONResponse([
+					'success' => false,
+					'error' => 'Failed to create user'
+				], 500);
+			}
+			
+		// Set display name
+		$user->setDisplayName($testDisplayName);
+		
+		// Set email if provided (optional, but recommended)
+		if (!empty($testEmail)) {
+			$user->setEMailAddress($testEmail);
+		}
+		
+		// Add to group if provided
+		if (!empty($testGroup)) {
+			$group = $this->groupManager->get($testGroup);
+			if ($group) {
+				$group->addUser($user);
+			}
+		}
+		
+		// Set quota if provided
+		if ($testQuota !== null && $testQuota !== '') {
+			$quotaBytes = (float)$testQuota * 1024 * 1024 * 1024; // Convert GB to bytes
+			$user->setQuota((string)$quotaBytes);
+		}
+			
+			return new JSONResponse([
+				'success' => true,
+				'username' => $testUsername,
+				'displayName' => $testDisplayName,
+				'email' => $testEmail,
+				'group' => $testGroup,
+				'quota' => $testQuota,
+				'message' => 'Test user created successfully'
+			]);
+		} catch (\Exception $e) {
+			return new JSONResponse([
+				'success' => false,
+				'error' => $e->getMessage(),
+				'trace' => $e->getTraceAsString()
+			], 500);
+		}
+	}
+
+	/**
+	 * Get list of Nextcloud groups
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 */
+	public function getNextcloudGroups(): JSONResponse {
+		try {
+			$groups = [];
+			$logger = \OC::$server->getLogger();
+			
+			// Method 1: search() with empty string (should return all groups)
+			try {
+				$foundGroups = $this->groupManager->search('');
+				$logger->info('IGroupManager->search("") returned ' . count($foundGroups) . ' groups');
+				foreach ($foundGroups as $group) {
+					if ($group) {
+						$gid = $group->getGID();
+						$groups[] = $gid;
+						$logger->debug('Found group: ' . $gid);
+					}
+				}
+			} catch (\Exception $e) {
+				$logger->warning('search() method failed: ' . $e->getMessage());
+			}
+			
+			// Method 2: callAll() - iterate through all groups
+			if (empty($groups)) {
+				try {
+					$count = 0;
+					$this->groupManager->callAll(function ($group) use (&$groups, &$count) {
+						if ($group) {
+							$gid = $group->getGID();
+							$groups[] = $gid;
+							$count++;
+						}
+					});
+					$logger->info('callAll() method found ' . $count . ' groups');
+				} catch (\Exception $e) {
+					$logger->warning('callAll() method failed: ' . $e->getMessage());
+				}
+			}
+			
+			// Remove duplicates and sort
+			$groups = array_unique($groups);
+			sort($groups);
+			
+			// Final log
+			$logger->info('Total unique groups found: ' . count($groups), [
+				'groups' => $groups,
+				'userId' => $this->userId
+			]);
+			
+			return new JSONResponse(array_values($groups));
+		} catch (\Exception $e) {
+			// Log error with full details
+			\OC::$server->getLogger()->error('Error loading Nextcloud groups: ' . $e->getMessage(), [
+				'exception' => $e,
+				'trace' => $e->getTraceAsString()
+			]);
+			return new JSONResponse([
+				'error' => $e->getMessage(),
+				'debug' => 'Check Nextcloud logs for details'
+			], 500);
 		}
 	}
 

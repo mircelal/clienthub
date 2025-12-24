@@ -7,13 +7,16 @@ return [
 		['name' => 'page#index', 'url' => '/', 'verb' => 'GET'],
 		['name' => 'page#test', 'url' => '/test', 'verb' => 'GET'],
 
-		// Client routes
+		// Client routes - specific routes BEFORE {id} routes
 		['name' => 'client#index', 'url' => '/api/clients', 'verb' => 'GET'],
-		['name' => 'client#show', 'url' => '/api/clients/{id}', 'verb' => 'GET'],
 		['name' => 'client#create', 'url' => '/api/clients', 'verb' => 'POST'],
+		['name' => 'client#getContacts', 'url' => '/api/contacts', 'verb' => 'GET'],
+		['name' => 'client#testCreateNextcloudUser', 'url' => '/api/clients/test-create-nc-user', 'verb' => 'POST'],
+		['name' => 'client#getNextcloudGroups', 'url' => '/api/clients/nextcloud-groups', 'verb' => 'GET'],
+		// Client routes with {id} - must be after specific routes
+		['name' => 'client#show', 'url' => '/api/clients/{id}', 'verb' => 'GET'],
 		['name' => 'client#update', 'url' => '/api/clients/{id}', 'verb' => 'PUT'],
 		['name' => 'client#delete', 'url' => '/api/clients/{id}', 'verb' => 'DELETE'],
-		['name' => 'client#getContacts', 'url' => '/api/contacts', 'verb' => 'GET'],
 
 		// Domain routes
 		['name' => 'domain#index', 'url' => '/api/domains', 'verb' => 'GET'],

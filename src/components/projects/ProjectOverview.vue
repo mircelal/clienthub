@@ -86,7 +86,7 @@
                 <div class="widget-content">
                     <span class="widget-label">{{ translate('domaincontrol', 'Budget') }}</span>
                     <span class="widget-value font-mono">
-                        {{ formatCurrency(project.budget, project.currency) }}
+                        {{ formatCurrency(project.budget) }}
                     </span>
                 </div>
             </div>
@@ -253,6 +253,7 @@ import AccountMinus from 'vue-material-design-icons/AccountMinus.vue'
 import LinkVariant from 'vue-material-design-icons/LinkVariant.vue'
 import LinkVariantOff from 'vue-material-design-icons/LinkVariantOff.vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
+import api from '../../services/api'
 
 export default {
     name: 'ProjectOverview',
@@ -337,6 +338,15 @@ export default {
         },
     },
     emits: ['navigate-client'],
+    data() {
+        return {
+            defaultCurrency: 'USD',
+            currencies: [],
+        }
+    },
+    mounted() {
+        this.loadSettings()
+    },
     methods: {
         translate(appId, text, vars) {
              try {
@@ -423,15 +433,62 @@ export default {
             const d = new Date(date)
             return d.toLocaleDateString('tr-TR', { year: 'numeric', month: 'short', day: 'numeric' })
         },
-        formatCurrency(amount, currency = 'USD') {
+        async loadSettings() {
+            try {
+                const response = await api.settings.get()
+                const settings = response.data || {}
+                
+                this.defaultCurrency = settings.default_currency || 'USD'
+                
+                // Load currencies to get symbol
+                if (settings.currencies) {
+                    try {
+                        this.currencies = JSON.parse(settings.currencies)
+                    } catch (e) {
+                        this.currencies = []
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading settings:', error)
+                this.defaultCurrency = 'USD'
+            }
+        },
+        getCurrencySymbol(currencyCode) {
+            if (!currencyCode) currencyCode = this.defaultCurrency || 'USD'
+            
+            // First try to find in loaded currencies
+            if (this.currencies && this.currencies.length > 0) {
+                const currency = this.currencies.find(c => c.code === currencyCode)
+                if (currency && currency.symbol) {
+                    return currency.symbol
+                }
+            }
+            
+            // Fallback to default symbols if not found in settings
+            const defaultSymbols = {
+                'USD': '$',
+                'EUR': '€',
+                'TRY': '₺',
+                'AZN': '₼',
+                'GBP': '£',
+                'RUB': '₽',
+            }
+            return defaultSymbols[currencyCode] || currencyCode
+        },
+        formatCurrency(amount, currency = null) {
             if (amount === null || amount === undefined) return '-'
             // Handle string numbers
             const val = parseFloat(amount)
             if (isNaN(val) || val === 0) return '-'
+            // Always use default currency from settings
+            const currencyCode = this.defaultCurrency || 'USD'
+            const symbol = this.getCurrencySymbol(currencyCode)
+            
+            // Always show symbol (getCurrencySymbol now has fallback)
             return new Intl.NumberFormat('tr-TR', {
-                style: 'currency',
-                currency: currency || 'USD',
-            }).format(val)
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+            }).format(val) + ' ' + symbol
         },
         formatDurationLocal(seconds) {
             if (this.formatDuration && typeof this.formatDuration === 'function') {

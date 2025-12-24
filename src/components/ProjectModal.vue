@@ -140,23 +140,6 @@
 							placeholder="0.00"
 						/>
 					</div>
-					<div class="form-group">
-						<label for="project-currency" class="form-label">
-							{{ translate('domaincontrol', 'Currency') }}
-						</label>
-						<select
-							id="project-currency"
-							v-model="formData.currency"
-							class="form-control"
-						>
-							<option value="USD">$ USD</option>
-							<option value="EUR">€ EUR</option>
-							<option value="TRY">₺ TRY</option>
-							<option value="AZN">₼ AZN</option>
-							<option value="GBP">£ GBP</option>
-							<option value="RUB">₽ RUB</option>
-						</select>
-					</div>
 				</div>
 
 				<div class="form-group">
@@ -213,9 +196,11 @@ export default {
 		},
 	},
 	emits: ['close', 'saved'],
-	data() {
+		data() {
 		return {
 			saving: false,
+			defaultCurrency: 'USD',
+			currencies: [],
 			formData: {
 				name: '',
 				clientId: '',
@@ -225,10 +210,13 @@ export default {
 				startDate: '',
 				deadline: '',
 				budget: '',
-				currency: 'USD',
+				currency: this.defaultCurrency || 'USD',
 				notes: '',
 			},
 		}
+	},
+	mounted() {
+		this.loadSettings()
 	},
 	computed: {
 		isOpen() {
@@ -248,6 +236,7 @@ export default {
 					if (this.presetClientId) {
 						this.formData.clientId = this.presetClientId
 					}
+					// Set default currency
 				}
 			}
 		},
@@ -263,7 +252,6 @@ export default {
 				startDate: '',
 				deadline: '',
 				budget: '',
-				currency: 'USD',
 				notes: '',
 			}
 		},
@@ -279,7 +267,6 @@ export default {
 				startDate: this.project.startDate ? this.project.startDate.split(' ')[0] : '',
 				deadline: this.project.deadline ? this.project.deadline.split(' ')[0] : '',
 				budget: this.project.budget || '',
-				currency: this.project.currency || 'USD',
 				notes: this.project.notes || '',
 			}
 		},
@@ -295,7 +282,7 @@ export default {
 					startDate: this.formData.startDate || '',
 					deadline: this.formData.deadline || '',
 					budget: this.formData.budget || '',
-					currency: this.formData.currency || 'USD',
+					currency: this.defaultCurrency || 'USD',
 					notes: this.formData.notes || '',
 				}
 

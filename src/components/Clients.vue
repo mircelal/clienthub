@@ -36,6 +36,94 @@
         />
 
         <!-- ========================================== -->
+        <!-- NEXTCLOUD ACCOUNT MODAL                    -->
+        <!-- ========================================== -->
+        <div v-if="nextcloudAccountModalOpen" class="nc-modal-overlay" @click.self="closeNextcloudAccountModal">
+            <div class="nc-modal-content">
+                <div class="nc-modal-header">
+                    <h3 class="nc-modal-title">
+                        {{ translate('domaincontrol', 'Create Nextcloud Account') }}
+                    </h3>
+                    <button class="nc-modal-close" @click="closeNextcloudAccountModal">
+                        <Close :size="20" />
+                    </button>
+                </div>
+                <div class="nc-modal-body">
+                    <div class="form-group">
+                        <label>{{ translate('domaincontrol', 'Username') }} *</label>
+                        <input
+                            type="text"
+                            v-model="nextcloudAccountForm.username"
+                            class="nc-input"
+                            :placeholder="translate('domaincontrol', 'Username')"
+                            required
+                        />
+                    </div>
+                    <div class="form-group">
+                        <label>{{ translate('domaincontrol', 'Display Name') }}</label>
+                        <input
+                            type="text"
+                            v-model="nextcloudAccountForm.displayName"
+                            class="nc-input"
+                            :placeholder="translate('domaincontrol', 'Display Name')"
+                        />
+                    </div>
+                    <div class="form-group">
+                        <label>{{ translate('domaincontrol', 'Email') }}</label>
+                        <input
+                            type="email"
+                            v-model="nextcloudAccountForm.email"
+                            class="nc-input"
+                            :placeholder="translate('domaincontrol', 'Email address')"
+                        />
+                    </div>
+                    <div class="form-group">
+                        <label>{{ translate('domaincontrol', 'Password') }} *</label>
+                        <input
+                            type="password"
+                            v-model="nextcloudAccountForm.password"
+                            class="nc-input"
+                            :placeholder="translate('domaincontrol', 'Password (minimum 10 characters)')"
+                            required
+                            minlength="10"
+                        />
+                        <small class="form-hint">{{ translate('domaincontrol', 'Password must be at least 10 characters long') }}</small>
+                    </div>
+                    <div class="form-group">
+                        <label>{{ translate('domaincontrol', 'Group') }}</label>
+                        <select
+                            v-model="nextcloudAccountForm.group"
+                            class="nc-input"
+                        >
+                            <option value="">{{ translate('domaincontrol', 'No group') }}</option>
+                            <option v-for="group in nextcloudGroups" :key="group" :value="group">
+                                {{ group }}
+                            </option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>{{ translate('domaincontrol', 'Quota (GB)') }}</label>
+                        <input
+                            type="number"
+                            v-model.number="nextcloudAccountForm.quota"
+                            class="nc-input"
+                            :placeholder="translate('domaincontrol', 'Storage quota in GB (leave empty for unlimited)')"
+                            min="0"
+                            step="0.1"
+                        />
+                        <small class="form-hint">{{ translate('domaincontrol', 'Leave empty for unlimited storage') }}</small>
+                    </div>
+                </div>
+                <div class="nc-modal-footer">
+                    <NcButton type="tertiary" @click="closeNextcloudAccountModal">{{ translate('domaincontrol', 'Cancel') }}</NcButton>
+                    <NcButton type="primary" @click="submitNextcloudAccount" :disabled="!nextcloudAccountForm.username || !nextcloudAccountForm.password || nextcloudAccountForm.password.length < 10">
+                        {{ translate('domaincontrol', 'Create Account') }}
+                    </NcButton>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
         <!-- NOTE DETAIL MODAL                          -->
         <!-- ========================================== -->
         <div v-if="noteModalOpen" class="nc-modal-overlay" @click.self="closeNoteModal">
@@ -190,6 +278,16 @@
                     <h2 class="detail-title">{{ selectedClient.name }}</h2>
                 </div>
                 <div class="header-actions">
+                    <NcButton 
+                        v-if="!selectedClient.nextcloudUserId" 
+                        type="primary" 
+                        @click="openNextcloudAccountModal"
+                        style="margin-right: 8px;">
+                        <template #icon>
+                            <Account :size="20" />
+                        </template>
+                        {{ translate('domaincontrol', 'Create Nextcloud Account') }}
+                    </NcButton>
                     <NcButton type="secondary" @click="editClient(selectedClient.id)">
                         <template #icon>
                             <Pencil :size="20" />
@@ -520,6 +618,7 @@ import RichTextEditor from './RichTextEditor.vue'
 
 // Icons
 import AccountGroup from 'vue-material-design-icons/AccountGroup.vue'
+import Account from 'vue-material-design-icons/Account.vue'
 import Magnify from 'vue-material-design-icons/Magnify.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
@@ -606,6 +705,18 @@ export default {
             // Task Modal
             taskModalOpen: false,
             editingTask: null,
+
+            // Nextcloud Account Modal
+            nextcloudAccountModalOpen: false,
+            nextcloudAccountForm: {
+                username: '',
+                displayName: '',
+                email: '',
+                password: '',
+                group: '',
+                quota: null
+            },
+            nextcloudGroups: [],
 
             // Payments
             showAllPayments: false
@@ -704,6 +815,7 @@ export default {
     mounted() {
         this.loadClients()
         this.loadRelatedData()
+        this.loadNextcloudGroups()
     },
     methods: {
         translate(appId, text, vars) {
@@ -831,6 +943,140 @@ export default {
         },
         backToList() {
             this.selectedClient = null
+        },
+        openNextcloudAccountModal() {
+            if (!this.selectedClient || !this.selectedClient.id) {
+                alert('❌ ' + this.translate('domaincontrol', 'Client not selected'))
+                return
+            }
+            
+            if (this.selectedClient.nextcloudUserId) {
+                const message = this.translate('domaincontrol', 'This client already has a Nextcloud account: {username}', {username: this.selectedClient.nextcloudUserId})
+                alert('ℹ️ ' + message)
+                return
+            }
+
+            // Generate username from client name
+            const generateUsername = (name) => {
+                if (!name) {
+                    return 'client_' + this.selectedClient.id
+                }
+                
+                let username = name
+                    // Convert to lowercase first
+                    .toLowerCase()
+                    // Azerbaijani characters (must be before Turkish to avoid conflicts)
+                    .replace(/ə/g, 'e').replace(/Ə/g, 'e')
+                    // Turkish characters
+                    .replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ş/g, 's')
+                    .replace(/ı/g, 'i').replace(/ö/g, 'o').replace(/ç/g, 'c')
+                    // Remove all non-alphanumeric characters except spaces
+                    .replace(/[^a-z0-9\s]/g, '')
+                    // Replace spaces with underscores
+                    .replace(/\s+/g, '_')
+                    .replace(/_+/g, '_')
+                    .replace(/^_|_$/g, '')
+                    .substring(0, 64)
+                
+                if (!username) {
+                    username = 'client_' + this.selectedClient.id
+                }
+                return username
+            }
+
+            // Fill form with client data
+            this.nextcloudAccountForm = {
+                username: generateUsername(this.selectedClient.name),
+                displayName: this.selectedClient.name || '',
+                email: this.selectedClient.email || '',
+                password: '',
+                group: '',
+                quota: null
+            }
+            
+            this.nextcloudAccountModalOpen = true
+        },
+        closeNextcloudAccountModal() {
+            this.nextcloudAccountModalOpen = false
+            this.nextcloudAccountForm = {
+                username: '',
+                displayName: '',
+                email: '',
+                password: '',
+                group: '',
+                quota: null
+            }
+        },
+        async loadNextcloudGroups() {
+            try {
+                const response = await api.clients.getNextcloudGroups()
+                console.log('Nextcloud groups response:', response)
+                this.nextcloudGroups = response.data || []
+                console.log('Loaded groups:', this.nextcloudGroups)
+            } catch (error) {
+                console.error('Error loading Nextcloud groups:', error)
+                console.error('Error details:', error.response)
+                this.nextcloudGroups = []
+            }
+        },
+        async submitNextcloudAccount() {
+            if (!this.nextcloudAccountForm.username || !this.nextcloudAccountForm.password) {
+                alert('❌ ' + this.translate('domaincontrol', 'Username and password are required'))
+                return
+            }
+
+            if (this.nextcloudAccountForm.password.length < 10) {
+                alert('❌ ' + this.translate('domaincontrol', 'Password must be at least 10 characters long'))
+                return
+            }
+
+            try {
+                const userData = {
+                    username: this.nextcloudAccountForm.username,
+                    password: this.nextcloudAccountForm.password,
+                    displayName: this.nextcloudAccountForm.displayName || this.selectedClient.name,
+                    email: this.nextcloudAccountForm.email || null,
+                    group: this.nextcloudAccountForm.group || null,
+                    quota: this.nextcloudAccountForm.quota || null
+                }
+                
+                const response = await api.clients.testCreateNextcloudUser(userData)
+                
+                if (response.data.success) {
+                    // Update client with Nextcloud user ID
+                    await api.clients.update(this.selectedClient.id, {
+                        ncUserId: response.data.username
+                    })
+                    
+                    // Reload client data
+                    await this.loadClients()
+                    const updatedClient = this.clients.find(c => c.id === this.selectedClient.id)
+                    if (updatedClient) {
+                        this.selectedClient = updatedClient
+                    }
+                    
+                    // Close modal
+                    this.closeNextcloudAccountModal()
+                    
+                    const successMessage = this.translate('domaincontrol', 'Nextcloud account created successfully!')
+                    const detailsMessage = this.translate('domaincontrol', 'Username: {username}\nPassword: {password}', {
+                        username: response.data.username,
+                        password: this.nextcloudAccountForm.password
+                    })
+                    alert('✅ ' + successMessage + '\n\n' + detailsMessage)
+                } else {
+                    const errorMessage = this.translate('domaincontrol', 'Error creating Nextcloud account: {error}', {
+                        error: response.data.error || this.translate('domaincontrol', 'Unknown error')
+                    })
+                    alert('❌ ' + errorMessage)
+                }
+            } catch (error) {
+                console.error('Nextcloud account creation error:', error)
+                const errorMessage = this.translate('domaincontrol', 'Error creating Nextcloud account: {error}', {
+                    error: error.response?.data?.error || error.message || this.translate('domaincontrol', 'Unknown error')
+                })
+                alert('❌ ' + errorMessage)
+            }
         },
         getInitials(name) {
             if (!name) return '?'

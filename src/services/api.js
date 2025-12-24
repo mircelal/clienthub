@@ -35,6 +35,12 @@ export default {
 			},
 		}),
 		delete: (id) => axios.delete(`${apiBase}/clients/${id}`),
+		testCreateNextcloudUser: (data) => axios.post(`${apiBase}/clients/test-create-nc-user`, data, {
+			headers: {
+				'Content-Type': 'application/json',
+			},
+		}),
+		getNextcloudGroups: () => axios.get(`${apiBase}/clients/nextcloud-groups`),
 		byClient: {
 			projects: (clientId) => axios.get(`${apiBase}/clients/${clientId}/projects`),
 			tasks: (clientId) => axios.get(`${apiBase}/clients/${clientId}/tasks`),
