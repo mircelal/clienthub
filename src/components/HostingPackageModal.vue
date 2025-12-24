@@ -418,7 +418,7 @@ export default {
 }
 
 .modal-content.modal-large {
-	max-width: 800px;
+	/* max-width: 800px; */
 }
 
 .modal-header {

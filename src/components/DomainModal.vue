@@ -366,7 +366,7 @@ export default {
     flex-direction: column;
 }
 
-.nc-modal-large { max-width: 800px; }
+.nc-modal-large { /* max-width: 800px; */ }
 
 /* Header */
 .nc-modal-header {

@@ -1168,9 +1168,7 @@ nav#app-navigation-vue {
 	box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
 }
 
-.modal-content.modal-large {
-	max-width: 800px;
-}
+
 
 .modal-header {
 	padding: 24px 28px;

@@ -420,7 +420,14 @@
 		"No expense categories": "Gider kategorisi yok",
 		"Error deleting category": "Kategori silinirken hata oluştu",
 		"Error saving category": "Kategori kaydedilirken hata oluştu",
-		"Are you sure you want to delete this category?": "Bu kategoriyi silmek istediğinizden emin misiniz?"
+		"Are you sure you want to delete this category?": "Bu kategoriyi silmek istediğinizden emin misiniz?",
+		"Transaction Statistics": "İşlem İstatistikleri",
+		"Total Income": "Toplam Gelir",
+		"Total Expense": "Toplam Gider",
+		"Net Profit": "Net Kar",
+		"By Category": "Kategoriye Göre",
+		"Uncategorized": "Kategorisiz",
+		"transactions": "işlem"
 	},
 	"pluralForm": "nplurals=2; plural=(n > 1);"
 }
