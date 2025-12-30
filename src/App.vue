@@ -310,7 +310,7 @@ export default {
 			} catch (e) {
 				console.warn('Translation error:', e)
 			}
-			// Fallback: return label if translation not found
+			// Fallback: return label if  translation not found
 			return label
 		},
 	},
