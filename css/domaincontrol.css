@@ -1,0 +1,14 @@
+/**
+ * Domain Control - Modern List Design
+ * Version: 2.0.0
+ * Nextcloud Native App Styling - Based on Contacts App
+ */
+
+/* ============================================
+   NEXTCLOUD NATIVE APP LAYOUT
+   ============================================ */
+
+/* App Content - Nextcloud Standard Padding */
+.app-content-wrapper {
+	padding: 0;
+}

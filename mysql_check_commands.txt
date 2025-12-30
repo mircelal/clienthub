@@ -1,0 +1,45 @@
+# MySQL Bağlantı ve Tablo Kontrol Komutları
+# Bu komutları terminalde çalıştırın ve çıktıları paylaşın
+
+# 1. MySQL'e bağlan (Nextcloud config dosyasından veritabanı bilgilerini al)
+# Genellikle şu şekilde:
+mysql -u nextcloud_user -p nextcloud_db
+
+# VEYA config/config.php dosyasından bilgileri alıp:
+# mysql -u [dbuser] -p [dbname]
+
+# 2. Tabloyu kontrol et
+SHOW TABLES LIKE '%domaincontrol_clients%';
+
+# 3. Tablo yapısını göster
+DESCRIBE oc_domaincontrol_clients;
+
+# VEYA
+SHOW COLUMNS FROM oc_domaincontrol_clients;
+
+# 4. Tablo oluşturulma bilgilerini göster
+SHOW CREATE TABLE oc_domaincontrol_clients;
+
+# 5. Tablodaki veri sayısını kontrol et
+SELECT COUNT(*) FROM oc_domaincontrol_clients;
+
+# 6. Örnek verileri göster (ilk 5 kayıt)
+SELECT * FROM oc_domaincontrol_clients LIMIT 5;
+
+# 7. nc_user_id kolonunun var olup olmadığını kontrol et
+SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE, COLUMN_DEFAULT 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+AND TABLE_NAME = 'oc_domaincontrol_clients' 
+AND COLUMN_NAME = 'nc_user_id';
+
+# 8. Tüm kolonları listele
+SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE, COLUMN_DEFAULT, CHARACTER_MAXIMUM_LENGTH
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = DATABASE() 
+AND TABLE_NAME = 'oc_domaincontrol_clients'
+ORDER BY ORDINAL_POSITION;
+
+# 9. Migration durumunu kontrol et
+SELECT * FROM oc_migrations WHERE app = 'domaincontrol' ORDER BY timestamp DESC LIMIT 10;
+

@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
+	<id>domaincontrol</id>
+	<name>ClientHub</name>
+	<summary>Comprehensive client, project, and business management system</summary>
+	<description><![CDATA[ClientHub - Complete business management solution. Manage clients, projects, invoices, payments, tasks, domains, hosting, websites, and services. Track everything in one place with integrated file management and Nextcloud Contacts integration.]]></description>
+	<version>0.9.04</version>
+	<licence>agpl</licence>
+	<author>Calal Mir</author>
+	<namespace>DomainControl</namespace>
+	<category>tools</category>
+	
+	<screenshot>https://raw.githubusercontent.com/yourusername/domaincontrol/main/screenshots/main.png</screenshot>
+	
+	<dependencies>
+		<nextcloud min-version="25" max-version="32"/>
+	</dependencies>
+	
+	<navigations>
+		<navigation>
+			<name>ClientHub</name>
+			<route>domaincontrol.page.index</route>
+			<icon>app.svg</icon>
+		</navigation>
+	</navigations>
+</info>
